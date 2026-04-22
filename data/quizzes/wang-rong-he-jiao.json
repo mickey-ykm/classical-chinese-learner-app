@@ -1,0 +1,406 @@
+{
+  "articleId": "wang-rong-he-jiao",
+  "totalPoints": 46,
+  "parts": [
+    {
+      "part": 1,
+      "title": "第一部分：字詞釋義選擇題",
+      "pointsPerQuestion": 1,
+      "questions": [
+        {
+          "id": 1, "part": 1, "points": 1,
+          "stem": "同時「遭」大喪",
+          "options": [
+            { "key": "A", "text": "遭受 (遭遇不幸)" },
+            { "key": "B", "text": "遭遇 (遇到)" },
+            { "key": "C", "text": "一次 (一遭)" },
+            { "key": "D", "text": "糟糕 (情況壞)" }
+          ],
+          "correctAnswer": "B",
+          "explanation": "【換】單音節詞「遭」替換為雙音節「遭遇」。"
+        },
+        {
+          "id": 2, "part": 1, "points": 1,
+          "stem": "遭「大喪」",
+          "options": [
+            { "key": "A", "text": "重大的損失" },
+            { "key": "B", "text": "盛大的葬禮" },
+            { "key": "C", "text": "父母的喪事" },
+            { "key": "D", "text": "國家的哀痛" }
+          ],
+          "correctAnswer": "C",
+          "explanation": "【增】增加具體內容，使語意明確。"
+        },
+        {
+          "id": 3, "part": 1, "points": 1,
+          "stem": "「俱」以孝稱",
+          "options": [
+            { "key": "A", "text": "具備" },
+            { "key": "B", "text": "恐懼" },
+            { "key": "C", "text": "都、同樣" },
+            { "key": "D", "text": "一起" }
+          ],
+          "correctAnswer": "C",
+          "explanation": "【換】將文言副詞「俱」換成現代漢語「都」。"
+        },
+        {
+          "id": 4, "part": 1, "points": 1,
+          "stem": "俱「以」孝稱",
+          "options": [
+            { "key": "A", "text": "用來" },
+            { "key": "B", "text": "憑藉、因為" },
+            { "key": "C", "text": "以為" },
+            { "key": "D", "text": "帶領" }
+          ],
+          "correctAnswer": "B",
+          "explanation": "【換】介詞轉換，解釋行為的原因。"
+        },
+        {
+          "id": 5, "part": 1, "points": 1,
+          "stem": "以孝「稱」",
+          "options": [
+            { "key": "A", "text": "稱讚" },
+            { "key": "B", "text": "稱呼" },
+            { "key": "C", "text": "稱量" },
+            { "key": "D", "text": "著稱、出名" }
+          ],
+          "correctAnswer": "D",
+          "explanation": "【換】換成意義更完整的雙音節詞。"
+        },
+        {
+          "id": 6, "part": 1, "points": 1,
+          "stem": "王「雞骨支床」",
+          "options": [
+            { "key": "A", "text": "王戎把雞骨頭堆在床上" },
+            { "key": "B", "text": "王戎瘦得像雞骨架支撐在床" },
+            { "key": "C", "text": "王戎用雞骨頭修理床鋪" },
+            { "key": "D", "text": "王戎睡在雞骨頭上面" }
+          ],
+          "correctAnswer": "B",
+          "explanation": "【增】補充形容詞描述，將借喻形象具體化。"
+        },
+        {
+          "id": 7, "part": 1, "points": 1,
+          "stem": "和哭泣「備」禮",
+          "options": [
+            { "key": "A", "text": "準備" },
+            { "key": "B", "text": "周全、完備" },
+            { "key": "C", "text": "防備" },
+            { "key": "D", "text": "具備" }
+          ],
+          "correctAnswer": "B",
+          "explanation": "【換】轉換為性質相同的雙音節形容詞。"
+        },
+        {
+          "id": 8, "part": 1, "points": 1,
+          "stem": "武帝「謂」劉仲雄曰",
+          "options": [
+            { "key": "A", "text": "認為" },
+            { "key": "B", "text": "稱呼" },
+            { "key": "C", "text": "對……說" },
+            { "key": "D", "text": "意思是" }
+          ],
+          "correctAnswer": "C",
+          "explanation": "【換】轉換動詞，涉及說話對象。"
+        },
+        {
+          "id": 9, "part": 1, "points": 1,
+          "stem": "謂劉仲雄「曰」",
+          "options": [
+            { "key": "A", "text": "說" },
+            { "key": "B", "text": "叫做" },
+            { "key": "C", "text": "日子" },
+            { "key": "D", "text": "約定" }
+          ],
+          "correctAnswer": "A",
+          "explanation": "【換】基本動詞轉換。"
+        },
+        {
+          "id": 10, "part": 1, "points": 1,
+          "stem": "「卿」數省王、和不",
+          "options": [
+            { "key": "A", "text": "官職稱號" },
+            { "key": "B", "text": "古人對配偶的稱呼" },
+            { "key": "C", "text": "你（上對下的尊稱）" },
+            { "key": "D", "text": "他" }
+          ],
+          "correctAnswer": "C",
+          "explanation": "【換】代詞轉換（上對下或對等尊稱）。"
+        },
+        {
+          "id": 11, "part": 1, "points": 1,
+          "stem": "卿「數」省王、和不",
+          "options": [
+            { "key": "A", "text": "數量" },
+            { "key": "B", "text": "計算" },
+            { "key": "C", "text": "多次、屢次" },
+            { "key": "D", "text": "責備" }
+          ],
+          "correctAnswer": "C",
+          "explanation": "【換】注意詞性（副詞），非名詞「數目」。"
+        },
+        {
+          "id": 12, "part": 1, "points": 1,
+          "stem": "卿數「省」王、和不",
+          "options": [
+            { "key": "A", "text": "節省" },
+            { "key": "B", "text": "探望" },
+            { "key": "C", "text": "反省" },
+            { "key": "D", "text": "省份" }
+          ],
+          "correctAnswer": "B",
+          "explanation": "【換】換成現代漢語常用詞。"
+        },
+        {
+          "id": 13, "part": 1, "points": 1,
+          "stem": "卿數省王、和「不」",
+          "options": [
+            { "key": "A", "text": "不可以" },
+            { "key": "B", "text": "嗎（通「否」）" },
+            { "key": "C", "text": "不是" },
+            { "key": "D", "text": "不要" }
+          ],
+          "correctAnswer": "B",
+          "explanation": "【換】通假字「否」，轉換為疑問助詞。"
+        },
+        {
+          "id": 14, "part": 1, "points": 1,
+          "stem": "「聞」和哀苦過禮",
+          "options": [
+            { "key": "A", "text": "聽說" },
+            { "key": "B", "text": "聞到" },
+            { "key": "C", "text": "聲望" },
+            { "key": "D", "text": "知道" }
+          ],
+          "correctAnswer": "A",
+          "explanation": "【換】轉換為雙音節動詞。"
+        },
+        {
+          "id": 15, "part": 1, "points": 1,
+          "stem": "使人憂「之」",
+          "options": [
+            { "key": "A", "text": "的（助詞）" },
+            { "key": "B", "text": "去、往（動詞）" },
+            { "key": "C", "text": "他（指和嶠）" },
+            { "key": "D", "text": "這件事" }
+          ],
+          "correctAnswer": "C",
+          "explanation": "【補】代詞釋義必須補出具體指代的人。"
+        },
+        {
+          "id": 16, "part": 1, "points": 1,
+          "stem": "「雖」備禮",
+          "options": [
+            { "key": "A", "text": "雖然" },
+            { "key": "B", "text": "即使" },
+            { "key": "C", "text": "但是" },
+            { "key": "D", "text": "隨即" }
+          ],
+          "correctAnswer": "A",
+          "explanation": "【增】增加字數，使其符合現代語法結構。"
+        },
+        {
+          "id": 17, "part": 1, "points": 1,
+          "stem": "「神氣」不損",
+          "options": [
+            { "key": "A", "text": "很威風的樣子" },
+            { "key": "B", "text": "精神氣色" },
+            { "key": "C", "text": "語氣" },
+            { "key": "D", "text": "氣味" }
+          ],
+          "correctAnswer": "B",
+          "explanation": "【換】現代雖有此詞，但此處需換成精確解釋。"
+        },
+        {
+          "id": 18, "part": 1, "points": 1,
+          "stem": "神氣不「損」",
+          "options": [
+            { "key": "A", "text": "損壞" },
+            { "key": "B", "text": "損失" },
+            { "key": "C", "text": "損傷、衰弱" },
+            { "key": "D", "text": "減少" }
+          ],
+          "correctAnswer": "C",
+          "explanation": "【換】換成具體描述身體/精神狀態的詞。"
+        },
+        {
+          "id": 19, "part": 1, "points": 1,
+          "stem": "哀「毀」骨立",
+          "options": [
+            { "key": "A", "text": "毀滅" },
+            { "key": "B", "text": "毀壞名譽" },
+            { "key": "C", "text": "（因哀慟）損害健康" },
+            { "key": "D", "text": "拆除" }
+          ],
+          "correctAnswer": "C",
+          "explanation": "【換】這裡「毀」是特指因悲傷而自毀身體。"
+        },
+        {
+          "id": 20, "part": 1, "points": 1,
+          "stem": "臣「以」和嶠生孝",
+          "options": [
+            { "key": "A", "text": "憑藉" },
+            { "key": "B", "text": "因為" },
+            { "key": "C", "text": "認為、以為" },
+            { "key": "D", "text": "用來" }
+          ],
+          "correctAnswer": "C",
+          "explanation": "【換】區分動詞與介詞用法。"
+        }
+      ]
+    },
+    {
+      "part": 2,
+      "title": "第二部分：句子翻譯與語法辨析",
+      "pointsPerQuestion": 2,
+      "questions": [
+        {
+          "id": 21, "part": 2, "points": 2,
+          "stem": "「卿數省王、和不？」最準確的語譯是：",
+          "options": [
+            { "key": "A", "text": "卿大夫多次反省王戎和和嶠的對錯嗎？" },
+            { "key": "B", "text": "你多次去探望過王戎和和嶠嗎？" },
+            { "key": "C", "text": "你最近有省下王戎和和嶠的錢嗎？" },
+            { "key": "D", "text": "他多次去探望王戎，和嶠不是嗎？" }
+          ],
+          "correctAnswer": "B",
+          "explanation": "疑問句，末字「不」通假作語氣助詞「否」；「省」意為探望；「卿」為上對下的你。"
+        },
+        {
+          "id": 22, "part": 2, "points": 2,
+          "stem": "「和嶠雖備禮，神氣不損。」最準確的語譯是：",
+          "options": [
+            { "key": "A", "text": "和嶠雖然準備了禮物，但精神沒有受損。" },
+            { "key": "B", "text": "和嶠雖然防備禮節，神情卻不見傷損。" },
+            { "key": "C", "text": "和嶠雖然禮數周全，但精神氣色並未受損。" },
+            { "key": "D", "text": "和嶠雖然具備禮儀，神氣卻一點不差。" }
+          ],
+          "correctAnswer": "C",
+          "explanation": "轉折複句：「雖……，……」結構；「備禮」=禮數周全；「神氣」=精神氣色。"
+        },
+        {
+          "id": 23, "part": 2, "points": 2,
+          "stem": "「臣以和嶠生孝，王戎死孝。」最準確的語譯是：",
+          "options": [
+            { "key": "A", "text": "臣認為和嶠因孝順而生，王戎因孝順而死。" },
+            { "key": "B", "text": "臣認為和嶠是在保全生命的範圍內盡孝，王戎則是拼上性命在盡孝。" },
+            { "key": "C", "text": "臣憑藉和嶠的生孝和王戎的死孝來判斷。" },
+            { "key": "D", "text": "臣以為和嶠孝順地活著，王戎孝順地死去。" }
+          ],
+          "correctAnswer": "B",
+          "explanation": "省略句：「以」作動詞「認為」；「生孝」/「死孝」為劉仲雄創造的對比概念。"
+        }
+      ]
+    },
+    {
+      "part": 3,
+      "title": "第三部分：文意理解題",
+      "pointsPerQuestion": 3,
+      "questions": [
+        {
+          "id": 24, "part": 3, "points": 3,
+          "stem": "下列哪一項對王戎和和嶠守喪表現的描述是錯誤的？",
+          "options": [
+            { "key": "A", "text": "王戎因悲痛而消瘦，形容枯槁" },
+            { "key": "B", "text": "和嶠哭泣並將喪葬禮儀做得十分周全" },
+            { "key": "C", "text": "和嶠因哀傷過度而精神大受損耗" },
+            { "key": "D", "text": "武帝起初擔心的是和嶠" }
+          ],
+          "correctAnswer": "C",
+          "explanation": "原文「神氣不損」說明和嶠精神氣色並未受損，選項C與原文相反，故為錯誤描述。"
+        },
+        {
+          "id": 25, "part": 3, "points": 3,
+          "stem": "武帝最初擔心和嶠的原因是什麼？",
+          "options": [
+            { "key": "A", "text": "武帝見過和嶠，發現他面色蒼白" },
+            { "key": "B", "text": "武帝聽聞和嶠哀苦的程度已超過了禮節的規範" },
+            { "key": "C", "text": "武帝認為和嶠的禮儀做得不夠周全" },
+            { "key": "D", "text": "武帝擔心和嶠會因悲傷而骨瘦如柴" }
+          ],
+          "correctAnswer": "B",
+          "explanation": "原文「聞和哀苦過禮，使人憂之」，武帝是聽聞（非親眼見到）和嶠哀苦超過禮節而擔憂。"
+        },
+        {
+          "id": 26, "part": 3, "points": 3,
+          "stem": "劉仲雄提出「生孝」與「死孝」的目的是什麼？",
+          "options": [
+            { "key": "A", "text": "批評和嶠的孝順不夠真誠" },
+            { "key": "B", "text": "讚揚王戎的孝順比和嶠更深厚" },
+            { "key": "C", "text": "提醒武帝王戎的健康正面臨危險" },
+            { "key": "D", "text": "說明兩種孝順方式各有優劣" }
+          ],
+          "correctAnswer": "C",
+          "explanation": "劉仲雄用「死孝」點出王戎以生命換孝道，目的是轉移武帝的擔憂對象，提醒他應憂戎而非憂嶠。"
+        },
+        {
+          "id": 27, "part": 3, "points": 3,
+          "stem": "從本文可見，魏晉時期士人最推崇的核心價值是什麼？",
+          "options": [
+            { "key": "A", "text": "嚴格遵守禮教規範" },
+            { "key": "B", "text": "追求真情實感，重視內在的真實性" },
+            { "key": "C", "text": "以外在形式表現孝道" },
+            { "key": "D", "text": "犧牲生命以表達忠孝" }
+          ],
+          "correctAnswer": "B",
+          "explanation": "全文通過對比強調王戎「任真自得」的真情流露比和嶠的外在禮儀更受推崇，體現魏晉「任真」美學。"
+        }
+      ]
+    },
+    {
+      "part": 4,
+      "title": "第四部分：修辭與人物形象",
+      "pointsPerQuestion": 2,
+      "questions": [
+        {
+          "id": 28, "part": 4, "points": 2,
+          "stem": "「王雞骨支床」使用了哪種修辭手法？",
+          "options": [
+            { "key": "A", "text": "誇張" },
+            { "key": "B", "text": "擬人" },
+            { "key": "C", "text": "對偶" },
+            { "key": "D", "text": "借喻" }
+          ],
+          "correctAnswer": "D",
+          "explanation": "以「雞骨支床」直接喻指王戎極度消瘦的身形，省去比喻詞，屬借喻。"
+        },
+        {
+          "id": 29, "part": 4, "points": 2,
+          "stem": "作者描寫王戎和和嶠主要使用了哪種寫作手法？",
+          "options": [
+            { "key": "A", "text": "烘托" },
+            { "key": "B", "text": "象徵" },
+            { "key": "C", "text": "對比" },
+            { "key": "D", "text": "鋪墊" }
+          ],
+          "correctAnswer": "C",
+          "explanation": "文章將王戎（形毀禮缺）與和嶠（形全禮備）並置對照，突出兩種孝道的差異，是典型的對比手法。"
+        },
+        {
+          "id": 30, "part": 4, "points": 2,
+          "stem": "根據本文，和嶠的人物形象最貼近哪一項描述？",
+          "options": [
+            { "key": "A", "text": "虛偽做作，以禮掩蓋冷漠" },
+            { "key": "B", "text": "過分悲傷，不顧自身健康" },
+            { "key": "C", "text": "理智克制，以完備禮儀盡孝" },
+            { "key": "D", "text": "冷靜旁觀，對父母之死漠然" }
+          ],
+          "correctAnswer": "C",
+          "explanation": "和嶠「備禮」且「神氣不損」，體現他以理性節制情感、恪守禮儀的形象，並非虛偽或冷漠。"
+        },
+        {
+          "id": 31, "part": 4, "points": 2,
+          "stem": "王戎的性格特質最符合哪一項描述？",
+          "options": [
+            { "key": "A", "text": "固執己見，不聽勸告" },
+            { "key": "B", "text": "任真自得，情感真摯不拘禮法" },
+            { "key": "C", "text": "懦弱膽小，缺乏禮教修養" },
+            { "key": "D", "text": "放縱情緒，缺乏自制力" }
+          ],
+          "correctAnswer": "B",
+          "explanation": "王戎「雖不備禮，而哀毀骨立」，體現魏晉士人「任真」風範——以真情代替禮數，自然流露而不矯飾。"
+        }
+      ]
+    }
+  ]
+}

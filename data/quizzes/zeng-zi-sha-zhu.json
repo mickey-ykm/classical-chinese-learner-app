@@ -1,0 +1,313 @@
+{
+  "articleId": "zeng-zi-sha-zhu",
+  "totalPoints": 26,
+  "parts": [
+    {
+      "part": 1,
+      "title": "第一部分：字詞釋義",
+      "pointsPerQuestion": 1,
+      "questions": [
+        {
+          "id": 1, "part": 1, "points": 1,
+          "stem": "「曾子之妻之市」中，第一個「之」字是什麼意思？",
+          "options": [
+            { "key": "A", "text": "前往、到（動詞）" },
+            { "key": "B", "text": "的（助詞）" },
+            { "key": "C", "text": "他（代詞）" },
+            { "key": "D", "text": "這（指示代詞）" }
+          ],
+          "correctAnswer": "B"
+        },
+        {
+          "id": 2, "part": 1, "points": 1,
+          "stem": "「曾子之妻之市」中，第二個「之」字是什麼意思？",
+          "options": [
+            { "key": "A", "text": "的（助詞）" },
+            { "key": "B", "text": "前往、到（動詞）" },
+            { "key": "C", "text": "他（代詞）" },
+            { "key": "D", "text": "於是（連詞）" }
+          ],
+          "correctAnswer": "B"
+        },
+        {
+          "id": 3, "part": 1, "points": 1,
+          "stem": "「其子隨之而泣」中，「之」字指代什麼？",
+          "options": [
+            { "key": "A", "text": "曾子" },
+            { "key": "B", "text": "市集" },
+            { "key": "C", "text": "曾子的妻子（母親）" },
+            { "key": "D", "text": "豬" }
+          ],
+          "correctAnswer": "C"
+        },
+        {
+          "id": 4, "part": 1, "points": 1,
+          "stem": "「女還，顧反」中的「女」字，在句中應如何解釋？",
+          "options": [
+            { "key": "A", "text": "女性、女子" },
+            { "key": "B", "text": "女兒" },
+            { "key": "C", "text": "通「汝」，指「你」" },
+            { "key": "D", "text": "同「屢」，多次" }
+          ],
+          "correctAnswer": "C"
+        },
+        {
+          "id": 5, "part": 1, "points": 1,
+          "stem": "「女還，顧反」中的「反」字是什麼意思？",
+          "options": [
+            { "key": "A", "text": "反對" },
+            { "key": "B", "text": "反省" },
+            { "key": "C", "text": "反轉" },
+            { "key": "D", "text": "通「返」，回來" }
+          ],
+          "correctAnswer": "D"
+        },
+        {
+          "id": 6, "part": 1, "points": 1,
+          "stem": "「為女殺彘」中的「彘」字是什麼意思？",
+          "options": [
+            { "key": "A", "text": "雞" },
+            { "key": "B", "text": "豬" },
+            { "key": "C", "text": "牛" },
+            { "key": "D", "text": "羊" }
+          ],
+          "correctAnswer": "B"
+        },
+        {
+          "id": 7, "part": 1, "points": 1,
+          "stem": "「妻適市來」中的「適」字是什麼意思？",
+          "options": [
+            { "key": "A", "text": "適合" },
+            { "key": "B", "text": "剛才、剛剛" },
+            { "key": "C", "text": "舒適" },
+            { "key": "D", "text": "前往" }
+          ],
+          "correctAnswer": "B"
+        },
+        {
+          "id": 8, "part": 1, "points": 1,
+          "stem": "「妻止之曰」中的「止」字是什麼意思？",
+          "options": [
+            { "key": "A", "text": "停止" },
+            { "key": "B", "text": "阻止、勸阻" },
+            { "key": "C", "text": "舉止" },
+            { "key": "D", "text": "只有" }
+          ],
+          "correctAnswer": "B"
+        },
+        {
+          "id": 9, "part": 1, "points": 1,
+          "stem": "「特與嬰兒戲耳」中的「特」字是什麼意思？",
+          "options": [
+            { "key": "A", "text": "特別" },
+            { "key": "B", "text": "特意" },
+            { "key": "C", "text": "特權" },
+            { "key": "D", "text": "只是、不過" }
+          ],
+          "correctAnswer": "D"
+        },
+        {
+          "id": 10, "part": 1, "points": 1,
+          "stem": "「特與嬰兒戲耳」中的「耳」字是什麼意思？",
+          "options": [
+            { "key": "A", "text": "耳朵" },
+            { "key": "B", "text": "而且" },
+            { "key": "C", "text": "罷了（語氣詞）" },
+            { "key": "D", "text": "聽見" }
+          ],
+          "correctAnswer": "C"
+        },
+        {
+          "id": 11, "part": 1, "points": 1,
+          "stem": "「嬰兒非與戲也」中的「戲」字是什麼意思？",
+          "options": [
+            { "key": "A", "text": "看戲" },
+            { "key": "B", "text": "戲弄、開玩笑" },
+            { "key": "C", "text": "遊戲" },
+            { "key": "D", "text": "唱戲" }
+          ],
+          "correctAnswer": "B"
+        },
+        {
+          "id": 12, "part": 1, "points": 1,
+          "stem": "「嬰兒非有知也」中的「知」字是什麼意思？",
+          "options": [
+            { "key": "A", "text": "知識" },
+            { "key": "B", "text": "知道" },
+            { "key": "C", "text": "知覺" },
+            { "key": "D", "text": "智慧、判斷是非的能力" }
+          ],
+          "correctAnswer": "D"
+        },
+        {
+          "id": 13, "part": 1, "points": 1,
+          "stem": "「待父母而學者也」中的「待」字是什麼意思？",
+          "options": [
+            { "key": "A", "text": "等待" },
+            { "key": "B", "text": "依賴、依靠" },
+            { "key": "C", "text": "對待" },
+            { "key": "D", "text": "招待" }
+          ],
+          "correctAnswer": "B"
+        },
+        {
+          "id": 14, "part": 1, "points": 1,
+          "stem": "「今子欺之」中的「子」字指代誰？",
+          "options": [
+            { "key": "A", "text": "兒子" },
+            { "key": "B", "text": "曾子" },
+            { "key": "C", "text": "你（指曾子的妻子）" },
+            { "key": "D", "text": "諸子百家" }
+          ],
+          "correctAnswer": "C"
+        },
+        {
+          "id": 15, "part": 1, "points": 1,
+          "stem": "「是教子欺也」中的「是」字是什麼意思？",
+          "options": [
+            { "key": "A", "text": "判斷詞（是、對）" },
+            { "key": "B", "text": "這（指示代詞）" },
+            { "key": "C", "text": "但是" },
+            { "key": "D", "text": "於是" }
+          ],
+          "correctAnswer": "B"
+        },
+        {
+          "id": 16, "part": 1, "points": 1,
+          "stem": "「非所以成教也」中的「所以」是什麼意思？",
+          "options": [
+            { "key": "A", "text": "因此" },
+            { "key": "B", "text": "用來……的方法" },
+            { "key": "C", "text": "因為" },
+            { "key": "D", "text": "所謂的" }
+          ],
+          "correctAnswer": "B"
+        },
+        {
+          "id": 17, "part": 1, "points": 1,
+          "stem": "「遂烹彘也」中的「遂」字是什麼意思？",
+          "options": [
+            { "key": "A", "text": "於是、就" },
+            { "key": "B", "text": "隨後" },
+            { "key": "C", "text": "順利" },
+            { "key": "D", "text": "未遂" }
+          ],
+          "correctAnswer": "A"
+        }
+      ]
+    },
+    {
+      "part": 2,
+      "title": "第二部分：句子翻譯",
+      "pointsPerQuestion": 1,
+      "questions": [
+        {
+          "id": 18, "part": 2, "points": 1,
+          "stem": "以下哪一項是「顧反，為女殺彘」最準確的語譯？",
+          "options": [
+            { "key": "A", "text": "顧全反對的意見，為女兒殺豬。" },
+            { "key": "B", "text": "回頭反思，為了你把豬殺了。" },
+            { "key": "C", "text": "等我回來，就為你殺豬。" },
+            { "key": "D", "text": "看著你反叛，不如為你殺豬。" }
+          ],
+          "correctAnswer": "C"
+        },
+        {
+          "id": 19, "part": 2, "points": 1,
+          "stem": "以下哪一項是「妻適市來，曾子欲捕彘殺之」最準確的語譯？",
+          "options": [
+            { "key": "A", "text": "妻子適合去市集，曾子想抓豬殺來吃。" },
+            { "key": "B", "text": "妻子剛從市集回來，曾子就想抓豬來殺。" },
+            { "key": "C", "text": "妻子去市集買了東西回來，曾子準備捕豬。" },
+            { "key": "D", "text": "妻子剛好在市集遇到曾子，曾子正要殺豬。" }
+          ],
+          "correctAnswer": "B"
+        },
+        {
+          "id": 20, "part": 2, "points": 1,
+          "stem": "以下哪一項是「嬰兒非有知也，待父母而學者也」最準確的語譯？",
+          "options": [
+            { "key": "A", "text": "小孩子不是沒有知識的，只是等待父母來教導。" },
+            { "key": "B", "text": "小孩子本身不懂事，是依賴父母學習的。" },
+            { "key": "C", "text": "嬰兒沒有知覺，必須靠父母學習。" },
+            { "key": "D", "text": "小孩子不知道什麼是錯，要等父母學會了再來教。" }
+          ],
+          "correctAnswer": "B"
+        },
+        {
+          "id": 21, "part": 2, "points": 1,
+          "stem": "以下哪一項是「今子欺之，是教子欺也」最準確的語譯？",
+          "options": [
+            { "key": "A", "text": "今天兒子欺騙你，是因為你教兒子欺騙。" },
+            { "key": "B", "text": "今天你欺負他，這是在教兒子去欺負別人。" },
+            { "key": "C", "text": "現在小孩子被欺騙，這是教育上的欺騙。" },
+            { "key": "D", "text": "現在你欺騙他，這是在教他欺騙。" }
+          ],
+          "correctAnswer": "D"
+        }
+      ]
+    },
+    {
+      "part": 3,
+      "title": "第三部分：內容理解",
+      "pointsPerQuestion": 1,
+      "questions": [
+        {
+          "id": 22, "part": 3, "points": 1,
+          "stem": "曾子妻子當初答應「為女殺彘」的真正用意是什麼？",
+          "options": [
+            { "key": "A", "text": "打算晚上加菜慶祝" },
+            { "key": "B", "text": "為了讓兒子乖乖回家，不再哭鬧" },
+            { "key": "C", "text": "測試曾子會不會真的殺豬" },
+            { "key": "D", "text": "覺得家裡的豬已經養肥了" }
+          ],
+          "correctAnswer": "B"
+        },
+        {
+          "id": 23, "part": 3, "points": 1,
+          "stem": "當曾子真的要去殺豬時，妻子為何要「止之」？",
+          "options": [
+            { "key": "A", "text": "她覺得殺豬太殘忍了" },
+            { "key": "B", "text": "她認為家裡很窮，不能隨便殺豬" },
+            { "key": "C", "text": "她認為自己只是在哄小孩，不必當真" },
+            { "key": "D", "text": "她打算把豬賣到市集去換錢" }
+          ],
+          "correctAnswer": "C"
+        },
+        {
+          "id": 24, "part": 3, "points": 1,
+          "stem": "根據曾子的觀點，幼兒的行為模式主要是透過什麼方式建立的？",
+          "options": [
+            { "key": "A", "text": "透過模仿和依賴父母的言行" },
+            { "key": "B", "text": "透過在市集中與人交流" },
+            { "key": "C", "text": "透過閱讀聖賢書籍" },
+            { "key": "D", "text": "透過天生的智慧與本能" }
+          ],
+          "correctAnswer": "A"
+        },
+        {
+          "id": 25, "part": 3, "points": 1,
+          "stem": "曾子認為「母欺子」會帶來什麼嚴重的後果？",
+          "options": [
+            { "key": "A", "text": "兒子會變得脾氣暴躁" },
+            { "key": "B", "text": "兒子以後再也不會去市集" },
+            { "key": "C", "text": "兒子會失去對母親的信任，破壞教育的根基" },
+            { "key": "D", "text": "曾子會因此與妻子發生嚴重的爭執" }
+          ],
+          "correctAnswer": "C"
+        },
+        {
+          "id": 26, "part": 3, "points": 1,
+          "stem": "《曾子殺豬》這篇文言文最主要想帶出什麼道理？",
+          "options": [
+            { "key": "A", "text": "教導父母不應該隨便帶小孩出門" },
+            { "key": "B", "text": "父母教育子女必須言傳身教，誠實守信" },
+            { "key": "C", "text": "夫妻之間應該要多溝通，避免誤會" },
+            { "key": "D", "text": "答應別人的事情如果做不到，可以開玩笑帶過" }
+          ],
+          "correctAnswer": "B"
+        }
+      ]
+    }
+  ]
+}
