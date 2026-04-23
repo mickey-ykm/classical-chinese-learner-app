@@ -1,8 +1,9 @@
-import { useState } from "react"
-import { ScrollView, View, Text, Pressable } from "react-native"
+import { useState, useRef } from "react"
+import { ScrollView, View, Text, Pressable, NativeSyntheticEvent, NativeScrollEvent } from "react-native"
 import { useRouter, useLocalSearchParams } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { getArticle } from "@/lib/data"
+import { markAsRead } from "@/lib/readProgress"
 import type { Footnote } from "@/lib/types"
 import ArticleText from "@/components/reading/ArticleText"
 import FootnotePanel from "@/components/reading/FootnotePanel"
@@ -13,16 +14,32 @@ export default function ReadScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const article = getArticle(id)
   const [activeFootnote, setActiveFootnote] = useState<Footnote | null>(null)
+  const markedRead = useRef(false)
 
   function handleFootnoteTap(footnoteId: string) {
     const fn = article.footnotes.find((f) => f.id === footnoteId) ?? null
     setActiveFootnote(fn)
   }
 
+  function handleScroll(e: NativeSyntheticEvent<NativeScrollEvent>) {
+    if (markedRead.current) return
+    const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent
+    const nearBottom = contentOffset.y + layoutMeasurement.height >= contentSize.height - 80
+    if (nearBottom) {
+      markedRead.current = true
+      markAsRead(id)
+    }
+  }
+
   return (
     <SafeAreaView className="flex-1 bg-slate-50">
       <View className="flex-1">
-        <ScrollView className="flex-1 px-5" contentContainerClassName="py-8 pb-12">
+        <ScrollView
+          className="flex-1 px-5"
+          contentContainerClassName="py-8 pb-12"
+          onScroll={handleScroll}
+          scrollEventThrottle={200}
+        >
           <Pressable onPress={() => router.back()} className="mb-6" hitSlop={12}>
             <Text className="text-sm text-slate-400">← 返回</Text>
           </Pressable>

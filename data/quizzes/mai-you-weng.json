@@ -1,0 +1,710 @@
+{
+  "articleId": "mai-you-weng",
+  "totalPoints": 44,
+  "parts": [
+    {
+      "part": 1,
+      "title": "第一部分：字詞釋義選擇題",
+      "pointsPerQuestion": 1,
+      "questions": [
+        {
+          "id": 1,
+          "part": 1,
+          "points": 1,
+          "stem": "陳康肅公堯咨「善」射",
+          "options": [
+            {
+              "key": "A",
+              "text": "善良"
+            },
+            {
+              "key": "B",
+              "text": "擅長"
+            },
+            {
+              "key": "C",
+              "text": "喜歡"
+            },
+            {
+              "key": "D",
+              "text": "經常"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "【換】文言文中的「善」常作動詞，意為「擅長、善於」。"
+        },
+        {
+          "id": 2,
+          "part": 1,
+          "points": 1,
+          "stem": "公亦以此自「矜」",
+          "options": [
+            {
+              "key": "A",
+              "text": "憐憫"
+            },
+            {
+              "key": "B",
+              "text": "嚴肅"
+            },
+            {
+              "key": "C",
+              "text": "尊敬"
+            },
+            {
+              "key": "D",
+              "text": "誇耀、驕傲"
+            }
+          ],
+          "correctAnswer": "D",
+          "explanation": "【換】「矜」在此處指驕傲自大。"
+        },
+        {
+          "id": 3,
+          "part": 1,
+          "points": 1,
+          "stem": "「嘗」射於家圃",
+          "options": [
+            {
+              "key": "A",
+              "text": "曾經"
+            },
+            {
+              "key": "B",
+              "text": "品嚐"
+            },
+            {
+              "key": "C",
+              "text": "嘗試"
+            },
+            {
+              "key": "D",
+              "text": "常常"
+            }
+          ],
+          "correctAnswer": "A",
+          "explanation": "【換】副詞，表示過去發生過的事情。"
+        },
+        {
+          "id": 4,
+          "part": 1,
+          "points": 1,
+          "stem": "有賣油翁「釋」擔而立",
+          "options": [
+            {
+              "key": "A",
+              "text": "解釋"
+            },
+            {
+              "key": "B",
+              "text": "放下"
+            },
+            {
+              "key": "C",
+              "text": "釋放"
+            },
+            {
+              "key": "D",
+              "text": "挑著"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "【換】動詞，意為放下。"
+        },
+        {
+          "id": 5,
+          "part": 1,
+          "points": 1,
+          "stem": "久而不「去」",
+          "options": [
+            {
+              "key": "A",
+              "text": "前往"
+            },
+            {
+              "key": "B",
+              "text": "離開"
+            },
+            {
+              "key": "C",
+              "text": "過去"
+            },
+            {
+              "key": "D",
+              "text": "距離"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "【換】古今異義詞，文言文中的「去」通常是離開的意思。"
+        },
+        {
+          "id": 6,
+          "part": 1,
+          "points": 1,
+          "stem": "「但」微頷之",
+          "options": [
+            {
+              "key": "A",
+              "text": "但是"
+            },
+            {
+              "key": "B",
+              "text": "只、不過"
+            },
+            {
+              "key": "C",
+              "text": "卻"
+            },
+            {
+              "key": "D",
+              "text": "不但"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "【換】副詞，表示範圍，意為「只」。"
+        },
+        {
+          "id": 7,
+          "part": 1,
+          "points": 1,
+          "stem": "但微「頷」之",
+          "options": [
+            {
+              "key": "A",
+              "text": "搖頭"
+            },
+            {
+              "key": "B",
+              "text": "微笑"
+            },
+            {
+              "key": "C",
+              "text": "點頭"
+            },
+            {
+              "key": "D",
+              "text": "下巴"
+            }
+          ],
+          "correctAnswer": "C",
+          "explanation": "【換】動詞，點頭表示認可或同意。"
+        },
+        {
+          "id": 8,
+          "part": 1,
+          "points": 1,
+          "stem": "「汝」亦知射乎",
+          "options": [
+            {
+              "key": "A",
+              "text": "我"
+            },
+            {
+              "key": "B",
+              "text": "他"
+            },
+            {
+              "key": "C",
+              "text": "誰"
+            },
+            {
+              "key": "D",
+              "text": "你"
+            }
+          ],
+          "correctAnswer": "D",
+          "explanation": "【換】第二人稱代詞。"
+        },
+        {
+          "id": 9,
+          "part": 1,
+          "points": 1,
+          "stem": "無他，但手熟「爾」",
+          "options": [
+            {
+              "key": "A",
+              "text": "你"
+            },
+            {
+              "key": "B",
+              "text": "如此"
+            },
+            {
+              "key": "C",
+              "text": "罷了"
+            },
+            {
+              "key": "D",
+              "text": "偶爾"
+            }
+          ],
+          "correctAnswer": "C",
+          "explanation": "【換】語氣詞，通「耳」，相當於「而已」、「罷了」。"
+        },
+        {
+          "id": 10,
+          "part": 1,
+          "points": 1,
+          "stem": "「爾」安敢輕吾射",
+          "options": [
+            {
+              "key": "A",
+              "text": "你"
+            },
+            {
+              "key": "B",
+              "text": "這"
+            },
+            {
+              "key": "C",
+              "text": "那"
+            },
+            {
+              "key": "D",
+              "text": "罷了"
+            }
+          ],
+          "correctAnswer": "A",
+          "explanation": "【換】第二人稱代詞，指「你」。"
+        },
+        {
+          "id": 11,
+          "part": 1,
+          "points": 1,
+          "stem": "爾「安」敢輕吾射",
+          "options": [
+            {
+              "key": "A",
+              "text": "安全"
+            },
+            {
+              "key": "B",
+              "text": "安裝"
+            },
+            {
+              "key": "C",
+              "text": "怎麼、哪裡"
+            },
+            {
+              "key": "D",
+              "text": "安心"
+            }
+          ],
+          "correctAnswer": "C",
+          "explanation": "【換】疑問代詞，表反詰語氣。"
+        },
+        {
+          "id": 12,
+          "part": 1,
+          "points": 1,
+          "stem": "爾安敢「輕」吾射",
+          "options": [
+            {
+              "key": "A",
+              "text": "重量小"
+            },
+            {
+              "key": "B",
+              "text": "輕視"
+            },
+            {
+              "key": "C",
+              "text": "輕鬆"
+            },
+            {
+              "key": "D",
+              "text": "輕易"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "【換】形容詞作動詞用，意為看輕、藐視。"
+        },
+        {
+          "id": 13,
+          "part": 1,
+          "points": 1,
+          "stem": "以我「酌」油知之",
+          "options": [
+            {
+              "key": "A",
+              "text": "喝酒"
+            },
+            {
+              "key": "B",
+              "text": "考慮"
+            },
+            {
+              "key": "C",
+              "text": "舀取、倒入"
+            },
+            {
+              "key": "D",
+              "text": "斟酌"
+            }
+          ],
+          "correctAnswer": "C",
+          "explanation": "【換】動詞，指舀起液體並倒入容器。"
+        },
+        {
+          "id": 14,
+          "part": 1,
+          "points": 1,
+          "stem": "「徐」以杓酌油瀝之",
+          "options": [
+            {
+              "key": "A",
+              "text": "慢慢地"
+            },
+            {
+              "key": "B",
+              "text": "快速地"
+            },
+            {
+              "key": "C",
+              "text": "勉強地"
+            },
+            {
+              "key": "D",
+              "text": "順利地"
+            }
+          ],
+          "correctAnswer": "A",
+          "explanation": "【換】副詞，緩慢的意思。"
+        },
+        {
+          "id": 15,
+          "part": 1,
+          "points": 1,
+          "stem": "康肅笑而「遣」之",
+          "options": [
+            {
+              "key": "A",
+              "text": "派遣"
+            },
+            {
+              "key": "B",
+              "text": "責備"
+            },
+            {
+              "key": "C",
+              "text": "遺留"
+            },
+            {
+              "key": "D",
+              "text": "打發、讓他走"
+            }
+          ],
+          "correctAnswer": "D",
+          "explanation": "【換】動詞，打發別人離開。"
+        }
+      ]
+    },
+    {
+      "part": 2,
+      "title": "第二部分：句子翻譯與語法辨析",
+      "pointsPerQuestion": 2,
+      "questions": [
+        {
+          "id": 16,
+          "part": 2,
+          "points": 2,
+          "stem": "「嘗射於家圃」最準確的語譯是：",
+          "options": [
+            {
+              "key": "A",
+              "text": "曾經在別人家裡的菜園射箭。"
+            },
+            {
+              "key": "B",
+              "text": "（他）曾經在家中的園子裡射箭。"
+            },
+            {
+              "key": "C",
+              "text": "嘗試在家裡的菜園射箭。"
+            },
+            {
+              "key": "D",
+              "text": "經常把箭射到家裡的菜園。"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "倒裝句（狀語後置），正常語序為「嘗於家圃射」。「嘗」為曾經。"
+        },
+        {
+          "id": 17,
+          "part": 2,
+          "points": 2,
+          "stem": "「有賣油翁釋擔而立」最準確的語譯是：",
+          "options": [
+            {
+              "key": "A",
+              "text": "有個賣油的老翁解開擔子站起來。"
+            },
+            {
+              "key": "B",
+              "text": "有個賣油的老翁放下挑著的擔子站在一旁。"
+            },
+            {
+              "key": "C",
+              "text": "有個賣油的老翁解釋他的擔子並站著。"
+            },
+            {
+              "key": "D",
+              "text": "有個賣油的老翁挑著擔子站在那裡。"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "「釋」意為放下，「而」表順承關係，連接兩個動作。"
+        },
+        {
+          "id": 18,
+          "part": 2,
+          "points": 2,
+          "stem": "「爾安敢輕吾射！」最準確的語譯是：",
+          "options": [
+            {
+              "key": "A",
+              "text": "你怎麼敢看輕我的箭術！"
+            },
+            {
+              "key": "B",
+              "text": "你在哪裡輕視我的射箭！"
+            },
+            {
+              "key": "C",
+              "text": "你憑甚麼比我的箭射得輕！"
+            },
+            {
+              "key": "D",
+              "text": "你安全地避開了我的箭！"
+            }
+          ],
+          "correctAnswer": "A",
+          "explanation": "反問句。「爾」指你，「安」指怎麼，「輕」為輕視。"
+        },
+        {
+          "id": 19,
+          "part": 2,
+          "points": 2,
+          "stem": "「以我酌油知之」最準確的語譯是：",
+          "options": [
+            {
+              "key": "A",
+              "text": "因為我喝酒的經驗所以知道這個道理。"
+            },
+            {
+              "key": "B",
+              "text": "用我倒油的方法就能知道他。"
+            },
+            {
+              "key": "C",
+              "text": "憑著我倒油的經驗就懂得這個道理。"
+            },
+            {
+              "key": "D",
+              "text": "認為我倒油的時候就能知道。"
+            }
+          ],
+          "correctAnswer": "C",
+          "explanation": "「以」為介詞「憑藉」，「之」代詞指代「手熟」的道理。"
+        }
+      ]
+    },
+    {
+      "part": 3,
+      "title": "第三部分：文意理解題",
+      "pointsPerQuestion": 3,
+      "questions": [
+        {
+          "id": 20,
+          "part": 3,
+          "points": 3,
+          "stem": "賣油翁看到陳堯咨射箭百發百中，有甚麼反應？",
+          "options": [
+            {
+              "key": "A",
+              "text": "大聲讚賞"
+            },
+            {
+              "key": "B",
+              "text": "轉身離開"
+            },
+            {
+              "key": "C",
+              "text": "只是微微點頭"
+            },
+            {
+              "key": "D",
+              "text": "搖頭嘆氣"
+            }
+          ],
+          "correctAnswer": "C",
+          "explanation": "原文「見其發矢十中八九，但微頷之」，可見他反應平淡，僅微微點頭表示認可。"
+        },
+        {
+          "id": 21,
+          "part": 3,
+          "points": 3,
+          "stem": "陳堯咨最初為什麼對賣油翁生氣？",
+          "options": [
+            {
+              "key": "A",
+              "text": "因為賣油翁打擾了他射箭。"
+            },
+            {
+              "key": "B",
+              "text": "因為賣油翁認為他的箭術沒甚麼了不起，只是手熟而已。"
+            },
+            {
+              "key": "C",
+              "text": "因為賣油翁倒油弄髒了他的菜園。"
+            },
+            {
+              "key": "D",
+              "text": "因為賣油翁拒絕與他比試射箭。"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "陳堯咨以箭術自矜，聽到老翁評價「無他，但手熟爾」覺得被輕視，因而「忿然」。"
+        },
+        {
+          "id": 22,
+          "part": 3,
+          "points": 3,
+          "stem": "賣油翁如何向陳堯咨證明自己的觀點？",
+          "options": [
+            {
+              "key": "A",
+              "text": "親自拿起弓箭射靶。"
+            },
+            {
+              "key": "B",
+              "text": "隔著一枚銅錢的方孔將油倒入葫蘆，而銅錢不濕。"
+            },
+            {
+              "key": "C",
+              "text": "將葫蘆頂在頭上倒油而滴水不漏。"
+            },
+            {
+              "key": "D",
+              "text": "引用古人的名言來說服陳堯咨。"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "原文描述老翁「以錢覆其口，徐以杓酌油瀝之，自錢孔入而錢不濕」來證明熟能生巧。"
+        },
+        {
+          "id": 23,
+          "part": 3,
+          "points": 3,
+          "stem": "《賣油翁》一文的主旨是什麼？",
+          "options": [
+            {
+              "key": "A",
+              "text": "天外有天，人外有人"
+            },
+            {
+              "key": "B",
+              "text": "熟能生巧，人外有人，不應驕傲自滿"
+            },
+            {
+              "key": "C",
+              "text": "行行出狀元，職業無分貴賤"
+            },
+            {
+              "key": "D",
+              "text": "學習需循序漸進"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "文章通過賣油翁的高超倒油技巧，點出「惟手熟爾」，說明熟能生巧，勸誡陳堯咨不可因技藝高超而自傲。"
+        }
+      ]
+    },
+    {
+      "part": 4,
+      "title": "第四部分：寫作手法與人物形象",
+      "pointsPerQuestion": 3,
+      "questions": [
+        {
+          "id": 24,
+          "part": 4,
+          "points": 3,
+          "stem": "文章主要運用了哪種寫作手法來塑造人物？",
+          "options": [
+            {
+              "key": "A",
+              "text": "側面烘托"
+            },
+            {
+              "key": "B",
+              "text": "對比手法"
+            },
+            {
+              "key": "C",
+              "text": "借景抒情"
+            },
+            {
+              "key": "D",
+              "text": "象徵手法"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "將陳堯咨的「驕傲自大、急躁（自矜、忿然）」與賣油翁的「從容淡定、謙虛（微頷、無他）」進行對比，突顯主題。"
+        },
+        {
+          "id": 25,
+          "part": 4,
+          "points": 3,
+          "stem": "從「睨之」、「微頷之」可見賣油翁是個怎樣的人？",
+          "options": [
+            {
+              "key": "A",
+              "text": "傲慢無禮，喜歡挑釁他人。"
+            },
+            {
+              "key": "B",
+              "text": "深藏不露，對事物有冷靜客觀的判斷。"
+            },
+            {
+              "key": "C",
+              "text": "膽小怕事，不敢直接表達意見。"
+            },
+            {
+              "key": "D",
+              "text": "愛管閒事，喜歡對人品頭論足。"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "神態描寫表現出賣油翁閱歷豐富，看透了陳堯咨箭術的本質只是「手熟」，故表現得沉穩不驚。"
+        },
+        {
+          "id": 26,
+          "part": 4,
+          "points": 3,
+          "stem": "文章結尾寫「康肅笑而遣之」，這反映了陳堯咨的態度發生了什麼變化？",
+          "options": [
+            {
+              "key": "A",
+              "text": "由生氣轉為無奈，只好趕走老翁。"
+            },
+            {
+              "key": "B",
+              "text": "由自滿憤怒轉為心服口服，明白老翁的道理。"
+            },
+            {
+              "key": "C",
+              "text": "由傲慢轉為覺得老翁滑稽可笑。"
+            },
+            {
+              "key": "D",
+              "text": "由疑惑轉為嘲笑老翁不自量力。"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "「笑」字反映陳堯咨釋懷，親眼見證賣油翁的絕技後，明白了「熟能生巧」的道理，心悅誠服地讓老翁離開。"
+        }
+      ]
+    }
+  ]
+}

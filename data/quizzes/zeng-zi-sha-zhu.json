@@ -16,7 +16,8 @@
             { "key": "C", "text": "他（代詞）" },
             { "key": "D", "text": "這（指示代詞）" }
           ],
-          "correctAnswer": "B"
+          "correctAnswer": "B",
+          "explanation": "【換】文言結構助詞「之」相當於現代漢語「的」，用於名詞之間表示領屬關係。"
         },
         {
           "id": 2, "part": 1, "points": 1,
@@ -27,7 +28,8 @@
             { "key": "C", "text": "他（代詞）" },
             { "key": "D", "text": "於是（連詞）" }
           ],
-          "correctAnswer": "B"
+          "correctAnswer": "B",
+          "explanation": "【換】「之市」即「前往市集」，此處「之」作動詞，表示前往某地，注意與第一個「之」的詞性不同。"
         },
         {
           "id": 3, "part": 1, "points": 1,
@@ -38,7 +40,8 @@
             { "key": "C", "text": "曾子的妻子（母親）" },
             { "key": "D", "text": "豬" }
           ],
-          "correctAnswer": "C"
+          "correctAnswer": "C",
+          "explanation": "【補】代詞「之」須補出具體指代對象，上文講曾子之妻去市集，故兒子隨「她」而哭，此處指曾子之妻。"
         },
         {
           "id": 4, "part": 1, "points": 1,
@@ -49,7 +52,8 @@
             { "key": "C", "text": "通「汝」，指「你」" },
             { "key": "D", "text": "同「屢」，多次" }
           ],
-          "correctAnswer": "C"
+          "correctAnswer": "C",
+          "explanation": "【換】通假字，「女」通「汝」，為第二人稱代詞，此處曾子之妻安慰兒子：「你回去吧。」"
         },
         {
           "id": 5, "part": 1, "points": 1,
@@ -60,7 +64,8 @@
             { "key": "C", "text": "反轉" },
             { "key": "D", "text": "通「返」，回來" }
           ],
-          "correctAnswer": "D"
+          "correctAnswer": "D",
+          "explanation": "【換】通假字，「反」通「返」，意為回來。全句「顧反」即「回來之後」，是曾子之妻對兒子的承諾。"
         },
         {
           "id": 6, "part": 1, "points": 1,
@@ -71,7 +76,8 @@
             { "key": "C", "text": "牛" },
             { "key": "D", "text": "羊" }
           ],
-          "correctAnswer": "B"
+          "correctAnswer": "B",
+          "explanation": "【換】文言名詞「彘」即現代漢語的「豬」，是本文故事的核心道具。"
         },
         {
           "id": 7, "part": 1, "points": 1,
@@ -82,7 +88,8 @@
             { "key": "C", "text": "舒適" },
             { "key": "D", "text": "前往" }
           ],
-          "correctAnswer": "B"
+          "correctAnswer": "B",
+          "explanation": "【換】副詞「適」表示動作剛發生，相當於「剛剛」。「妻適市來」即「妻子剛從市集回來」。"
         },
         {
           "id": 8, "part": 1, "points": 1,
@@ -93,7 +100,8 @@
             { "key": "C", "text": "舉止" },
             { "key": "D", "text": "只有" }
           ],
-          "correctAnswer": "B"
+          "correctAnswer": "B",
+          "explanation": "【換】「止之」即阻止他（曾子），「止」為及物動詞，帶賓語「之」，意為勸阻。"
         },
         {
           "id": 9, "part": 1, "points": 1,
@@ -104,7 +112,8 @@
             { "key": "C", "text": "特權" },
             { "key": "D", "text": "只是、不過" }
           ],
-          "correctAnswer": "D"
+          "correctAnswer": "D",
+          "explanation": "【換】副詞「特」表限制，相當於「只是、不過」，與句末語氣詞「耳」配合，表示輕描淡寫。"
         },
         {
           "id": 10, "part": 1, "points": 1,
@@ -115,7 +124,8 @@
             { "key": "C", "text": "罷了（語氣詞）" },
             { "key": "D", "text": "聽見" }
           ],
-          "correctAnswer": "C"
+          "correctAnswer": "C",
+          "explanation": "【換】語氣詞「耳」置於句末，表示輕描淡寫或有所保留，相當於「罷了」，常與「特」「不過」等副詞搭配。"
         },
         {
           "id": 11, "part": 1, "points": 1,
@@ -126,7 +136,8 @@
             { "key": "C", "text": "遊戲" },
             { "key": "D", "text": "唱戲" }
           ],
-          "correctAnswer": "B"
+          "correctAnswer": "B",
+          "explanation": "【換】動詞「戲」指開玩笑、逗弄，此處曾子反駁妻子：「對小孩子是不可以開玩笑的。」"
         },
         {
           "id": 12, "part": 1, "points": 1,
@@ -137,7 +148,8 @@
             { "key": "C", "text": "知覺" },
             { "key": "D", "text": "智慧、判斷是非的能力" }
           ],
-          "correctAnswer": "D"
+          "correctAnswer": "D",
+          "explanation": "【換】「知」此處非一般「知道」，而指辨別是非、分辨善惡的智慧和判斷力，即幼兒尚未具備的道德認知能力。"
         },
         {
           "id": 13, "part": 1, "points": 1,
@@ -148,7 +160,8 @@
             { "key": "C", "text": "對待" },
             { "key": "D", "text": "招待" }
           ],
-          "correctAnswer": "B"
+          "correctAnswer": "B",
+          "explanation": "【換】「待父母而學」即依靠父母來學習，動詞「待」作「依賴、依靠」解，非「等待」。"
         },
         {
           "id": 14, "part": 1, "points": 1,
@@ -159,7 +172,8 @@
             { "key": "C", "text": "你（指曾子的妻子）" },
             { "key": "D", "text": "諸子百家" }
           ],
-          "correctAnswer": "C"
+          "correctAnswer": "C",
+          "explanation": "【補】「子」為第二人稱尊稱，此處曾子對其妻說話，故「子」指妻子，即「你現在欺騙他（兒子）」。"
         },
         {
           "id": 15, "part": 1, "points": 1,
@@ -170,7 +184,8 @@
             { "key": "C", "text": "但是" },
             { "key": "D", "text": "於是" }
           ],
-          "correctAnswer": "B"
+          "correctAnswer": "B",
+          "explanation": "【換】「是」此處為指示代詞「這」，指上文「母欺子」的行為，而非現代判斷詞「是」。"
         },
         {
           "id": 16, "part": 1, "points": 1,
@@ -181,7 +196,8 @@
             { "key": "C", "text": "因為" },
             { "key": "D", "text": "所謂的" }
           ],
-          "correctAnswer": "B"
+          "correctAnswer": "B",
+          "explanation": "【換】文言「所以」表方法手段，「所以成教」即「用來成就教育的方法」，與現代漢語「所以（因此）」截然不同。"
         },
         {
           "id": 17, "part": 1, "points": 1,
@@ -192,7 +208,8 @@
             { "key": "C", "text": "順利" },
             { "key": "D", "text": "未遂" }
           ],
-          "correctAnswer": "A"
+          "correctAnswer": "A",
+          "explanation": "【換】連詞「遂」表承接，相當於「於是、就」，說明曾子在說理之後立即付諸行動。"
         }
       ]
     },
@@ -210,7 +227,8 @@
             { "key": "C", "text": "等我回來，就為你殺豬。" },
             { "key": "D", "text": "看著你反叛，不如為你殺豬。" }
           ],
-          "correctAnswer": "C"
+          "correctAnswer": "C",
+          "explanation": "「顧反」即「回來之後」（「反」通「返」）；「女」通「汝」為「你」；「彘」為豬。全句是曾子之妻對兒子的承諾，語意應為「等我回來，就為你殺豬。」"
         },
         {
           "id": 19, "part": 2, "points": 1,
@@ -221,7 +239,8 @@
             { "key": "C", "text": "妻子去市集買了東西回來，曾子準備捕豬。" },
             { "key": "D", "text": "妻子剛好在市集遇到曾子，曾子正要殺豬。" }
           ],
-          "correctAnswer": "B"
+          "correctAnswer": "B",
+          "explanation": "「適」作副詞，意為「剛剛」；「欲捕彘殺之」即「想抓豬殺掉牠」，「之」指豬。注意「適」不可譯為「適合」或「恰好」（前往）。"
         },
         {
           "id": 20, "part": 2, "points": 1,
@@ -232,7 +251,8 @@
             { "key": "C", "text": "嬰兒沒有知覺，必須靠父母學習。" },
             { "key": "D", "text": "小孩子不知道什麼是錯，要等父母學會了再來教。" }
           ],
-          "correctAnswer": "B"
+          "correctAnswer": "B",
+          "explanation": "「非有知」即「沒有辨別是非的智慧」；「待父母而學者」即「依靠父母來學習的人」。「待」作「依賴」解，而非「等待」。"
         },
         {
           "id": 21, "part": 2, "points": 1,
@@ -243,7 +263,8 @@
             { "key": "C", "text": "現在小孩子被欺騙，這是教育上的欺騙。" },
             { "key": "D", "text": "現在你欺騙他，這是在教他欺騙。" }
           ],
-          "correctAnswer": "D"
+          "correctAnswer": "D",
+          "explanation": "「子」指妻子（第二人稱尊稱）；「欺之」欺騙他（兒子）；「是」為指示代詞「這」；「教子欺」即「教兒子學習欺騙」。注意「子」前後指代不同的人。"
         }
       ]
     },
@@ -261,7 +282,8 @@
             { "key": "C", "text": "測試曾子會不會真的殺豬" },
             { "key": "D", "text": "覺得家裡的豬已經養肥了" }
           ],
-          "correctAnswer": "B"
+          "correctAnswer": "B",
+          "explanation": "妻子以「為女殺彘」哄兒子跟她同行，目的是讓兒子停止哭鬧、乖乖回家，本是安撫的玩笑話，並無打算真正殺豬。"
         },
         {
           "id": 23, "part": 3, "points": 1,
@@ -272,7 +294,8 @@
             { "key": "C", "text": "她認為自己只是在哄小孩，不必當真" },
             { "key": "D", "text": "她打算把豬賣到市集去換錢" }
           ],
-          "correctAnswer": "C"
+          "correctAnswer": "C",
+          "explanation": "妻子說「特與嬰兒戲耳」，說明她認為那只是逗哄小孩的玩笑，不是認真的承諾，故想阻止曾子真的殺豬。"
         },
         {
           "id": 24, "part": 3, "points": 1,
@@ -283,7 +306,8 @@
             { "key": "C", "text": "透過閱讀聖賢書籍" },
             { "key": "D", "text": "透過天生的智慧與本能" }
           ],
-          "correctAnswer": "A"
+          "correctAnswer": "A",
+          "explanation": "曾子言「嬰兒非有知也，待父母而學者也」，指出幼兒尚無判斷是非的能力，其行為模式是透過依賴和模仿父母的言行來建立的。"
         },
         {
           "id": 25, "part": 3, "points": 1,
@@ -294,7 +318,8 @@
             { "key": "C", "text": "兒子會失去對母親的信任，破壞教育的根基" },
             { "key": "D", "text": "曾子會因此與妻子發生嚴重的爭執" }
           ],
-          "correctAnswer": "C"
+          "correctAnswer": "C",
+          "explanation": "曾子言「今子欺之，是教子欺也」，母親欺騙孩子即等於教孩子學習欺騙，不僅使孩子失去信任根基，更「非所以成教」，根本上破壞了家庭教育的功效。"
         },
         {
           "id": 26, "part": 3, "points": 1,
@@ -305,7 +330,8 @@
             { "key": "C", "text": "夫妻之間應該要多溝通，避免誤會" },
             { "key": "D", "text": "答應別人的事情如果做不到，可以開玩笑帶過" }
           ],
-          "correctAnswer": "B"
+          "correctAnswer": "B",
+          "explanation": "曾子堅持殺豬兌現承諾，以行動反駁妻子「只是玩笑」的說法，全文核心是：父母教育子女必須言行一致、誠實守信，否則就是在教孩子學習欺騙。"
         }
       ]
     }

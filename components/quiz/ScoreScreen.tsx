@@ -2,6 +2,8 @@ import { View, Text, Pressable, ScrollView } from "react-native"
 import { useRouter } from "expo-router"
 import type { Question, QuizAnswer } from "@/lib/types"
 import { calculateScore, getPartScore } from "@/lib/quiz"
+import { getNextQuizId, getArticleIndex } from "@/lib/data"
+import { Mascot } from "@/components/Mascot"
 
 interface Props {
   questions: Question[]
@@ -15,8 +17,10 @@ export default function ScoreScreen({ questions, answers, partTitles, articleId,
   const router = useRouter()
   const { earned, total, percentage } = calculateScore(questions, answers)
 
-  const emoji =
-    percentage >= 80 ? "🎉" : percentage >= 60 ? "👍" : percentage >= 40 ? "📖" : "💪"
+  const nextQuizId = getNextQuizId(articleId)
+  const nextTitle = nextQuizId
+    ? getArticleIndex().find((a) => a.id === nextQuizId)?.title ?? "下一課"
+    : null
 
   const message =
     percentage >= 80
@@ -35,7 +39,7 @@ export default function ScoreScreen({ questions, answers, partTitles, articleId,
 
   return (
     <ScrollView className="flex-1" contentContainerClassName="items-center gap-6 py-6 px-5">
-      <Text className="text-6xl">{emoji}</Text>
+      <Mascot mood={percentage >= 60 ? "happy" : "sad"} size={110} />
 
       <View className="items-center gap-1">
         <Text className="text-4xl font-bold text-slate-800">{percentage}%</Text>
@@ -64,17 +68,20 @@ export default function ScoreScreen({ questions, answers, partTitles, articleId,
       </View>
 
       <View className="w-full gap-3">
+        {nextTitle && (
+          <Pressable
+            onPress={() => router.replace({ pathname: "/read", params: { id: nextQuizId! } })}
+            className="w-full py-3.5 rounded-xl bg-amber-500 items-center active:opacity-80"
+          >
+            <Text className="text-white font-semibold text-base">下一課 →</Text>
+            <Text className="text-amber-100 text-xs mt-0.5">{nextTitle}</Text>
+          </Pressable>
+        )}
         <Pressable
           onPress={onRestart}
-          className="w-full py-3.5 rounded-xl bg-amber-500 items-center active:opacity-80"
-        >
-          <Text className="text-white font-semibold text-base">重新挑戰</Text>
-        </Pressable>
-        <Pressable
-          onPress={() => router.push({ pathname: "/read", params: { id: articleId } })}
           className="w-full py-3.5 rounded-xl border-2 border-slate-200 items-center active:opacity-80"
         >
-          <Text className="text-slate-700 font-semibold text-base">返回文章</Text>
+          <Text className="text-slate-700 font-semibold text-base">重新挑戰</Text>
         </Pressable>
         <Pressable
           onPress={() => router.push("/")}

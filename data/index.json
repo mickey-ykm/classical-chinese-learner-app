@@ -12,5 +12,34 @@
     "source": "《韓非子》",
     "totalPoints": 26,
     "totalQuestions": 26
+  },
+  {
+    "id": "hua-xin-wang-lang",
+    "title": "華歆、王朗俱乘船避難",
+    "source": "《世說新語》",
+    "totalPoints": 28,
+    "totalQuestions": 28
+  },
+  {
+    "id": "mai-you-weng",
+    "title": "賣油翁",
+    "source": "",
+    "totalPoints": 44,
+    "totalQuestions": 26
+  },
+  {
+    "id": "chun-ye-xi-yu",
+    "title": "春夜喜雨",
+    "source": "《杜工部集》",
+    "totalPoints": 65,
+    "totalQuestions": 26
+  },
+  {
+    "id": "da-tong-yu-xiao-kang",
+    "title": "大同與小康",
+    "source": "《禮記·禮運》",
+    "totalPoints": 62,
+    "totalQuestions": 27,
+    "type": "challenge"
   }
 ]

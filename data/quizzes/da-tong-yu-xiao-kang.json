@@ -1,0 +1,736 @@
+{
+  "articleId": "da-tong-yu-xiao-kang",
+  "totalPoints": 62,
+  "parts": [
+    {
+      "part": 1,
+      "title": "第一部分：字詞釋義選擇題",
+      "pointsPerQuestion": 2,
+      "questions": [
+        {
+          "id": 1,
+          "part": 1,
+          "points": 2,
+          "stem": "仲尼「與」於蜡賓",
+          "options": [
+            {
+              "key": "A",
+              "text": "給予"
+            },
+            {
+              "key": "B",
+              "text": "結交"
+            },
+            {
+              "key": "C",
+              "text": "參與、參加"
+            },
+            {
+              "key": "D",
+              "text": "和"
+            }
+          ],
+          "correctAnswer": "C",
+          "explanation": "【換】動詞，參與的意思。"
+        },
+        {
+          "id": 2,
+          "part": 1,
+          "points": 2,
+          "stem": "丘未之「逮」也",
+          "options": [
+            {
+              "key": "A",
+              "text": "逮捕"
+            },
+            {
+              "key": "B",
+              "text": "趕上、及"
+            },
+            {
+              "key": "C",
+              "text": "看見"
+            },
+            {
+              "key": "D",
+              "text": "經歷"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "【換】動詞，趕上。孔子感嘆自己生不逢時，未趕上大同之世。"
+        },
+        {
+          "id": 3,
+          "part": 1,
+          "points": 2,
+          "stem": "選賢「與」能",
+          "options": [
+            {
+              "key": "A",
+              "text": "和、同"
+            },
+            {
+              "key": "B",
+              "text": "通『舉』，推舉"
+            },
+            {
+              "key": "C",
+              "text": "給予"
+            },
+            {
+              "key": "D",
+              "text": "讚許"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "【換】通假字，此處指推舉有才能的人。"
+        },
+        {
+          "id": 4,
+          "part": 1,
+          "points": 2,
+          "stem": "不獨「親」其親",
+          "options": [
+            {
+              "key": "A",
+              "text": "親戚"
+            },
+            {
+              "key": "B",
+              "text": "父母"
+            },
+            {
+              "key": "C",
+              "text": "親自"
+            },
+            {
+              "key": "D",
+              "text": "以……為親（敬愛）"
+            }
+          ],
+          "correctAnswer": "D",
+          "explanation": "【換】名詞作動詞，意動用法，把……當作親人來敬愛。"
+        },
+        {
+          "id": 5,
+          "part": 1,
+          "points": 2,
+          "stem": "「矜」、寡、孤、獨、廢、疾者皆有所養",
+          "options": [
+            {
+              "key": "A",
+              "text": "驕傲"
+            },
+            {
+              "key": "B",
+              "text": "憐憫"
+            },
+            {
+              "key": "C",
+              "text": "通『鰥』，老而無妻"
+            },
+            {
+              "key": "D",
+              "text": "自誇"
+            }
+          ],
+          "correctAnswer": "C",
+          "explanation": "【換】通假字，鰥寡孤獨泛指社會上的弱勢群體。"
+        },
+        {
+          "id": 6,
+          "part": 1,
+          "points": 2,
+          "stem": "男有「分」",
+          "options": [
+            {
+              "key": "A",
+              "text": "分開"
+            },
+            {
+              "key": "B",
+              "text": "分數"
+            },
+            {
+              "key": "C",
+              "text": "職分、職業"
+            },
+            {
+              "key": "D",
+              "text": "天分"
+            }
+          ],
+          "correctAnswer": "C",
+          "explanation": "【換】名詞，指各自的職責、工作。"
+        },
+        {
+          "id": 7,
+          "part": 1,
+          "points": 2,
+          "stem": "女有「歸」",
+          "options": [
+            {
+              "key": "A",
+              "text": "回歸"
+            },
+            {
+              "key": "B",
+              "text": "歸還"
+            },
+            {
+              "key": "C",
+              "text": "女子出嫁"
+            },
+            {
+              "key": "D",
+              "text": "歸宿"
+            }
+          ],
+          "correctAnswer": "C",
+          "explanation": "【換】古代稱女子出嫁為『歸』。"
+        },
+        {
+          "id": 8,
+          "part": 1,
+          "points": 2,
+          "stem": "「惡」其棄於地也",
+          "options": [
+            {
+              "key": "A",
+              "text": "邪惡"
+            },
+            {
+              "key": "B",
+              "text": "厭惡、討厭"
+            },
+            {
+              "key": "C",
+              "text": "惡劣"
+            },
+            {
+              "key": "D",
+              "text": "怎麼"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "【換】動詞，讀音『烏』(wu3)，討厭的意思。"
+        },
+        {
+          "id": 9,
+          "part": 1,
+          "points": 2,
+          "stem": "謀閉而不「興」",
+          "options": [
+            {
+              "key": "A",
+              "text": "高興"
+            },
+            {
+              "key": "B",
+              "text": "興起、發生"
+            },
+            {
+              "key": "C",
+              "text": "興旺"
+            },
+            {
+              "key": "D",
+              "text": "復興"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "【換】動詞，指圖謀算計之心不會產生。"
+        },
+        {
+          "id": 10,
+          "part": 1,
+          "points": 2,
+          "stem": "盜竊亂「賊」而不作",
+          "options": [
+            {
+              "key": "A",
+              "text": "小偷"
+            },
+            {
+              "key": "B",
+              "text": "殘害、害人"
+            },
+            {
+              "key": "C",
+              "text": "強盜"
+            },
+            {
+              "key": "D",
+              "text": "背叛"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "【換】動詞，指殺人越貨等殘害他人的行為。"
+        },
+        {
+          "id": 11,
+          "part": 1,
+          "points": 2,
+          "stem": "大人「世及」以為禮",
+          "options": [
+            {
+              "key": "A",
+              "text": "世代交替"
+            },
+            {
+              "key": "B",
+              "text": "父死子繼、兄終弟及"
+            },
+            {
+              "key": "C",
+              "text": "世界末日"
+            },
+            {
+              "key": "D",
+              "text": "世世代代"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "【釋】古代王位或權力的繼承制度，是『天下為家』的特徵。"
+        },
+        {
+          "id": 12,
+          "part": 1,
+          "points": 2,
+          "stem": "城郭溝池以為「固」",
+          "options": [
+            {
+              "key": "A",
+              "text": "堅固"
+            },
+            {
+              "key": "B",
+              "text": "防禦的堡壘"
+            },
+            {
+              "key": "C",
+              "text": "固執"
+            },
+            {
+              "key": "D",
+              "text": "本來"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "【換】形容詞作名詞，防禦工事。"
+        },
+        {
+          "id": 13,
+          "part": 1,
+          "points": 2,
+          "stem": "以「篤」父子",
+          "options": [
+            {
+              "key": "A",
+              "text": "病重"
+            },
+            {
+              "key": "B",
+              "text": "使……純厚"
+            },
+            {
+              "key": "C",
+              "text": "真誠"
+            },
+            {
+              "key": "D",
+              "text": "專一"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "【換】使動用法，使父子關係純厚。"
+        },
+        {
+          "id": 14,
+          "part": 1,
+          "points": 2,
+          "stem": "以「賢」勇知",
+          "options": [
+            {
+              "key": "A",
+              "text": "賢能的人"
+            },
+            {
+              "key": "B",
+              "text": "賢慧"
+            },
+            {
+              "key": "C",
+              "text": "尊重、推崇"
+            },
+            {
+              "key": "D",
+              "text": "勝過"
+            }
+          ],
+          "correctAnswer": "C",
+          "explanation": "【換】名詞作動詞，推崇。"
+        },
+        {
+          "id": 15,
+          "part": 1,
+          "points": 2,
+          "stem": "在「埶」者去",
+          "options": [
+            {
+              "key": "A",
+              "text": "才藝"
+            },
+            {
+              "key": "B",
+              "text": "種植"
+            },
+            {
+              "key": "C",
+              "text": "邊界"
+            },
+            {
+              "key": "D",
+              "text": "通『勢』，權位"
+            }
+          ],
+          "correctAnswer": "D",
+          "explanation": "【換】通假字，指在位掌權的人。"
+        }
+      ]
+    },
+    {
+      "part": 2,
+      "title": "第二部分：句子翻譯與語法辨析",
+      "pointsPerQuestion": 3,
+      "questions": [
+        {
+          "id": 16,
+          "part": 2,
+          "points": 3,
+          "stem": "「丘未之逮也，而有志焉」最準確的語譯是：",
+          "options": [
+            {
+              "key": "A",
+              "text": "孔丘沒有被逮捕，而且還有志向。"
+            },
+            {
+              "key": "B",
+              "text": "我沒能趕上那個時代，但古書上還有記載。"
+            },
+            {
+              "key": "C",
+              "text": "山丘還沒有到達，但我心裡有志向。"
+            },
+            {
+              "key": "D",
+              "text": "我沒能看到，但我立志要實現它。"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "「未之逮」是賓語前置句（未逮之），「志」指文字記載（通『誌』）。"
+        },
+        {
+          "id": 17,
+          "part": 2,
+          "points": 3,
+          "stem": "「故人不獨親其親，不獨子其子」最準確的語譯是：",
+          "options": [
+            {
+              "key": "A",
+              "text": "所以人們不單獨親近親戚，不單獨讓兒子做兒子。"
+            },
+            {
+              "key": "B",
+              "text": "所以人們不只是敬愛自己的父母，不只是疼愛自己的子女。"
+            },
+            {
+              "key": "C",
+              "text": "所以人不獨立親吻親人，不獨立養育孩子。"
+            },
+            {
+              "key": "D",
+              "text": "因為人不只有親人，也不只有子女。"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "第一個「親」和「子」均為意動用法，譯為「以……為親」和「以……為子」。"
+        },
+        {
+          "id": 18,
+          "part": 2,
+          "points": 3,
+          "stem": "「如有不由此者，在埶者去，眾以為殃」最準確的語譯是：",
+          "options": [
+            {
+              "key": "A",
+              "text": "如果有不從這裡經過的人，掌權的就會離開，大家覺得有災難。"
+            },
+            {
+              "key": "B",
+              "text": "如果有不遵循禮制的人，在位的就會被罷免，民眾都會把他看作禍害。"
+            },
+            {
+              "key": "C",
+              "text": "如果不因為這個原因，有勢力的人就會被驅逐，成為眾人的災殃。"
+            },
+            {
+              "key": "D",
+              "text": "如果有不自由的人，有才藝的離開了，群眾就會遭殃。"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "「由」指遵循，「此」指禮制，「去」指罷免，「殃」指禍害。"
+        }
+      ]
+    },
+    {
+      "part": 3,
+      "title": "第三部分：文意理解題",
+      "pointsPerQuestion": 3,
+      "questions": [
+        {
+          "id": 19,
+          "part": 3,
+          "points": 3,
+          "stem": "孔子為何「喟然而歎」？",
+          "options": [
+            {
+              "key": "A",
+              "text": "因為自己年紀老邁，不能再做官。"
+            },
+            {
+              "key": "B",
+              "text": "因為魯國的蜡祭準備得不夠豐盛。"
+            },
+            {
+              "key": "C",
+              "text": "因為感慨大道已經隱沒，世風日下，美好的『大同』之世不再。"
+            },
+            {
+              "key": "D",
+              "text": "因為他被魯國國君驅逐出境。"
+            }
+          ],
+          "correctAnswer": "C",
+          "explanation": "孔子看見魯國祭祀的情景，聯想到現在是「小康」之世，感嘆未能趕上「大道之行」的時代。"
+        },
+        {
+          "id": 20,
+          "part": 3,
+          "points": 3,
+          "stem": "以下哪一項是「大同」社會的最根本特徵？",
+          "options": [
+            {
+              "key": "A",
+              "text": "天下為家"
+            },
+            {
+              "key": "B",
+              "text": "天下為公"
+            },
+            {
+              "key": "C",
+              "text": "城郭溝池"
+            },
+            {
+              "key": "D",
+              "text": "各親其親"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "「大同」社會的總綱領是「天下為公」，一切權力和財富歸全社會共有。"
+        },
+        {
+          "id": 21,
+          "part": 3,
+          "points": 3,
+          "stem": "在「大同」社會中，社會如何對待弱勢群體？",
+          "options": [
+            {
+              "key": "A",
+              "text": "由他們的親人獨自撫養"
+            },
+            {
+              "key": "B",
+              "text": "任由他們自生自滅"
+            },
+            {
+              "key": "C",
+              "text": "矜、寡、孤、獨、廢、疾者皆有所養"
+            },
+            {
+              "key": "D",
+              "text": "將他們驅逐出城郭"
+            }
+          ],
+          "correctAnswer": "C",
+          "explanation": "這體現了「大同」社會的博愛思想和完善的社會保障。"
+        },
+        {
+          "id": 22,
+          "part": 3,
+          "points": 3,
+          "stem": "「小康」社會的特徵是「天下為家」，它主要依賴甚麼來維持社會秩序？",
+          "options": [
+            {
+              "key": "A",
+              "text": "無為而治"
+            },
+            {
+              "key": "B",
+              "text": "禮義法度"
+            },
+            {
+              "key": "C",
+              "text": "嚴刑峻法"
+            },
+            {
+              "key": "D",
+              "text": "軍事武力"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "文中有「禮義以為紀」，說明小康社會依靠制定禮儀制度來規範人們的行為。"
+        },
+        {
+          "id": 23,
+          "part": 3,
+          "points": 3,
+          "stem": "為什麼「小康」社會需要「城郭溝池」？",
+          "options": [
+            {
+              "key": "A",
+              "text": "因為「天下為家」，人們有私有財產的觀念，需要防禦外敵或盜賊。"
+            },
+            {
+              "key": "B",
+              "text": "為了美化城市景觀。"
+            },
+            {
+              "key": "C",
+              "text": "為了提供百姓休閒娛樂的場所。"
+            },
+            {
+              "key": "D",
+              "text": "為了解決水利灌溉問題。"
+            }
+          ],
+          "correctAnswer": "A",
+          "explanation": "大道隱沒後，人們出現了私心（貨力為己），因而發生了爭端與戰爭（兵由此起），所以需要建立防禦工事。"
+        }
+      ]
+    },
+    {
+      "part": 4,
+      "title": "第四部分：修辭與寫作手法",
+      "pointsPerQuestion": 2,
+      "questions": [
+        {
+          "id": 24,
+          "part": 4,
+          "points": 2,
+          "stem": "文章將「大同」與「小康」社會並列描寫，主要運用了哪種寫作手法？",
+          "options": [
+            {
+              "key": "A",
+              "text": "側面烘托"
+            },
+            {
+              "key": "B",
+              "text": "借景抒情"
+            },
+            {
+              "key": "C",
+              "text": "對比"
+            },
+            {
+              "key": "D",
+              "text": "象徵"
+            }
+          ],
+          "correctAnswer": "C",
+          "explanation": "文章將「天下為公」與「天下為家」等一系列特徵進行對照比較，突顯了兩個時代的差異。"
+        },
+        {
+          "id": 25,
+          "part": 4,
+          "points": 2,
+          "stem": "「使老有所終，壯有所用，幼有所長」使用了甚麼修辭手法？",
+          "options": [
+            {
+              "key": "A",
+              "text": "誇張"
+            },
+            {
+              "key": "B",
+              "text": "排比"
+            },
+            {
+              "key": "C",
+              "text": "擬人"
+            },
+            {
+              "key": "D",
+              "text": "比喻"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "三個結構相同、語氣一致的句子並列，增強了語氣，屬排比手法。"
+        },
+        {
+          "id": 26,
+          "part": 4,
+          "points": 2,
+          "stem": "「以正君臣，以篤父子，以睦兄弟，以和夫婦」也是運用了排比。這組排比句強調了甚麼的重要性？",
+          "options": [
+            {
+              "key": "A",
+              "text": "城郭溝池的防禦作用"
+            },
+            {
+              "key": "B",
+              "text": "禮義在維繫人倫關係中的核心作用"
+            },
+            {
+              "key": "C",
+              "text": "建功立業的必要性"
+            },
+            {
+              "key": "D",
+              "text": "大道之行的偉大"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "這句承接「禮義以為紀」，說明禮儀是用來規範各階層、各種家庭和社會關係的。"
+        },
+        {
+          "id": 27,
+          "part": 4,
+          "points": 2,
+          "stem": "文章開首寫孔子參加祭祀後「喟然而歎」，在結構上有何作用？",
+          "options": [
+            {
+              "key": "A",
+              "text": "總結全文"
+            },
+            {
+              "key": "B",
+              "text": "引起下文，為後文論述大同與小康社會作鋪墊"
+            },
+            {
+              "key": "C",
+              "text": "首尾呼應"
+            },
+            {
+              "key": "D",
+              "text": "卒章顯志"
+            }
+          ],
+          "correctAnswer": "B",
+          "explanation": "藉孔子的嘆息引出言偃的發問，從而順理成章地引出孔子對大同與小康的論述。"
+        }
+      ]
+    }
+  ]
+}

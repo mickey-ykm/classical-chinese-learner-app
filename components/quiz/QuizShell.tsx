@@ -1,10 +1,12 @@
 import { useState, useCallback } from "react"
-import { View } from "react-native"
+import { View, Pressable, Text } from "react-native"
 import type { Question, QuizAnswer, OptionKey } from "@/lib/types"
 import { checkAnswer } from "@/lib/quiz"
+import { getArticle } from "@/lib/data"
 import QuizProgressBar from "./QuizProgressBar"
 import QuizQuestion from "./QuizQuestion"
 import ScoreScreen from "./ScoreScreen"
+import ArticlePopup from "./ArticlePopup"
 
 interface Props {
   questions: Question[]
@@ -17,36 +19,45 @@ export default function QuizShell({ questions, partTitles, articleId }: Props) {
   const [answers, setAnswers] = useState<Record<number, QuizAnswer>>({})
   const [selectedOption, setSelectedOption] = useState<OptionKey | null>(null)
   const [revealAnswer, setRevealAnswer] = useState(false)
+  const [waitingForNext, setWaitingForNext] = useState(false)
+  const [lastAnswerCorrect, setLastAnswerCorrect] = useState(false)
   const [isFinished, setIsFinished] = useState(false)
+  const [showArticle, setShowArticle] = useState(false)
 
+  const article = getArticle(articleId)
   const currentQuestion = questions[currentIndex]
+  const isLastQuestion = currentIndex + 1 >= questions.length
 
   const handleSelect = useCallback(
     (key: OptionKey) => {
-      if (revealAnswer || selectedOption !== null) return
+      if (waitingForNext || selectedOption !== null) return
       const result = checkAnswer(currentQuestion, key)
       setSelectedOption(key)
       setAnswers((prev) => ({ ...prev, [currentQuestion.id]: result }))
       setRevealAnswer(true)
-
-      setTimeout(() => {
-        setRevealAnswer(false)
-        setSelectedOption(null)
-        if (currentIndex + 1 >= questions.length) {
-          setIsFinished(true)
-        } else {
-          setCurrentIndex((i) => i + 1)
-        }
-      }, 1200)
+      setLastAnswerCorrect(result.isCorrect)
+      setWaitingForNext(true)
     },
-    [currentQuestion, currentIndex, questions.length, revealAnswer, selectedOption]
+    [currentQuestion, waitingForNext, selectedOption]
   )
+
+  const handleNext = useCallback(() => {
+    setRevealAnswer(false)
+    setSelectedOption(null)
+    setWaitingForNext(false)
+    if (isLastQuestion) {
+      setIsFinished(true)
+    } else {
+      setCurrentIndex((i) => i + 1)
+    }
+  }, [isLastQuestion])
 
   function handleRestart() {
     setCurrentIndex(0)
     setAnswers({})
     setSelectedOption(null)
     setRevealAnswer(false)
+    setWaitingForNext(false)
     setIsFinished(false)
   }
 
@@ -67,14 +78,36 @@ export default function QuizShell({ questions, partTitles, articleId }: Props) {
 
   return (
     <View className="gap-6">
-      <QuizProgressBar current={currentIndex + 1} total={questions.length} />
+      <View className="flex-row items-center gap-3">
+        <View className="flex-1">
+          <QuizProgressBar current={currentIndex + 1} total={questions.length} />
+        </View>
+        <Pressable
+          onPress={() => setShowArticle(true)}
+          hitSlop={8}
+          className="bg-amber-100 border border-amber-300 rounded-lg px-3 py-1.5 active:opacity-70"
+        >
+          <Text className="text-amber-700 font-semibold text-xs">📖 文章</Text>
+        </Pressable>
+      </View>
+
       <QuizQuestion
         question={currentQuestion}
         partTitle={partTitles[currentQuestion.part] ?? ""}
         isFirstOfPart={isFirstOfPart}
         selectedOption={selectedOption}
         revealAnswer={revealAnswer}
+        waitingForNext={waitingForNext}
+        isCorrect={lastAnswerCorrect}
+        isLastQuestion={isLastQuestion}
         onSelect={handleSelect}
+        onNext={handleNext}
+      />
+
+      <ArticlePopup
+        visible={showArticle}
+        article={article}
+        onClose={() => setShowArticle(false)}
       />
     </View>
   )

@@ -61,4 +61,5 @@ export interface ArticleEntry {
   source: string
   totalPoints: number
   totalQuestions: number
+  type?: "challenge"
 }

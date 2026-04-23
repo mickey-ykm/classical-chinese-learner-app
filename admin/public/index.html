@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>文言教室 Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; }
+    .tab-active { border-bottom: 2px solid #d97706; color: #d97706; }
+    textarea { resize: vertical; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    #toast {
+      position: fixed; bottom: 24px; right: 24px;
+      padding: 12px 20px; border-radius: 8px; font-size: 14px;
+      transform: translateY(80px); opacity: 0;
+      transition: transform 0.25s ease, opacity 0.25s ease;
+      z-index: 1000; pointer-events: none;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+  </style>
+</head>
+<body class="bg-stone-50 text-slate-800 min-h-screen">
+
+<!-- Header -->
+<header class="bg-white border-b border-stone-200 px-6 py-4 flex items-center gap-3">
+  <div class="w-9 h-9 rounded-md bg-amber-600 flex items-center justify-center text-white font-bold text-sm">文</div>
+  <div>
+    <h1 class="font-bold text-lg leading-tight">文言教室 Admin</h1>
+    <p class="text-xs text-slate-500">Exercise Management Portal</p>
+  </div>
+</header>
+
+<div class="max-w-6xl mx-auto p-6 flex gap-6">
+
+  <!-- Left panel: Exercise list -->
+  <aside class="w-72 shrink-0">
+    <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+      <div class="px-4 py-3 border-b border-stone-100 flex items-center justify-between">
+        <h2 class="font-semibold text-sm">Exercises</h2>
+        <button onclick="loadExercises()" class="text-xs text-amber-600 hover:text-amber-700">Refresh</button>
+      </div>
+      <div id="exercise-list" class="divide-y divide-stone-100 min-h-[120px]">
+        <div class="px-4 py-8 text-center text-sm text-slate-400">Loading…</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Right panel: Create exercise -->
+  <main class="flex-1 min-w-0">
+    <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+      <div class="px-6 py-4 border-b border-stone-100">
+        <h2 class="font-semibold">New Exercise</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Paste or upload the article and quiz JSON files below.</p>
+      </div>
+
+      <div class="p-6 space-y-6">
+
+        <!-- Article JSON -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-sm font-medium">Article JSON</label>
+            <div class="flex items-center gap-2">
+              <span id="article-status-dot" class="status-dot bg-slate-200"></span>
+              <span id="article-status-label" class="text-xs text-slate-400">—</span>
+              <label class="text-xs text-amber-600 hover:text-amber-700 cursor-pointer ml-2">
+                Upload file
+                <input type="file" accept=".json" class="hidden" onchange="loadFile(event, 'article-json')" />
+              </label>
+            </div>
+          </div>
+          <textarea
+            id="article-json"
+            rows="10"
+            placeholder='{ "id": "my-article", "title": "...", "segments": [...], ... }'
+            oninput="onArticleInput()"
+            class="w-full font-mono text-xs border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-stone-50"
+          ></textarea>
+          <div id="article-errors" class="mt-1.5 space-y-1 hidden"></div>
+        </div>
+
+        <!-- Quiz JSON -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-sm font-medium">Quiz JSON</label>
+            <div class="flex items-center gap-2">
+              <span id="quiz-status-dot" class="status-dot bg-slate-200"></span>
+              <span id="quiz-status-label" class="text-xs text-slate-400">—</span>
+              <label class="text-xs text-amber-600 hover:text-amber-700 cursor-pointer ml-2">
+                Upload file
+                <input type="file" accept=".json" class="hidden" onchange="loadFile(event, 'quiz-json')" />
+              </label>
+            </div>
+          </div>
+          <textarea
+            id="quiz-json"
+            rows="10"
+            placeholder='{ "articleId": "my-article", "totalPoints": 100, "parts": [...], ... }'
+            oninput="onQuizInput()"
+            class="w-full font-mono text-xs border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-stone-50"
+          ></textarea>
+          <div id="quiz-errors" class="mt-1.5 space-y-1 hidden"></div>
+        </div>
+
+        <!-- Validation summary bar -->
+        <div id="validation-summary" class="rounded-lg bg-stone-50 border border-stone-200 px-4 py-3 text-xs space-y-1 hidden">
+          <div class="flex gap-4">
+            <span id="sum-article" class="flex items-center gap-1.5"><span class="status-dot bg-slate-200"></span> Article</span>
+            <span id="sum-quiz" class="flex items-center gap-1.5"><span class="status-dot bg-slate-200"></span> Quiz</span>
+            <span id="sum-match" class="flex items-center gap-1.5"><span class="status-dot bg-slate-200"></span> IDs match</span>
+          </div>
+        </div>
+
+        <!-- Challenge toggle -->
+        <div class="flex items-center gap-3">
+          <input type="checkbox" id="is-challenge" class="w-4 h-4 accent-amber-600 cursor-pointer" />
+          <label for="is-challenge" class="text-sm font-medium cursor-pointer select-none">
+            章節挑戰 <span class="text-slate-400 font-normal">(marks this exercise as a chapter challenge)</span>
+          </label>
+        </div>
+
+        <!-- Submit -->
+        <div class="flex justify-end">
+          <button
+            id="submit-btn"
+            onclick="createExercise()"
+            disabled
+            class="px-5 py-2.5 rounded-lg text-sm font-semibold bg-amber-600 text-white
+                   disabled:opacity-40 disabled:cursor-not-allowed
+                   hover:bg-amber-700 active:bg-amber-800 transition-colors"
+          >
+            Create Exercise
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+
+let articleValid = false
+let quizValid = false
+let idsMatch = false
+
+// ── File upload ───────────────────────────────────────────────────────────────
+
+function loadFile(event, targetId) {
+  const file = event.target.files[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    document.getElementById(targetId).value = e.target.result
+    if (targetId === 'article-json') onArticleInput()
+    else onQuizInput()
+  }
+  reader.readAsText(file)
+  event.target.value = ''
+}
+
+// ── Client-side validation ────────────────────────────────────────────────────
+
+function validateArticle(a) {
+  const errs = []
+  if (!a || typeof a !== 'object') return ['Article must be a JSON object']
+  if (!a.id || typeof a.id !== 'string') errs.push('Missing: id (string)')
+  if (!a.title || typeof a.title !== 'string') errs.push('Missing: title (string)')
+  if (!Array.isArray(a.segments) || !a.segments.length) errs.push('Missing/empty: segments[]')
+  if (!Array.isArray(a.footnotes)) errs.push('Missing: footnotes[]')
+  if (!Array.isArray(a.modernTranslation) || !a.modernTranslation.length)
+    errs.push('Missing/empty: modernTranslation[]')
+  return errs
+}
+
+function validateQuiz(q) {
+  if (!q || typeof q !== 'object') return ['Quiz must be a JSON object']
+  const errs = []
+  if (!q.articleId || typeof q.articleId !== 'string') errs.push('Missing: articleId (string)')
+  if (typeof q.totalPoints !== 'number') errs.push('Missing/invalid: totalPoints (must be a number)')
+  if (!Array.isArray(q.parts) || !q.parts.length) errs.push('Missing/empty: parts[]')
+  else {
+    q.parts.forEach((p, pi) => {
+      if (!Array.isArray(p.questions) || !p.questions.length) {
+        errs.push(`parts[${pi}]: empty questions[]`)
+      } else {
+        p.questions.forEach((qq, qi) => {
+          if (!qq.correctAnswer)
+            errs.push(`parts[${pi}].questions[${qi}]: missing correctAnswer`)
+          if (!Array.isArray(qq.options) || qq.options.length < 2)
+            errs.push(`parts[${pi}].questions[${qi}]: needs ≥2 options`)
+        })
+      }
+    })
+  }
+  return errs
+}
+
+// ── Input handlers ─────────────────────────────────────────────────────────────
+
+function parseJSON(id) {
+  try { return JSON.parse(document.getElementById(id).value) }
+  catch { return null }
+}
+
+function setStatus(prefix, valid, errors) {
+  const dot = document.getElementById(`${prefix}-status-dot`)
+  const label = document.getElementById(`${prefix}-status-label`)
+  const errorBox = document.getElementById(`${prefix}-errors`)
+
+  if (!document.getElementById(`${prefix}-json`).value.trim()) {
+    dot.className = 'status-dot bg-slate-200'
+    label.textContent = '—'
+    label.className = 'text-xs text-slate-400'
+    errorBox.classList.add('hidden')
+    errorBox.innerHTML = ''
+    return
+  }
+
+  if (valid) {
+    dot.className = 'status-dot bg-green-500'
+    label.textContent = 'Valid'
+    label.className = 'text-xs text-green-600'
+    errorBox.classList.add('hidden')
+    errorBox.innerHTML = ''
+  } else {
+    dot.className = 'status-dot bg-red-500'
+    label.textContent = `${errors.length} error${errors.length > 1 ? 's' : ''}`
+    label.className = 'text-xs text-red-600'
+    errorBox.innerHTML = errors.map(e =>
+      `<p class="text-xs text-red-600 flex items-start gap-1.5"><span class="mt-0.5 shrink-0">✕</span>${e}</p>`
+    ).join('')
+    errorBox.classList.remove('hidden')
+  }
+}
+
+function setSummaryItem(id, ok) {
+  const el = document.getElementById(id)
+  const dot = el.querySelector('.status-dot')
+  if (ok) {
+    dot.className = 'status-dot bg-green-500'
+    el.classList.remove('text-slate-400')
+    el.classList.add('text-green-700')
+  } else {
+    dot.className = 'status-dot bg-red-400'
+    el.classList.remove('text-green-700')
+    el.classList.add('text-slate-400')
+  }
+}
+
+function onArticleInput() {
+  const parsed = parseJSON('article-json')
+  const errs = parsed ? validateArticle(parsed) : (document.getElementById('article-json').value.trim() ? ['Invalid JSON'] : [])
+  articleValid = !!parsed && errs.length === 0
+  setStatus('article', articleValid, errs)
+  updateSummary()
+}
+
+function onQuizInput() {
+  const parsed = parseJSON('quiz-json')
+  const errs = parsed ? validateQuiz(parsed) : (document.getElementById('quiz-json').value.trim() ? ['Invalid JSON'] : [])
+  quizValid = !!parsed && errs.length === 0
+  setStatus('quiz', quizValid, errs)
+  updateSummary()
+}
+
+function updateSummary() {
+  const artRaw = document.getElementById('article-json').value.trim()
+  const quizRaw = document.getElementById('quiz-json').value.trim()
+
+  if (!artRaw && !quizRaw) {
+    document.getElementById('validation-summary').classList.add('hidden')
+    document.getElementById('submit-btn').disabled = true
+    return
+  }
+
+  document.getElementById('validation-summary').classList.remove('hidden')
+
+  const art = parseJSON('article-json')
+  const quiz = parseJSON('quiz-json')
+  idsMatch = !!(art && quiz && art.id && art.id === quiz.articleId)
+
+  setSummaryItem('sum-article', articleValid)
+  setSummaryItem('sum-quiz', quizValid)
+  setSummaryItem('sum-match', idsMatch)
+
+  document.getElementById('submit-btn').disabled = !(articleValid && quizValid && idsMatch)
+}
+
+// ── API calls ─────────────────────────────────────────────────────────────────
+
+async function loadExercises() {
+  const list = document.getElementById('exercise-list')
+  list.innerHTML = '<div class="px-4 py-8 text-center text-sm text-slate-400">Loading…</div>'
+  try {
+    const res = await fetch('/api/exercises')
+    const data = await res.json()
+    if (!data.length) {
+      list.innerHTML = '<div class="px-4 py-8 text-center text-sm text-slate-400">No exercises yet</div>'
+      return
+    }
+    list.innerHTML = data.map((ex, i) => `
+      <div class="px-4 py-3 hover:bg-stone-50 group flex items-start justify-between gap-2">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <span class="w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs font-bold flex items-center justify-center shrink-0">${i + 1}</span>
+            <p class="text-sm font-medium truncate">${escHtml(ex.title)}</p>
+            ${ex.type === 'challenge' ? '<span class="shrink-0 text-[10px] bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded">挑戰</span>' : ''}
+          </div>
+          <p class="text-xs text-slate-400 mt-0.5 pl-7">${escHtml(ex.id)} · ${ex.totalQuestions}Q · ${ex.totalPoints}pt</p>
+          ${ex.source ? `<p class="text-xs text-slate-400 pl-7 truncate">${escHtml(ex.source)}</p>` : ''}
+        </div>
+        <button
+          onclick="deleteExercise('${escHtml(ex.id)}')"
+          title="Delete"
+          class="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5 text-slate-400 hover:text-red-500 text-xs px-1.5 py-0.5 rounded hover:bg-red-50"
+        >✕</button>
+      </div>
+    `).join('')
+  } catch (e) {
+    list.innerHTML = `<div class="px-4 py-4 text-sm text-red-500">Failed to load: ${escHtml(e.message)}</div>`
+  }
+}
+
+async function createExercise() {
+  const btn = document.getElementById('submit-btn')
+  btn.disabled = true
+  btn.textContent = 'Creating…'
+
+  const article = parseJSON('article-json')
+  const quiz = parseJSON('quiz-json')
+
+  try {
+    const res = await fetch('/api/exercises', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ article, quiz, isChallenge: document.getElementById('is-challenge').checked }),
+    })
+    const data = await res.json()
+
+    if (!res.ok) {
+      if (data.articleErrors?.length) {
+        setStatus('article', false, data.articleErrors)
+        articleValid = false
+      }
+      if (data.quizErrors?.length) {
+        setStatus('quiz', false, data.quizErrors)
+        quizValid = false
+      }
+      updateSummary()
+      showToast(`Error: ${(data.articleErrors || []).concat(data.quizErrors || []).join('; ') || data.error}`, 'error')
+    } else {
+      showToast(`Exercise "${data.id}" created successfully!`, 'success')
+      document.getElementById('is-challenge').checked = false
+      document.getElementById('article-json').value = ''
+      document.getElementById('quiz-json').value = ''
+      articleValid = false
+      quizValid = false
+      idsMatch = false
+      setStatus('article', false, [])
+      setStatus('quiz', false, [])
+      document.getElementById('validation-summary').classList.add('hidden')
+      loadExercises()
+    }
+  } catch (e) {
+    showToast(`Network error: ${e.message}`, 'error')
+  }
+
+  btn.textContent = 'Create Exercise'
+  updateSummary()
+}
+
+async function deleteExercise(id) {
+  if (!confirm(`Delete exercise "${id}"?\n\nThis will remove the JSON files and unregister the exercise.`)) return
+  try {
+    const res = await fetch(`/api/exercises/${encodeURIComponent(id)}`, { method: 'DELETE' })
+    const data = await res.json()
+    if (!res.ok) {
+      showToast(`Error: ${data.error}`, 'error')
+    } else {
+      showToast(`Deleted "${id}"`, 'success')
+      loadExercises()
+    }
+  } catch (e) {
+    showToast(`Network error: ${e.message}`, 'error')
+  }
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+
+let toastTimer = null
+
+function showToast(msg, type = 'success') {
+  const el = document.getElementById('toast')
+  el.textContent = msg
+  el.className = type === 'success'
+    ? 'show bg-green-700 text-white'
+    : 'show bg-red-700 text-white'
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => { el.className = type === 'success' ? 'bg-green-700 text-white' : 'bg-red-700 text-white' }, 3500)
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+
+loadExercises()
+</script>
+</body>
+</html>
