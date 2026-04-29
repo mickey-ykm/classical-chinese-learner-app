@@ -41,3 +41,7 @@ app-example
 # generated native folders
 /ios
 /android
+
+# admin portal runtime artifacts
+admin/assessment-config.json
+admin/assessment-results/

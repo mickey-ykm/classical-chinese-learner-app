@@ -31,112 +31,332 @@
   </div>
 </header>
 
-<div class="max-w-6xl mx-auto p-6 flex gap-6">
+<div class="max-w-6xl mx-auto px-6">
 
-  <!-- Left panel: Exercise list -->
-  <aside class="w-72 shrink-0">
-    <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
-      <div class="px-4 py-3 border-b border-stone-100 flex items-center justify-between">
-        <h2 class="font-semibold text-sm">Exercises</h2>
-        <button onclick="loadExercises()" class="text-xs text-amber-600 hover:text-amber-700">Refresh</button>
+  <!-- Tab navigation -->
+  <div class="flex gap-1 border-b border-stone-200 pt-5 mb-6">
+    <button id="tab-exercises" onclick="showTab('exercises')" class="tab-active px-5 pb-2.5 text-sm font-medium">Exercises</button>
+    <button id="tab-assessment" onclick="showTab('assessment')" class="px-5 pb-2.5 text-sm font-medium text-slate-500 hover:text-slate-700">LLM Assessment</button>
+  </div>
+
+  <!-- ── Exercises panel ──────────────────────────────────────────────────── -->
+  <div id="panel-exercises" class="flex gap-6 pb-6">
+
+    <!-- Left panel: Exercise list -->
+    <aside class="w-72 shrink-0">
+      <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+        <div class="px-4 py-3 border-b border-stone-100 flex items-center justify-between">
+          <h2 class="font-semibold text-sm">Exercises</h2>
+          <button onclick="loadExercises()" class="text-xs text-amber-600 hover:text-amber-700">Refresh</button>
+        </div>
+        <div id="exercise-list" class="divide-y divide-stone-100 min-h-[120px]">
+          <div class="px-4 py-8 text-center text-sm text-slate-400">Loading…</div>
+        </div>
       </div>
-      <div id="exercise-list" class="divide-y divide-stone-100 min-h-[120px]">
-        <div class="px-4 py-8 text-center text-sm text-slate-400">Loading…</div>
+    </aside>
+
+    <!-- Right panel: Create exercise -->
+    <main class="flex-1 min-w-0">
+      <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-stone-100">
+          <h2 class="font-semibold">New Exercise</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Paste or upload the article and quiz JSON files below.</p>
+        </div>
+
+        <div class="p-6 space-y-6">
+
+          <!-- Article JSON -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-sm font-medium">Article JSON</label>
+              <div class="flex items-center gap-2">
+                <span id="article-status-dot" class="status-dot bg-slate-200"></span>
+                <span id="article-status-label" class="text-xs text-slate-400">—</span>
+                <label class="text-xs text-amber-600 hover:text-amber-700 cursor-pointer ml-2">
+                  Upload file
+                  <input type="file" accept=".json" class="hidden" onchange="loadFile(event, 'article-json')" />
+                </label>
+              </div>
+            </div>
+            <textarea
+              id="article-json"
+              rows="10"
+              placeholder='{ "id": "my-article", "title": "...", "segments": [...], ... }'
+              oninput="onArticleInput()"
+              class="w-full font-mono text-xs border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-stone-50"
+            ></textarea>
+            <div id="article-errors" class="mt-1.5 space-y-1 hidden"></div>
+          </div>
+
+          <!-- Quiz JSON -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-sm font-medium">Quiz JSON</label>
+              <div class="flex items-center gap-2">
+                <span id="quiz-status-dot" class="status-dot bg-slate-200"></span>
+                <span id="quiz-status-label" class="text-xs text-slate-400">—</span>
+                <label class="text-xs text-amber-600 hover:text-amber-700 cursor-pointer ml-2">
+                  Upload file
+                  <input type="file" accept=".json" class="hidden" onchange="loadFile(event, 'quiz-json')" />
+                </label>
+              </div>
+            </div>
+            <textarea
+              id="quiz-json"
+              rows="10"
+              placeholder='{ "articleId": "my-article", "totalPoints": 100, "parts": [...], ... }'
+              oninput="onQuizInput()"
+              class="w-full font-mono text-xs border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-stone-50"
+            ></textarea>
+            <div id="quiz-errors" class="mt-1.5 space-y-1 hidden"></div>
+          </div>
+
+          <!-- Validation summary bar -->
+          <div id="validation-summary" class="rounded-lg bg-stone-50 border border-stone-200 px-4 py-3 text-xs space-y-1 hidden">
+            <div class="flex gap-4">
+              <span id="sum-article" class="flex items-center gap-1.5"><span class="status-dot bg-slate-200"></span> Article</span>
+              <span id="sum-quiz" class="flex items-center gap-1.5"><span class="status-dot bg-slate-200"></span> Quiz</span>
+              <span id="sum-match" class="flex items-center gap-1.5"><span class="status-dot bg-slate-200"></span> IDs match</span>
+            </div>
+          </div>
+
+          <!-- Challenge toggle -->
+          <div class="flex items-center gap-3">
+            <input type="checkbox" id="is-challenge" class="w-4 h-4 accent-amber-600 cursor-pointer" />
+            <label for="is-challenge" class="text-sm font-medium cursor-pointer select-none">
+              章節挑戰 <span class="text-slate-400 font-normal">(marks this exercise as a chapter challenge)</span>
+            </label>
+          </div>
+
+          <!-- Submit -->
+          <div class="flex justify-end">
+            <button
+              id="submit-btn"
+              onclick="createExercise()"
+              disabled
+              class="px-5 py-2.5 rounded-lg text-sm font-semibold bg-amber-600 text-white
+                     disabled:opacity-40 disabled:cursor-not-allowed
+                     hover:bg-amber-700 active:bg-amber-800 transition-colors"
+            >
+              Create Exercise
+            </button>
+          </div>
+
+        </div>
       </div>
+    </main>
+
+  </div><!-- /panel-exercises -->
+
+  <!-- ── Assessment panel ─────────────────────────────────────────────────── -->
+  <div id="panel-assessment" class="hidden pb-6">
+
+    <div class="grid grid-cols-3 gap-6">
+
+      <!-- Left column: Articles + Models -->
+      <div class="space-y-5">
+
+        <!-- Articles -->
+        <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+          <div class="px-4 py-3 border-b border-stone-100">
+            <h3 class="font-semibold text-sm">Articles</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Select articles to assess</p>
+          </div>
+          <div id="assessment-articles" class="p-4 space-y-3">
+            <div class="text-sm text-slate-400">Loading…</div>
+          </div>
+        </div>
+
+        <!-- Models -->
+        <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+          <div class="px-4 py-3 border-b border-stone-100 flex items-center justify-between">
+            <div>
+              <h3 class="font-semibold text-sm">Models</h3>
+              <p class="text-xs text-slate-400 mt-0.5">OpenRouter model IDs</p>
+            </div>
+            <button onclick="addModel()" class="text-xs text-amber-600 hover:text-amber-700">+ Add</button>
+          </div>
+          <div id="models-list" class="p-4 space-y-2">
+            <div class="text-sm text-slate-400">Loading…</div>
+          </div>
+        </div>
+
+        <!-- Raw article -->
+        <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+          <div class="px-4 py-3 border-b border-stone-100 flex items-center justify-between">
+            <div>
+              <h3 class="font-semibold text-sm">Raw Article</h3>
+              <p class="text-xs text-slate-400 mt-0.5">Paste text not yet in the library</p>
+            </div>
+            <button id="raw-toggle" onclick="toggleRawArticle()" class="text-xs text-amber-600 hover:text-amber-700">+ Add</button>
+          </div>
+          <div id="raw-article-fields" class="hidden p-4 space-y-3">
+            <div>
+              <label class="text-xs font-medium text-slate-600 block mb-1">Title</label>
+              <input type="text" id="raw-title" placeholder="e.g. 桃花源記"
+                class="w-full text-sm border border-stone-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400" />
+            </div>
+            <div>
+              <label class="text-xs font-medium text-slate-600 block mb-1">Classical Chinese Text</label>
+              <textarea id="raw-text" rows="7" placeholder="晉太元中，武陵人捕魚為業…"
+                class="w-full text-xs border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-stone-50"></textarea>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right columns: Prompts -->
+      <div class="col-span-2 space-y-5">
+
+        <!-- Translation prompt -->
+        <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+          <div class="px-4 py-3 border-b border-stone-100">
+            <h3 class="font-semibold text-sm">Translation Prompt</h3>
+            <p class="text-xs text-slate-400 mt-0.5">System prompt for modern Mandarin translation</p>
+          </div>
+          <div class="p-4">
+            <textarea id="translation-prompt" rows="7"
+              class="w-full text-xs font-mono border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-stone-50"
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Quiz prompt -->
+        <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+          <div class="px-4 py-3 border-b border-stone-100">
+            <h3 class="font-semibold text-sm">Quiz Prompt</h3>
+            <p class="text-xs text-slate-400 mt-0.5">System prompt for quiz generation (4 parts, 18 questions)</p>
+          </div>
+          <div class="p-4">
+            <textarea id="quiz-prompt" rows="14"
+              class="w-full text-xs font-mono border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-stone-50"
+            ></textarea>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /grid -->
+
+    <!-- Controls bar -->
+    <div class="mt-5 bg-white rounded-xl border border-stone-200 p-4">
+      <div class="flex items-end gap-4">
+        <div class="flex-1">
+          <label class="text-xs font-medium text-slate-600 block mb-1.5">OpenRouter API Key</label>
+          <input type="password" id="openrouter-key" placeholder="sk-or-v1-…"
+            oninput="updateRunBtn()"
+            class="w-full text-sm border border-stone-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400" />
+        </div>
+        <button id="run-btn" onclick="saveAndRun()" disabled
+          class="shrink-0 px-5 py-2 rounded-lg text-sm font-semibold bg-amber-600 text-white
+                 disabled:opacity-40 disabled:cursor-not-allowed
+                 hover:bg-amber-700 active:bg-amber-800 transition-colors">
+          Run Assessment
+        </button>
+      </div>
+
+      <!-- Progress -->
+      <div id="run-progress" class="hidden mt-4">
+        <div class="flex items-center justify-between text-xs text-slate-500 mb-1.5">
+          <span id="progress-label">Running…</span>
+          <span id="progress-count">0 / 0</span>
+        </div>
+        <div class="w-full bg-stone-200 rounded-full h-1.5">
+          <div id="progress-bar" class="bg-amber-500 h-1.5 rounded-full transition-all duration-500" style="width:0%"></div>
+        </div>
+        <p id="progress-task" class="mt-1.5 text-xs text-slate-400 truncate"></p>
+      </div>
+
+      <!-- Error -->
+      <div id="run-error" class="hidden mt-3 text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"></div>
     </div>
-  </aside>
 
-  <!-- Right panel: Create exercise -->
-  <main class="flex-1 min-w-0">
-    <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
-      <div class="px-6 py-4 border-b border-stone-100">
-        <h2 class="font-semibold">New Exercise</h2>
-        <p class="text-xs text-slate-500 mt-0.5">Paste or upload the article and quiz JSON files below.</p>
-      </div>
-
-      <div class="p-6 space-y-6">
-
-        <!-- Article JSON -->
-        <div>
-          <div class="flex items-center justify-between mb-2">
-            <label class="text-sm font-medium">Article JSON</label>
-            <div class="flex items-center gap-2">
-              <span id="article-status-dot" class="status-dot bg-slate-200"></span>
-              <span id="article-status-label" class="text-xs text-slate-400">—</span>
-              <label class="text-xs text-amber-600 hover:text-amber-700 cursor-pointer ml-2">
-                Upload file
-                <input type="file" accept=".json" class="hidden" onchange="loadFile(event, 'article-json')" />
-              </label>
-            </div>
-          </div>
-          <textarea
-            id="article-json"
-            rows="10"
-            placeholder='{ "id": "my-article", "title": "...", "segments": [...], ... }'
-            oninput="onArticleInput()"
-            class="w-full font-mono text-xs border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-stone-50"
-          ></textarea>
-          <div id="article-errors" class="mt-1.5 space-y-1 hidden"></div>
-        </div>
-
-        <!-- Quiz JSON -->
-        <div>
-          <div class="flex items-center justify-between mb-2">
-            <label class="text-sm font-medium">Quiz JSON</label>
-            <div class="flex items-center gap-2">
-              <span id="quiz-status-dot" class="status-dot bg-slate-200"></span>
-              <span id="quiz-status-label" class="text-xs text-slate-400">—</span>
-              <label class="text-xs text-amber-600 hover:text-amber-700 cursor-pointer ml-2">
-                Upload file
-                <input type="file" accept=".json" class="hidden" onchange="loadFile(event, 'quiz-json')" />
-              </label>
-            </div>
-          </div>
-          <textarea
-            id="quiz-json"
-            rows="10"
-            placeholder='{ "articleId": "my-article", "totalPoints": 100, "parts": [...], ... }'
-            oninput="onQuizInput()"
-            class="w-full font-mono text-xs border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-stone-50"
-          ></textarea>
-          <div id="quiz-errors" class="mt-1.5 space-y-1 hidden"></div>
-        </div>
-
-        <!-- Validation summary bar -->
-        <div id="validation-summary" class="rounded-lg bg-stone-50 border border-stone-200 px-4 py-3 text-xs space-y-1 hidden">
-          <div class="flex gap-4">
-            <span id="sum-article" class="flex items-center gap-1.5"><span class="status-dot bg-slate-200"></span> Article</span>
-            <span id="sum-quiz" class="flex items-center gap-1.5"><span class="status-dot bg-slate-200"></span> Quiz</span>
-            <span id="sum-match" class="flex items-center gap-1.5"><span class="status-dot bg-slate-200"></span> IDs match</span>
-          </div>
-        </div>
-
-        <!-- Challenge toggle -->
-        <div class="flex items-center gap-3">
-          <input type="checkbox" id="is-challenge" class="w-4 h-4 accent-amber-600 cursor-pointer" />
-          <label for="is-challenge" class="text-sm font-medium cursor-pointer select-none">
-            章節挑戰 <span class="text-slate-400 font-normal">(marks this exercise as a chapter challenge)</span>
-          </label>
-        </div>
-
-        <!-- Submit -->
-        <div class="flex justify-end">
-          <button
-            id="submit-btn"
-            onclick="createExercise()"
-            disabled
-            class="px-5 py-2.5 rounded-lg text-sm font-semibold bg-amber-600 text-white
-                   disabled:opacity-40 disabled:cursor-not-allowed
-                   hover:bg-amber-700 active:bg-amber-800 transition-colors"
-          >
-            Create Exercise
+    <!-- Results -->
+    <div id="assessment-results" class="hidden mt-5">
+      <div class="bg-white rounded-xl border border-stone-200 p-4">
+        <h3 class="font-semibold text-sm mb-3">Download Results</h3>
+        <div class="flex gap-3">
+          <button id="dl-summary"
+            class="px-4 py-2 rounded-lg text-sm font-medium border border-stone-200 hover:bg-stone-50 transition-colors">
+            Summary CSV
+          </button>
+          <button id="dl-translations"
+            class="px-4 py-2 rounded-lg text-sm font-medium border border-stone-200 hover:bg-stone-50 transition-colors">
+            Translations CSV
+          </button>
+          <button id="dl-quiz"
+            class="px-4 py-2 rounded-lg text-sm font-medium border border-stone-200 hover:bg-stone-50 transition-colors">
+            Quiz CSV
           </button>
         </div>
-
       </div>
     </div>
-  </main>
-</div>
+
+    <!-- History -->
+    <div class="mt-5">
+      <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+        <div class="px-4 py-3 border-b border-stone-100 flex items-center justify-between">
+          <h3 class="font-semibold text-sm">Assessment History</h3>
+          <button onclick="loadHistory()" class="text-xs text-amber-600 hover:text-amber-700">Refresh</button>
+        </div>
+        <div id="history-list" class="divide-y divide-stone-100 min-h-[60px]">
+          <div class="px-4 py-6 text-center text-sm text-slate-400">Loading…</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /panel-assessment -->
+
+  <!-- ── Detail panel ─────────────────────────────────────────────────────── -->
+  <div id="panel-detail" class="hidden pb-6">
+
+    <!-- Header -->
+    <div class="flex items-center gap-4 mb-5">
+      <button onclick="closeDetail()"
+        class="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors shrink-0">
+        ← Back
+      </button>
+      <div class="flex-1 min-w-0">
+        <h2 class="font-semibold text-base truncate" id="detail-title">—</h2>
+        <p class="text-xs text-slate-400 font-mono" id="detail-run-id">—</p>
+      </div>
+      <div class="flex gap-2 shrink-0">
+        <button id="detail-dl-summary"
+          class="text-xs px-3 py-1.5 rounded-lg border border-stone-200 hover:bg-stone-50 transition-colors">
+          ↓ Summary
+        </button>
+        <button id="detail-dl-translations"
+          class="text-xs px-3 py-1.5 rounded-lg border border-stone-200 hover:bg-stone-50 transition-colors">
+          ↓ Translations
+        </button>
+        <button id="detail-dl-quiz"
+          class="text-xs px-3 py-1.5 rounded-lg border border-stone-200 hover:bg-stone-50 transition-colors">
+          ↓ Quiz
+        </button>
+      </div>
+    </div>
+
+    <!-- Sub-tabs -->
+    <div class="flex gap-1 border-b border-stone-200 mb-0">
+      <button id="dtab-summary" onclick="switchDetailTab('summary')"
+        class="tab-active px-5 pb-2.5 text-sm font-medium">Summary</button>
+      <button id="dtab-translations" onclick="switchDetailTab('translations')"
+        class="px-5 pb-2.5 text-sm font-medium text-slate-500 hover:text-slate-700">Translations</button>
+      <button id="dtab-quiz" onclick="switchDetailTab('quiz')"
+        class="px-5 pb-2.5 text-sm font-medium text-slate-500 hover:text-slate-700">Quiz</button>
+    </div>
+
+    <!-- Table area -->
+    <div class="bg-white rounded-b-xl border border-t-0 border-stone-200 overflow-hidden">
+      <div id="detail-table-container" class="overflow-auto max-h-[65vh]">
+        <div class="px-4 py-8 text-center text-sm text-slate-400">Loading…</div>
+      </div>
+      <div id="detail-row-count" class="px-4 py-2 border-t border-stone-100 text-xs text-slate-400"></div>
+    </div>
+
+  </div><!-- /panel-detail -->
+
+</div><!-- /max-w-6xl -->
 
 <!-- Toast -->
 <div id="toast"></div>
@@ -147,6 +367,27 @@
 let articleValid = false
 let quizValid = false
 let idsMatch = false
+
+// ── Tab navigation ────────────────────────────────────────────────────────────
+
+let assessmentTabLoaded = false
+
+function showTab(name) {
+  const isExercises = name === 'exercises'
+  document.getElementById('panel-exercises').classList.toggle('hidden', !isExercises)
+  document.getElementById('panel-assessment').classList.toggle('hidden', isExercises)
+  document.getElementById('panel-detail').classList.add('hidden')
+  document.getElementById('tab-exercises').className = isExercises
+    ? 'tab-active px-5 pb-2.5 text-sm font-medium'
+    : 'px-5 pb-2.5 text-sm font-medium text-slate-500 hover:text-slate-700'
+  document.getElementById('tab-assessment').className = !isExercises
+    ? 'tab-active px-5 pb-2.5 text-sm font-medium'
+    : 'px-5 pb-2.5 text-sm font-medium text-slate-500 hover:text-slate-700'
+  if (!isExercises && !assessmentTabLoaded) {
+    assessmentTabLoaded = true
+    loadAssessmentConfig()
+  }
+}
 
 // ── File upload ───────────────────────────────────────────────────────────────
 
@@ -291,7 +532,7 @@ function updateSummary() {
   document.getElementById('submit-btn').disabled = !(articleValid && quizValid && idsMatch)
 }
 
-// ── API calls ─────────────────────────────────────────────────────────────────
+// ── Exercises API calls ───────────────────────────────────────────────────────
 
 async function loadExercises() {
   const list = document.getElementById('exercise-list')
@@ -406,6 +647,307 @@ function showToast(msg, type = 'success') {
 
 function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+}
+
+// ── Assessment config ──────────────────────────────────────────────────────────
+
+let modelList = []
+
+async function loadAssessmentConfig() {
+  try {
+    const [cfgRes, artRes] = await Promise.all([
+      fetch('/api/assessment/config'),
+      fetch('/api/exercises'),
+    ])
+    const cfg = await cfgRes.json()
+    const articles = await artRes.json()
+
+    document.getElementById('translation-prompt').value = cfg.translationPrompt || ''
+    document.getElementById('quiz-prompt').value = cfg.quizPrompt || ''
+    renderModels(cfg.models || [])
+    renderAssessmentArticles(articles)
+    loadHistory()
+  } catch (e) {
+    showToast('Failed to load assessment config: ' + e.message, 'error')
+  }
+}
+
+function renderAssessmentArticles(articles) {
+  const container = document.getElementById('assessment-articles')
+  if (!articles.length) {
+    container.innerHTML = '<p class="text-xs text-slate-400">No articles found</p>'
+    return
+  }
+  container.innerHTML = articles.map((a, i) => `
+    <label class="flex items-start gap-2.5 cursor-pointer">
+      <input type="checkbox" value="${escHtml(a.id)}" ${i < 2 ? 'checked' : ''}
+        class="mt-0.5 accent-amber-600 w-3.5 h-3.5 shrink-0 cursor-pointer" />
+      <div class="min-w-0">
+        <p class="text-sm font-medium leading-tight">${escHtml(a.title)}</p>
+        <p class="text-xs text-slate-400">${escHtml(a.id)}</p>
+      </div>
+    </label>
+  `).join('')
+}
+
+function renderModels(models) {
+  modelList = [...models]
+  const container = document.getElementById('models-list')
+  if (!modelList.length) {
+    container.innerHTML = '<p class="text-xs text-slate-400">No models configured</p>'
+    return
+  }
+  container.innerHTML = modelList.map((m, i) => `
+    <div class="flex gap-2 items-center">
+      <input type="text" value="${escHtml(m)}"
+        oninput="modelList[${i}] = this.value"
+        class="flex-1 text-xs font-mono border border-stone-200 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-stone-50" />
+      <button onclick="removeModel(${i})"
+        class="shrink-0 text-slate-400 hover:text-red-500 text-xs px-1.5 py-1 rounded hover:bg-red-50 transition-colors">✕</button>
+    </div>
+  `).join('')
+}
+
+function addModel() {
+  modelList.push('')
+  renderModels(modelList)
+  const inputs = document.querySelectorAll('#models-list input[type=text]')
+  if (inputs.length) inputs[inputs.length - 1].focus()
+}
+
+function removeModel(i) {
+  modelList.splice(i, 1)
+  renderModels(modelList)
+}
+
+function updateRunBtn() {
+  const key = document.getElementById('openrouter-key').value.trim()
+  document.getElementById('run-btn').disabled = !key
+}
+
+// ── Run assessment ─────────────────────────────────────────────────────────────
+
+let pollTimer = null
+
+async function saveAndRun() {
+  const apiKey = document.getElementById('openrouter-key').value.trim()
+  if (!apiKey) return
+
+  const articleIds = [...document.querySelectorAll('#assessment-articles input[type=checkbox]:checked')].map(el => el.value)
+  const rawText = document.getElementById('raw-text').value.trim()
+  const rawTitle = document.getElementById('raw-title').value.trim() || '自訂文章'
+  const rawArticles = rawText ? [{ id: 'raw-article', title: rawTitle, text: rawText }] : []
+
+  if (!articleIds.length && !rawArticles.length) { showToast('請選擇或輸入至少一篇文章', 'error'); return }
+
+  const models = modelList.filter(m => m.trim())
+  if (!models.length) { showToast('Add at least one model', 'error'); return }
+
+  const translationPrompt = document.getElementById('translation-prompt').value
+  const quizPrompt = document.getElementById('quiz-prompt').value
+
+  // Save config (API key is intentionally excluded)
+  await fetch('/api/assessment/config', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ models, translationPrompt, quizPrompt }),
+  })
+
+  const btn = document.getElementById('run-btn')
+  btn.disabled = true
+  btn.textContent = 'Running…'
+  document.getElementById('assessment-results').classList.add('hidden')
+  document.getElementById('run-error').classList.add('hidden')
+  document.getElementById('run-progress').classList.remove('hidden')
+  document.getElementById('progress-bar').style.width = '0%'
+  document.getElementById('progress-count').textContent = '0 / 0'
+  document.getElementById('progress-task').textContent = ''
+
+  try {
+    const res = await fetch('/api/assessment/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ articleIds, rawArticles, models, translationPrompt, quizPrompt, apiKey }),
+    })
+    const body = await res.json()
+    if (!res.ok) throw new Error(body.error || 'Failed to start run')
+    startPolling(body.runId)
+  } catch (e) {
+    document.getElementById('run-error').textContent = 'Error: ' + e.message
+    document.getElementById('run-error').classList.remove('hidden')
+    btn.disabled = false
+    btn.textContent = 'Run Assessment'
+    updateRunBtn()
+  }
+}
+
+function startPolling(runId) {
+  clearInterval(pollTimer)
+  pollTimer = setInterval(async () => {
+    try {
+      const res = await fetch(`/api/assessment/status/${runId}`)
+      const { status, done, total, error, currentTask } = await res.json()
+      const pct = total > 0 ? Math.round((done / total) * 100) : 0
+      document.getElementById('progress-bar').style.width = pct + '%'
+      document.getElementById('progress-count').textContent = `${done} / ${total}`
+      document.getElementById('progress-label').textContent =
+        status === 'running' ? 'Running…' : status === 'done' ? 'Complete' : 'Error'
+      document.getElementById('progress-task').textContent = currentTask || ''
+
+      if (status === 'done') {
+        clearInterval(pollTimer)
+        renderDownloads(runId)
+        document.getElementById('run-btn').disabled = false
+        document.getElementById('run-btn').textContent = 'Run Assessment'
+        updateRunBtn()
+        showToast('Assessment complete!', 'success')
+      } else if (status === 'error') {
+        clearInterval(pollTimer)
+        document.getElementById('run-error').textContent = 'Run failed: ' + (error || 'Unknown error')
+        document.getElementById('run-error').classList.remove('hidden')
+        document.getElementById('run-btn').disabled = false
+        document.getElementById('run-btn').textContent = 'Run Assessment'
+        updateRunBtn()
+      }
+    } catch (_) { /* ignore transient network errors */ }
+  }, 2000)
+}
+
+function renderDownloads(runId) {
+  const section = document.getElementById('assessment-results')
+  section.classList.remove('hidden')
+  document.getElementById('dl-summary').onclick = () => { window.location.href = `/api/assessment/download/${runId}/summary` }
+  document.getElementById('dl-translations').onclick = () => { window.location.href = `/api/assessment/download/${runId}/translations` }
+  document.getElementById('dl-quiz').onclick = () => { window.location.href = `/api/assessment/download/${runId}/quiz` }
+  loadHistory()
+}
+
+function toggleRawArticle() {
+  const fields = document.getElementById('raw-article-fields')
+  const btn = document.getElementById('raw-toggle')
+  const nowHidden = fields.classList.toggle('hidden')
+  btn.textContent = nowHidden ? '+ Add' : '— Remove'
+}
+
+async function loadHistory() {
+  const list = document.getElementById('history-list')
+  try {
+    const res = await fetch('/api/assessment/history')
+    const history = await res.json()
+    if (!history.length) {
+      list.innerHTML = '<div class="px-4 py-6 text-center text-sm text-slate-400">No assessments yet</div>'
+      return
+    }
+    list.innerHTML = history.map((entry) => {
+      const dlBtns = ['summary', 'translations', 'quiz']
+        .filter((t) => entry.files[t])
+        .map((t) => `<button onclick="window.location.href='/api/assessment/download/${escHtml(entry.runId)}/${t}'"
+          class="text-xs px-3 py-1.5 rounded-lg border border-stone-200 hover:bg-stone-50 transition-colors capitalize">${t}</button>`)
+        .join('')
+      const hasFiles = Object.keys(entry.files).length > 0
+      return `
+        <div class="px-4 py-3 flex items-center justify-between gap-4">
+          <div class="min-w-0">
+            <p class="text-sm font-medium">${escHtml(entry.datetime || '—')}</p>
+            <p class="text-xs text-slate-400 font-mono">${escHtml(entry.runId)}</p>
+          </div>
+          <div class="flex gap-2 shrink-0 items-center">
+            ${hasFiles ? `<button onclick="openDetail('${escHtml(entry.runId)}', '${escHtml(entry.datetime || entry.runId)}')"
+              class="text-xs px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100 transition-colors font-medium">View</button>` : ''}
+            ${dlBtns}
+          </div>
+        </div>`
+    }).join('')
+  } catch (e) {
+    list.innerHTML = `<div class="px-4 py-4 text-sm text-red-500">Failed to load: ${escHtml(e.message)}</div>`
+  }
+}
+
+// ── Assessment detail view ────────────────────────────────────────────────────
+
+let detailRunId = null
+const detailCache = {}
+
+function openDetail(runId, datetime) {
+  detailRunId = runId
+  if (!detailCache[runId]) detailCache[runId] = {}
+  document.getElementById('detail-title').textContent = datetime || runId
+  document.getElementById('detail-run-id').textContent = 'Run ID: ' + runId
+  for (const t of ['summary', 'translations', 'quiz']) {
+    document.getElementById(`detail-dl-${t}`).onclick = () => {
+      window.location.href = `/api/assessment/download/${runId}/${t}`
+    }
+  }
+  document.getElementById('panel-assessment').classList.add('hidden')
+  document.getElementById('panel-detail').classList.remove('hidden')
+  // Ensure assessment tab appears active
+  document.getElementById('tab-assessment').className = 'tab-active px-5 pb-2.5 text-sm font-medium'
+  document.getElementById('tab-exercises').className = 'px-5 pb-2.5 text-sm font-medium text-slate-500 hover:text-slate-700'
+  switchDetailTab('summary')
+}
+
+function closeDetail() {
+  document.getElementById('panel-detail').classList.add('hidden')
+  document.getElementById('panel-assessment').classList.remove('hidden')
+}
+
+function switchDetailTab(type) {
+  for (const t of ['summary', 'translations', 'quiz']) {
+    document.getElementById(`dtab-${t}`).className = t === type
+      ? 'tab-active px-5 pb-2.5 text-sm font-medium'
+      : 'px-5 pb-2.5 text-sm font-medium text-slate-500 hover:text-slate-700'
+  }
+  loadDetailTab(detailRunId, type)
+}
+
+async function loadDetailTab(runId, type) {
+  const container = document.getElementById('detail-table-container')
+  const countEl = document.getElementById('detail-row-count')
+  if (detailCache[runId]?.[type]) {
+    const { headers, rows } = detailCache[runId][type]
+    renderTable(container, headers, rows)
+    countEl.textContent = `${rows.length} row${rows.length !== 1 ? 's' : ''}`
+    return
+  }
+  container.innerHTML = '<div class="px-4 py-8 text-center text-sm text-slate-400">Loading…</div>'
+  countEl.textContent = ''
+  try {
+    const res = await fetch(`/api/assessment/data/${runId}/${type}`)
+    if (!res.ok) {
+      const body = await res.json()
+      container.innerHTML = `<div class="px-4 py-4 text-sm text-red-500">${escHtml(body.error || 'Not found')}</div>`
+      return
+    }
+    const { headers, rows } = await res.json()
+    detailCache[runId][type] = { headers, rows }
+    renderTable(container, headers, rows)
+    countEl.textContent = `${rows.length} row${rows.length !== 1 ? 's' : ''}`
+  } catch (e) {
+    container.innerHTML = `<div class="px-4 py-4 text-sm text-red-500">Failed: ${escHtml(e.message)}</div>`
+    countEl.textContent = ''
+  }
+}
+
+function renderTable(container, headers, rows) {
+  if (!headers.length) {
+    container.innerHTML = '<div class="px-4 py-8 text-center text-sm text-slate-400">No data</div>'
+    return
+  }
+  const thCells = headers.map((h) =>
+    `<th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600 bg-stone-50 whitespace-nowrap border-r border-stone-200 last:border-r-0 sticky top-0 z-10">${escHtml(h)}</th>`
+  ).join('')
+  const trs = rows.map((row, ri) => {
+    const tds = headers.map((_, ci) => {
+      const val = row[ci] ?? ''
+      const display = val.length > 100 ? val.slice(0, 100) + '…' : val
+      return `<td class="px-3 py-2 text-xs text-slate-700 border-r border-stone-100 last:border-r-0 max-w-[220px] truncate align-top" title="${escHtml(val)}">${escHtml(display)}</td>`
+    }).join('')
+    return `<tr class="${ri % 2 === 0 ? 'bg-white' : 'bg-stone-50/60'} border-b border-stone-100 last:border-b-0">${tds}</tr>`
+  }).join('')
+  container.innerHTML = `<table class="border-collapse min-w-max w-full">
+    <thead class="border-b border-stone-200"><tr>${thCells}</tr></thead>
+    <tbody>${trs}</tbody>
+  </table>`
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
