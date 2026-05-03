@@ -281,7 +281,7 @@ function estimateCost(model, promptTokens, completionTokens) {
   return (promptTokens * p.input + completionTokens * p.output) / 1_000_000
 }
 
-async function callOpenRouter(model, messages, apiKey, retries = 1) {
+async function callOpenRouter(model, messages, apiKey, retries = 4) {
   const t0 = Date.now()
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
@@ -299,7 +299,10 @@ async function callOpenRouter(model, messages, apiKey, retries = 1) {
   })
   const latencyMs = Date.now() - t0
   if (res.status === 429 && retries > 0) {
-    await new Promise((r) => setTimeout(r, 10_000))
+    const retryAfter = res.headers.get("Retry-After")
+    const attempt = 4 - retries
+    const delay = retryAfter ? parseInt(retryAfter, 10) * 1000 : Math.min(10_000 * Math.pow(2, attempt), 80_000)
+    await new Promise((r) => setTimeout(r, delay))
     return callOpenRouter(model, messages, apiKey, retries - 1)
   }
   if (!res.ok) {
@@ -623,6 +626,7 @@ app.post("/api/assessment/run", (req, res) => {
           } catch (e) { tResult.error = e.message }
           results.push(tResult)
           runs[runId].done++
+          await new Promise((r) => setTimeout(r, 2_000))
 
           // Quiz call
           runs[runId].currentTask = `出題 · ${shortModel} · ${art.title}`
@@ -636,6 +640,7 @@ app.post("/api/assessment/run", (req, res) => {
           } catch (e) { qResult.error = e.message }
           results.push(qResult)
           runs[runId].done++
+          await new Promise((r) => setTimeout(r, 2_000))
         }
       }
 
