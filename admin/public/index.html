@@ -74,6 +74,20 @@
               <input type="checkbox" id="lib-is-challenge" disabled class="w-4 h-4 accent-amber-600 cursor-pointer" />
               <label for="lib-is-challenge" class="text-sm text-slate-600 cursor-pointer select-none">章節挑戰</label>
             </div>
+            <div class="flex items-center gap-1.5">
+              <label for="lib-level" class="text-sm text-slate-600 select-none">程度</label>
+              <select id="lib-level" disabled
+                class="text-sm border border-stone-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-white disabled:bg-stone-50 disabled:text-slate-400">
+                <option value="">—</option>
+                <option value="1">中一</option>
+                <option value="2">中二</option>
+                <option value="3">中三</option>
+                <option value="4">中四</option>
+                <option value="5">中五</option>
+                <option value="6">中六</option>
+                <option value="7">高中DSE</option>
+              </select>
+            </div>
             <button id="lib-edit-btn" onclick="editLibrary()"
               class="px-4 py-1.5 rounded-lg text-sm font-medium border border-stone-200 hover:bg-stone-50 transition-colors">
               Edit
@@ -292,6 +306,20 @@
               <label class="text-xs font-medium text-slate-600 block mb-1">Source</label>
               <input type="text" id="na-source" placeholder="e.g. 《陶淵明集》"
                 class="w-full text-sm border border-stone-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400" />
+            </div>
+            <div>
+              <label class="text-xs font-medium text-slate-600 block mb-1">Level 程度</label>
+              <select id="na-level"
+                class="w-full text-sm border border-stone-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-white">
+                <option value="">— unset —</option>
+                <option value="1">中一</option>
+                <option value="2">中二</option>
+                <option value="3">中三</option>
+                <option value="4">中四</option>
+                <option value="5">中五</option>
+                <option value="6">中六</option>
+                <option value="7">高中DSE</option>
+              </select>
             </div>
             <div>
               <label class="text-xs font-medium text-slate-600 block mb-1">Classical Chinese Text <span class="text-red-400">*</span></label>
@@ -792,6 +820,7 @@ let currentLibId = null
 let libOriginalArticle = null
 let libOriginalQuiz = null
 let libOriginalIsChallenge = false
+let libOriginalLevel = null
 let libArticleValid = false
 let libQuizValid = false
 
@@ -875,16 +904,19 @@ async function previewExercise(id) {
     libOriginalArticle = data.article
     libOriginalQuiz = data.quiz
     libOriginalIsChallenge = !!data.isChallenge
+    libOriginalLevel = data.level ?? null
 
     document.getElementById('lib-preview-title').textContent = data.article.title || id
     document.getElementById('lib-article-json').value = JSON.stringify(data.article, null, 2)
     document.getElementById('lib-quiz-json').value = JSON.stringify(data.quiz, null, 2)
     document.getElementById('lib-is-challenge').checked = libOriginalIsChallenge
+    document.getElementById('lib-level').value = libOriginalLevel ?? ''
 
     // Ensure read-only mode
     document.getElementById('lib-article-json').readOnly = true
     document.getElementById('lib-quiz-json').readOnly = true
     document.getElementById('lib-is-challenge').disabled = true
+    document.getElementById('lib-level').disabled = true
     document.getElementById('lib-edit-btn').classList.remove('hidden')
     document.getElementById('lib-save-btn').classList.add('hidden')
     document.getElementById('lib-cancel-btn').classList.add('hidden')
@@ -898,6 +930,7 @@ function editLibrary() {
   document.getElementById('lib-article-json').readOnly = false
   document.getElementById('lib-quiz-json').readOnly = false
   document.getElementById('lib-is-challenge').disabled = false
+  document.getElementById('lib-level').disabled = false
   document.getElementById('lib-edit-btn').classList.add('hidden')
   document.getElementById('lib-save-btn').classList.remove('hidden')
   document.getElementById('lib-cancel-btn').classList.remove('hidden')
@@ -921,7 +954,12 @@ async function saveLibraryEdits() {
     const res = await fetch(`/api/exercises/${encodeURIComponent(currentLibId)}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ article, quiz, isChallenge: document.getElementById('lib-is-challenge').checked }),
+      body: JSON.stringify({
+        article,
+        quiz,
+        isChallenge: document.getElementById('lib-is-challenge').checked,
+        level: parseInt(document.getElementById('lib-level').value) || null,
+      }),
     })
     const data = await res.json()
     if (!res.ok) {
@@ -932,10 +970,12 @@ async function saveLibraryEdits() {
       libOriginalArticle = article
       libOriginalQuiz = quiz
       libOriginalIsChallenge = document.getElementById('lib-is-challenge').checked
+      libOriginalLevel = parseInt(document.getElementById('lib-level').value) || null
       document.getElementById('lib-preview-title').textContent = article.title || currentLibId
       document.getElementById('lib-article-json').readOnly = true
       document.getElementById('lib-quiz-json').readOnly = true
       document.getElementById('lib-is-challenge').disabled = true
+      document.getElementById('lib-level').disabled = true
       document.getElementById('lib-edit-btn').classList.remove('hidden')
       document.getElementById('lib-save-btn').classList.add('hidden')
       document.getElementById('lib-cancel-btn').classList.add('hidden')
@@ -953,6 +993,7 @@ function cancelLibraryEdit() {
   document.getElementById('lib-article-json').readOnly = true
   document.getElementById('lib-quiz-json').readOnly = true
   document.getElementById('lib-is-challenge').disabled = true
+  document.getElementById('lib-level').disabled = true
   document.getElementById('lib-edit-btn').classList.remove('hidden')
   document.getElementById('lib-save-btn').classList.add('hidden')
   document.getElementById('lib-cancel-btn').classList.add('hidden')
@@ -967,6 +1008,7 @@ function cancelLibraryEdit() {
     document.getElementById('lib-quiz-errors').classList.add('hidden')
   }
   document.getElementById('lib-is-challenge').checked = libOriginalIsChallenge
+  document.getElementById('lib-level').value = libOriginalLevel ?? ''
 }
 
 // ── Raw Article Modal ─────────────────────────────────────────────────────────
@@ -1200,7 +1242,12 @@ async function saveRawToLibrary() {
     const res = await fetch('/api/exercises', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ article, quiz, isChallenge: document.getElementById('raw-modal-is-challenge').checked }),
+      body: JSON.stringify({
+        article,
+        quiz,
+        isChallenge: document.getElementById('raw-modal-is-challenge').checked,
+        level: parseInt(document.getElementById('raw-modal-level').value) || null,
+      }),
     })
     const data = await res.json()
     if (!res.ok) {
@@ -1540,7 +1587,12 @@ async function saveGeneratedArticle() {
     const res = await fetch('/api/exercises', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ article, quiz, isChallenge: document.getElementById('na-is-challenge').checked }),
+      body: JSON.stringify({
+        article,
+        quiz,
+        isChallenge: document.getElementById('na-is-challenge').checked,
+        level: parseInt(document.getElementById('na-level').value) || null,
+      }),
     })
     const data = await res.json()
     if (!res.ok) {
@@ -1551,6 +1603,7 @@ async function saveGeneratedArticle() {
       document.getElementById('na-article-json').value = ''
       document.getElementById('na-quiz-json').value = ''
       document.getElementById('na-is-challenge').checked = false
+      document.getElementById('na-level').value = ''
       naArticleValid = false
       naQuizValid = false
     }
@@ -1674,11 +1727,27 @@ loadAssessmentConfig()
           <div id="raw-modal-quiz-errors" class="mt-1.5 space-y-1 hidden"></div>
         </div>
 
-        <div class="flex items-center gap-3">
-          <input type="checkbox" id="raw-modal-is-challenge" class="w-4 h-4 accent-amber-600 cursor-pointer" />
-          <label for="raw-modal-is-challenge" class="text-sm cursor-pointer select-none">
-            章節挑戰 <span class="text-slate-400 font-normal">(mark as chapter challenge)</span>
-          </label>
+        <div class="flex items-center gap-4 flex-wrap">
+          <div class="flex items-center gap-3">
+            <input type="checkbox" id="raw-modal-is-challenge" class="w-4 h-4 accent-amber-600 cursor-pointer" />
+            <label for="raw-modal-is-challenge" class="text-sm cursor-pointer select-none">
+              章節挑戰 <span class="text-slate-400 font-normal">(mark as chapter challenge)</span>
+            </label>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <label for="raw-modal-level" class="text-sm text-slate-600 select-none">Level 程度</label>
+            <select id="raw-modal-level"
+              class="text-sm border border-stone-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-white">
+              <option value="">— unset —</option>
+              <option value="1">中一</option>
+              <option value="2">中二</option>
+              <option value="3">中三</option>
+              <option value="4">中四</option>
+              <option value="5">中五</option>
+              <option value="6">中六</option>
+              <option value="7">高中DSE</option>
+            </select>
+          </div>
         </div>
 
         <!-- Action buttons -->

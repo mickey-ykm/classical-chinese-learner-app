@@ -94,7 +94,7 @@ app.get("/api/exercises", (_req, res) => {
 
 app.post("/api/exercises", (req, res) => {
   try {
-    const { article, quiz, isChallenge } = req.body || {}
+    const { article, quiz, isChallenge, level } = req.body || {}
 
     const articleErrors = validateArticle(article)
     const quizErrors = validateQuiz(quiz)
@@ -134,6 +134,7 @@ app.post("/api/exercises", (req, res) => {
       totalQuestions,
     }
     if (isChallenge) entry.type = "challenge"
+    if (level >= 1 && level <= 7) entry.level = level
     index.push(entry)
     writeIndex(index)
 
@@ -160,7 +161,7 @@ app.get("/api/exercises/:id", (req, res) => {
 
     const article = JSON.parse(fs.readFileSync(articlePath, "utf8"))
     const quiz = JSON.parse(fs.readFileSync(quizPath, "utf8"))
-    res.json({ article, quiz, isChallenge: entry.type === "challenge" })
+    res.json({ article, quiz, isChallenge: entry.type === "challenge", level: entry.level ?? null })
   } catch (e) {
     res.status(500).json({ error: e.message })
   }
@@ -169,7 +170,7 @@ app.get("/api/exercises/:id", (req, res) => {
 app.put("/api/exercises/:id", (req, res) => {
   try {
     const { id } = req.params
-    const { article, quiz, isChallenge } = req.body || {}
+    const { article, quiz, isChallenge, level } = req.body || {}
 
     const index = readIndex()
     const entryIdx = index.findIndex((e) => e.id === id)
@@ -200,6 +201,7 @@ app.put("/api/exercises/:id", (req, res) => {
     const totalQuestions = quiz.parts.reduce((s, p) => s + p.questions.length, 0)
     const entry = { id, title: article.title, source: article.source || "", totalPoints: quiz.totalPoints, totalQuestions }
     if (isChallenge) entry.type = "challenge"
+    if (level >= 1 && level <= 7) entry.level = level
     index[entryIdx] = entry
     writeIndex(index)
 
