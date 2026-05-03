@@ -35,7 +35,7 @@
 
   <!-- Tab navigation -->
   <div class="flex gap-1 border-b border-stone-200 pt-5 mb-6">
-    <button id="tab-exercises" onclick="showTab('exercises')" class="tab-active px-5 pb-2.5 text-sm font-medium">Gemini Json Input (legacy)</button>
+    <button id="tab-exercises" onclick="showTab('exercises')" class="tab-active px-5 pb-2.5 text-sm font-medium">Article Library</button>
     <button id="tab-new-article" onclick="showTab('new-article')" class="px-5 pb-2.5 text-sm font-medium text-slate-500 hover:text-slate-700">Add a new article</button>
     <button id="tab-assessment" onclick="showTab('assessment')" class="px-5 pb-2.5 text-sm font-medium text-slate-500 hover:text-slate-700">LLM Assessment</button>
   </div>
@@ -56,95 +56,66 @@
       </div>
     </aside>
 
-    <!-- Right panel: Create exercise -->
+    <!-- Right panel: Preview / Edit -->
     <main class="flex-1 min-w-0">
-      <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
-        <div class="px-6 py-4 border-b border-stone-100">
-          <h2 class="font-semibold">New Exercise</h2>
-          <p class="text-xs text-slate-500 mt-0.5">Paste or upload the article and quiz JSON files below.</p>
+
+      <div id="lib-empty" class="bg-white rounded-xl border border-stone-200 p-12 text-center">
+        <p class="text-sm text-slate-400">Select an article from the list to preview its JSON files</p>
+      </div>
+
+      <div id="lib-preview" class="hidden bg-white rounded-xl border border-stone-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-stone-100 flex items-center justify-between gap-4">
+          <div class="min-w-0">
+            <h2 class="font-semibold truncate" id="lib-preview-title">—</h2>
+            <p class="text-xs text-slate-500 font-mono mt-0.5" id="lib-preview-id">—</p>
+          </div>
+          <div class="flex items-center gap-3 shrink-0">
+            <div class="flex items-center gap-2">
+              <input type="checkbox" id="lib-is-challenge" disabled class="w-4 h-4 accent-amber-600 cursor-pointer" />
+              <label for="lib-is-challenge" class="text-sm text-slate-600 cursor-pointer select-none">章節挑戰</label>
+            </div>
+            <button id="lib-edit-btn" onclick="editLibrary()"
+              class="px-4 py-1.5 rounded-lg text-sm font-medium border border-stone-200 hover:bg-stone-50 transition-colors">
+              Edit
+            </button>
+            <button id="lib-save-btn" onclick="saveLibraryEdits()" disabled
+              class="hidden px-4 py-1.5 rounded-lg text-sm font-semibold bg-green-600 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-green-700 transition-colors">
+              Save
+            </button>
+            <button id="lib-cancel-btn" onclick="cancelLibraryEdit()"
+              class="hidden px-4 py-1.5 rounded-lg text-sm font-medium border border-stone-200 hover:bg-stone-50 transition-colors">
+              Cancel
+            </button>
+          </div>
         </div>
 
-        <div class="p-6 space-y-6">
+        <div class="p-6 space-y-5">
 
           <!-- Article JSON -->
           <div>
-            <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center justify-between mb-1.5">
               <label class="text-sm font-medium">Article JSON</label>
-              <div class="flex items-center gap-2">
-                <span id="article-status-dot" class="status-dot bg-slate-200"></span>
-                <span id="article-status-label" class="text-xs text-slate-400">—</span>
-                <label class="text-xs text-amber-600 hover:text-amber-700 cursor-pointer ml-2">
-                  Upload file
-                  <input type="file" accept=".json" class="hidden" onchange="loadFile(event, 'article-json')" />
-                </label>
-              </div>
+              <span id="lib-article-status" class="text-xs text-slate-400"></span>
             </div>
-            <textarea
-              id="article-json"
-              rows="10"
-              placeholder='{ "id": "my-article", "title": "...", "segments": [...], ... }'
-              oninput="onArticleInput()"
-              class="w-full font-mono text-xs border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-stone-50"
-            ></textarea>
-            <div id="article-errors" class="mt-1.5 space-y-1 hidden"></div>
+            <textarea id="lib-article-json" rows="14" readonly oninput="onLibArticleInput()"
+              class="w-full font-mono text-xs border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-stone-50"></textarea>
+            <div id="lib-article-errors" class="mt-1.5 space-y-1 hidden"></div>
           </div>
 
           <!-- Quiz JSON -->
           <div>
-            <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center justify-between mb-1.5">
               <label class="text-sm font-medium">Quiz JSON</label>
-              <div class="flex items-center gap-2">
-                <span id="quiz-status-dot" class="status-dot bg-slate-200"></span>
-                <span id="quiz-status-label" class="text-xs text-slate-400">—</span>
-                <label class="text-xs text-amber-600 hover:text-amber-700 cursor-pointer ml-2">
-                  Upload file
-                  <input type="file" accept=".json" class="hidden" onchange="loadFile(event, 'quiz-json')" />
-                </label>
-              </div>
+              <span id="lib-quiz-status" class="text-xs text-slate-400"></span>
             </div>
-            <textarea
-              id="quiz-json"
-              rows="10"
-              placeholder='{ "articleId": "my-article", "totalPoints": 100, "parts": [...], ... }'
-              oninput="onQuizInput()"
-              class="w-full font-mono text-xs border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-stone-50"
-            ></textarea>
-            <div id="quiz-errors" class="mt-1.5 space-y-1 hidden"></div>
-          </div>
-
-          <!-- Validation summary bar -->
-          <div id="validation-summary" class="rounded-lg bg-stone-50 border border-stone-200 px-4 py-3 text-xs space-y-1 hidden">
-            <div class="flex gap-4">
-              <span id="sum-article" class="flex items-center gap-1.5"><span class="status-dot bg-slate-200"></span> Article</span>
-              <span id="sum-quiz" class="flex items-center gap-1.5"><span class="status-dot bg-slate-200"></span> Quiz</span>
-              <span id="sum-match" class="flex items-center gap-1.5"><span class="status-dot bg-slate-200"></span> IDs match</span>
-            </div>
-          </div>
-
-          <!-- Challenge toggle -->
-          <div class="flex items-center gap-3">
-            <input type="checkbox" id="is-challenge" class="w-4 h-4 accent-amber-600 cursor-pointer" />
-            <label for="is-challenge" class="text-sm font-medium cursor-pointer select-none">
-              章節挑戰 <span class="text-slate-400 font-normal">(marks this exercise as a chapter challenge)</span>
-            </label>
-          </div>
-
-          <!-- Submit -->
-          <div class="flex justify-end">
-            <button
-              id="submit-btn"
-              onclick="createExercise()"
-              disabled
-              class="px-5 py-2.5 rounded-lg text-sm font-semibold bg-amber-600 text-white
-                     disabled:opacity-40 disabled:cursor-not-allowed
-                     hover:bg-amber-700 active:bg-amber-800 transition-colors"
-            >
-              Create Exercise
-            </button>
+            <textarea id="lib-quiz-json" rows="14" readonly oninput="onLibQuizInput()"
+              class="w-full font-mono text-xs border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-stone-50"></textarea>
+            <div id="lib-quiz-errors" class="mt-1.5 space-y-1 hidden"></div>
           </div>
 
         </div>
       </div>
+
     </main>
 
   </div><!-- /panel-exercises -->
@@ -182,26 +153,17 @@
           </div>
         </div>
 
-        <!-- Raw article -->
+        <!-- Raw article queue -->
         <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
           <div class="px-4 py-3 border-b border-stone-100 flex items-center justify-between">
             <div>
               <h3 class="font-semibold text-sm">Raw Article</h3>
-              <p class="text-xs text-slate-400 mt-0.5">Paste text not yet in the library</p>
+              <p class="text-xs text-slate-400 mt-0.5">Generate &amp; add to assessment</p>
             </div>
-            <button id="raw-toggle" onclick="toggleRawArticle()" class="text-xs text-amber-600 hover:text-amber-700">+ Add</button>
+            <button onclick="openRawArticleModal()" class="text-xs text-amber-600 hover:text-amber-700">+ Add</button>
           </div>
-          <div id="raw-article-fields" class="hidden p-4 space-y-3">
-            <div>
-              <label class="text-xs font-medium text-slate-600 block mb-1">Title</label>
-              <input type="text" id="raw-title" placeholder="e.g. 桃花源記"
-                class="w-full text-sm border border-stone-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400" />
-            </div>
-            <div>
-              <label class="text-xs font-medium text-slate-600 block mb-1">Classical Chinese Text</label>
-              <textarea id="raw-text" rows="7" placeholder="晉太元中，武陵人捕魚為業…"
-                class="w-full text-xs border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-stone-50"></textarea>
-            </div>
+          <div id="raw-articles-queue" class="p-4 space-y-2">
+            <p class="text-xs text-slate-400">No raw articles queued</p>
           </div>
         </div>
 
@@ -519,10 +481,6 @@
 <script>
 // ── State ─────────────────────────────────────────────────────────────────────
 
-let articleValid = false
-let quizValid = false
-let idsMatch = false
-
 // ── Tab navigation ────────────────────────────────────────────────────────────
 
 let assessmentTabLoaded = false
@@ -545,21 +503,6 @@ function showTab(name) {
     newArticleTabLoaded = true
     loadNewArticleConfig()
   }
-}
-
-// ── File upload ───────────────────────────────────────────────────────────────
-
-function loadFile(event, targetId) {
-  const file = event.target.files[0]
-  if (!file) return
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    document.getElementById(targetId).value = e.target.result
-    if (targetId === 'article-json') onArticleInput()
-    else onQuizInput()
-  }
-  reader.readAsText(file)
-  event.target.value = ''
 }
 
 // ── Client-side validation ────────────────────────────────────────────────────
@@ -602,97 +545,6 @@ function validateQuiz(q) {
   return errs
 }
 
-// ── Input handlers ─────────────────────────────────────────────────────────────
-
-function parseJSON(id) {
-  try { return JSON.parse(document.getElementById(id).value) }
-  catch { return null }
-}
-
-function setStatus(prefix, valid, errors) {
-  const dot = document.getElementById(`${prefix}-status-dot`)
-  const label = document.getElementById(`${prefix}-status-label`)
-  const errorBox = document.getElementById(`${prefix}-errors`)
-
-  if (!document.getElementById(`${prefix}-json`).value.trim()) {
-    dot.className = 'status-dot bg-slate-200'
-    label.textContent = '—'
-    label.className = 'text-xs text-slate-400'
-    errorBox.classList.add('hidden')
-    errorBox.innerHTML = ''
-    return
-  }
-
-  if (valid) {
-    dot.className = 'status-dot bg-green-500'
-    label.textContent = 'Valid'
-    label.className = 'text-xs text-green-600'
-    errorBox.classList.add('hidden')
-    errorBox.innerHTML = ''
-  } else {
-    dot.className = 'status-dot bg-red-500'
-    label.textContent = `${errors.length} error${errors.length > 1 ? 's' : ''}`
-    label.className = 'text-xs text-red-600'
-    errorBox.innerHTML = errors.map(e =>
-      `<p class="text-xs text-red-600 flex items-start gap-1.5"><span class="mt-0.5 shrink-0">✕</span>${e}</p>`
-    ).join('')
-    errorBox.classList.remove('hidden')
-  }
-}
-
-function setSummaryItem(id, ok) {
-  const el = document.getElementById(id)
-  const dot = el.querySelector('.status-dot')
-  if (ok) {
-    dot.className = 'status-dot bg-green-500'
-    el.classList.remove('text-slate-400')
-    el.classList.add('text-green-700')
-  } else {
-    dot.className = 'status-dot bg-red-400'
-    el.classList.remove('text-green-700')
-    el.classList.add('text-slate-400')
-  }
-}
-
-function onArticleInput() {
-  const parsed = parseJSON('article-json')
-  const errs = parsed ? validateArticle(parsed) : (document.getElementById('article-json').value.trim() ? ['Invalid JSON'] : [])
-  articleValid = !!parsed && errs.length === 0
-  setStatus('article', articleValid, errs)
-  updateSummary()
-}
-
-function onQuizInput() {
-  const parsed = parseJSON('quiz-json')
-  const errs = parsed ? validateQuiz(parsed) : (document.getElementById('quiz-json').value.trim() ? ['Invalid JSON'] : [])
-  quizValid = !!parsed && errs.length === 0
-  setStatus('quiz', quizValid, errs)
-  updateSummary()
-}
-
-function updateSummary() {
-  const artRaw = document.getElementById('article-json').value.trim()
-  const quizRaw = document.getElementById('quiz-json').value.trim()
-
-  if (!artRaw && !quizRaw) {
-    document.getElementById('validation-summary').classList.add('hidden')
-    document.getElementById('submit-btn').disabled = true
-    return
-  }
-
-  document.getElementById('validation-summary').classList.remove('hidden')
-
-  const art = parseJSON('article-json')
-  const quiz = parseJSON('quiz-json')
-  idsMatch = !!(art && quiz && art.id && art.id === quiz.articleId)
-
-  setSummaryItem('sum-article', articleValid)
-  setSummaryItem('sum-quiz', quizValid)
-  setSummaryItem('sum-match', idsMatch)
-
-  document.getElementById('submit-btn').disabled = !(articleValid && quizValid && idsMatch)
-}
-
 // ── Exercises API calls ───────────────────────────────────────────────────────
 
 async function loadExercises() {
@@ -706,7 +558,8 @@ async function loadExercises() {
       return
     }
     list.innerHTML = data.map((ex, i) => `
-      <div class="px-4 py-3 hover:bg-stone-50 group flex items-start justify-between gap-2">
+      <div class="px-4 py-3 hover:bg-stone-50 group flex items-start justify-between gap-2 cursor-pointer${currentLibId === ex.id ? ' bg-amber-50' : ''}"
+           onclick="previewExercise('${escHtml(ex.id)}')">
         <div class="min-w-0">
           <div class="flex items-center gap-2">
             <span class="w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs font-bold flex items-center justify-center shrink-0">${i + 1}</span>
@@ -717,7 +570,7 @@ async function loadExercises() {
           ${ex.source ? `<p class="text-xs text-slate-400 pl-7 truncate">${escHtml(ex.source)}</p>` : ''}
         </div>
         <button
-          onclick="deleteExercise('${escHtml(ex.id)}')"
+          onclick="event.stopPropagation(); deleteExercise('${escHtml(ex.id)}')"
           title="Delete"
           class="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5 text-slate-400 hover:text-red-500 text-xs px-1.5 py-0.5 rounded hover:bg-red-50"
         >✕</button>
@@ -726,54 +579,6 @@ async function loadExercises() {
   } catch (e) {
     list.innerHTML = `<div class="px-4 py-4 text-sm text-red-500">Failed to load: ${escHtml(e.message)}</div>`
   }
-}
-
-async function createExercise() {
-  const btn = document.getElementById('submit-btn')
-  btn.disabled = true
-  btn.textContent = 'Creating…'
-
-  const article = parseJSON('article-json')
-  const quiz = parseJSON('quiz-json')
-
-  try {
-    const res = await fetch('/api/exercises', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ article, quiz, isChallenge: document.getElementById('is-challenge').checked }),
-    })
-    const data = await res.json()
-
-    if (!res.ok) {
-      if (data.articleErrors?.length) {
-        setStatus('article', false, data.articleErrors)
-        articleValid = false
-      }
-      if (data.quizErrors?.length) {
-        setStatus('quiz', false, data.quizErrors)
-        quizValid = false
-      }
-      updateSummary()
-      showToast(`Error: ${(data.articleErrors || []).concat(data.quizErrors || []).join('; ') || data.error}`, 'error')
-    } else {
-      showToast(`Exercise "${data.id}" created successfully!`, 'success')
-      document.getElementById('is-challenge').checked = false
-      document.getElementById('article-json').value = ''
-      document.getElementById('quiz-json').value = ''
-      articleValid = false
-      quizValid = false
-      idsMatch = false
-      setStatus('article', false, [])
-      setStatus('quiz', false, [])
-      document.getElementById('validation-summary').classList.add('hidden')
-      loadExercises()
-    }
-  } catch (e) {
-    showToast(`Network error: ${e.message}`, 'error')
-  }
-
-  btn.textContent = 'Create Exercise'
-  updateSummary()
 }
 
 async function deleteExercise(id) {
@@ -895,9 +700,7 @@ async function saveAndRun() {
   if (!apiKey) return
 
   const articleIds = [...document.querySelectorAll('#assessment-articles input[type=checkbox]:checked')].map(el => el.value)
-  const rawText = document.getElementById('raw-text').value.trim()
-  const rawTitle = document.getElementById('raw-title').value.trim() || '自訂文章'
-  const rawArticles = rawText ? [{ id: 'raw-article', title: rawTitle, text: rawText }] : []
+  const rawArticles = rawArticlesQueue.map(item => ({ id: item.id, title: item.title, text: item.text }))
 
   if (!articleIds.length && !rawArticles.length) { showToast('請選擇或輸入至少一篇文章', 'error'); return }
 
@@ -983,11 +786,436 @@ function renderDownloads(runId) {
   loadHistory()
 }
 
-function toggleRawArticle() {
-  const fields = document.getElementById('raw-article-fields')
-  const btn = document.getElementById('raw-toggle')
-  const nowHidden = fields.classList.toggle('hidden')
-  btn.textContent = nowHidden ? '+ Add' : '— Remove'
+// ── Article Library ───────────────────────────────────────────────────────────
+
+let currentLibId = null
+let libOriginalArticle = null
+let libOriginalQuiz = null
+let libOriginalIsChallenge = false
+let libArticleValid = false
+let libQuizValid = false
+
+function setLibStatus(prefix, valid, errors) {
+  const statusEl = document.getElementById(`lib-${prefix}-status`)
+  const errorBox = document.getElementById(`lib-${prefix}-errors`)
+  if (valid) {
+    statusEl.textContent = 'Valid'
+    statusEl.className = 'text-xs text-green-600'
+    errorBox.classList.add('hidden')
+    errorBox.innerHTML = ''
+  } else if (errors.length) {
+    statusEl.textContent = `${errors.length} error${errors.length > 1 ? 's' : ''}`
+    statusEl.className = 'text-xs text-red-600'
+    errorBox.innerHTML = errors.map((e) =>
+      `<p class="text-xs text-red-600 flex items-start gap-1.5"><span class="mt-0.5 shrink-0">✕</span>${escHtml(e)}</p>`
+    ).join('')
+    errorBox.classList.remove('hidden')
+  } else {
+    statusEl.textContent = ''
+    statusEl.className = 'text-xs text-slate-400'
+    errorBox.classList.add('hidden')
+    errorBox.innerHTML = ''
+  }
+}
+
+function onLibArticleInput() {
+  let parsed = null
+  try { parsed = JSON.parse(document.getElementById('lib-article-json').value) } catch (_) {}
+  const errs = parsed
+    ? validateArticle(parsed)
+    : document.getElementById('lib-article-json').value.trim() ? ['Invalid JSON'] : []
+  libArticleValid = !!parsed && errs.length === 0
+  setLibStatus('article', libArticleValid, errs)
+  updateLibSaveBtn()
+}
+
+function onLibQuizInput() {
+  let parsed = null
+  try { parsed = JSON.parse(document.getElementById('lib-quiz-json').value) } catch (_) {}
+  const errs = parsed
+    ? validateQuiz(parsed)
+    : document.getElementById('lib-quiz-json').value.trim() ? ['Invalid JSON'] : []
+  libQuizValid = !!parsed && errs.length === 0
+  setLibStatus('quiz', libQuizValid, errs)
+  updateLibSaveBtn()
+}
+
+function updateLibSaveBtn() {
+  let art = null, quiz = null
+  try { art = JSON.parse(document.getElementById('lib-article-json').value) } catch (_) {}
+  try { quiz = JSON.parse(document.getElementById('lib-quiz-json').value) } catch (_) {}
+  const idsOk = !!(art && quiz && art.id && art.id === quiz.articleId)
+  document.getElementById('lib-save-btn').disabled = !(libArticleValid && libQuizValid && idsOk)
+}
+
+async function previewExercise(id) {
+  currentLibId = id
+  libArticleValid = false
+  libQuizValid = false
+
+  document.getElementById('lib-empty').classList.add('hidden')
+  document.getElementById('lib-preview').classList.remove('hidden')
+  document.getElementById('lib-preview-title').textContent = '…'
+  document.getElementById('lib-preview-id').textContent = id
+  document.getElementById('lib-article-json').value = 'Loading…'
+  document.getElementById('lib-quiz-json').value = ''
+  document.getElementById('lib-article-status').textContent = ''
+  document.getElementById('lib-quiz-status').textContent = ''
+  document.getElementById('lib-article-errors').classList.add('hidden')
+  document.getElementById('lib-quiz-errors').classList.add('hidden')
+
+  // Re-render list to highlight selected item
+  loadExercises()
+
+  try {
+    const res = await fetch(`/api/exercises/${encodeURIComponent(id)}`)
+    if (!res.ok) throw new Error('Failed to load')
+    const data = await res.json()
+
+    libOriginalArticle = data.article
+    libOriginalQuiz = data.quiz
+    libOriginalIsChallenge = !!data.isChallenge
+
+    document.getElementById('lib-preview-title').textContent = data.article.title || id
+    document.getElementById('lib-article-json').value = JSON.stringify(data.article, null, 2)
+    document.getElementById('lib-quiz-json').value = JSON.stringify(data.quiz, null, 2)
+    document.getElementById('lib-is-challenge').checked = libOriginalIsChallenge
+
+    // Ensure read-only mode
+    document.getElementById('lib-article-json').readOnly = true
+    document.getElementById('lib-quiz-json').readOnly = true
+    document.getElementById('lib-is-challenge').disabled = true
+    document.getElementById('lib-edit-btn').classList.remove('hidden')
+    document.getElementById('lib-save-btn').classList.add('hidden')
+    document.getElementById('lib-cancel-btn').classList.add('hidden')
+  } catch (e) {
+    document.getElementById('lib-preview-title').textContent = 'Error'
+    document.getElementById('lib-article-json').value = 'Failed to load: ' + e.message
+  }
+}
+
+function editLibrary() {
+  document.getElementById('lib-article-json').readOnly = false
+  document.getElementById('lib-quiz-json').readOnly = false
+  document.getElementById('lib-is-challenge').disabled = false
+  document.getElementById('lib-edit-btn').classList.add('hidden')
+  document.getElementById('lib-save-btn').classList.remove('hidden')
+  document.getElementById('lib-cancel-btn').classList.remove('hidden')
+  onLibArticleInput()
+  onLibQuizInput()
+  document.getElementById('lib-article-json').focus()
+}
+
+async function saveLibraryEdits() {
+  let article, quiz
+  try { article = JSON.parse(document.getElementById('lib-article-json').value) }
+  catch (_) { showToast('Article JSON is invalid', 'error'); return }
+  try { quiz = JSON.parse(document.getElementById('lib-quiz-json').value) }
+  catch (_) { showToast('Quiz JSON is invalid', 'error'); return }
+
+  const btn = document.getElementById('lib-save-btn')
+  btn.disabled = true
+  btn.textContent = 'Saving…'
+
+  try {
+    const res = await fetch(`/api/exercises/${encodeURIComponent(currentLibId)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ article, quiz, isChallenge: document.getElementById('lib-is-challenge').checked }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      const msg = (data.articleErrors || []).concat(data.quizErrors || []).join('; ') || data.error
+      showToast('Save failed: ' + msg, 'error')
+    } else {
+      showToast('Saved successfully!', 'success')
+      libOriginalArticle = article
+      libOriginalQuiz = quiz
+      libOriginalIsChallenge = document.getElementById('lib-is-challenge').checked
+      document.getElementById('lib-preview-title').textContent = article.title || currentLibId
+      document.getElementById('lib-article-json').readOnly = true
+      document.getElementById('lib-quiz-json').readOnly = true
+      document.getElementById('lib-is-challenge').disabled = true
+      document.getElementById('lib-edit-btn').classList.remove('hidden')
+      document.getElementById('lib-save-btn').classList.add('hidden')
+      document.getElementById('lib-cancel-btn').classList.add('hidden')
+      loadExercises()
+    }
+  } catch (e) {
+    showToast('Network error: ' + e.message, 'error')
+  }
+
+  btn.textContent = 'Save'
+  updateLibSaveBtn()
+}
+
+function cancelLibraryEdit() {
+  document.getElementById('lib-article-json').readOnly = true
+  document.getElementById('lib-quiz-json').readOnly = true
+  document.getElementById('lib-is-challenge').disabled = true
+  document.getElementById('lib-edit-btn').classList.remove('hidden')
+  document.getElementById('lib-save-btn').classList.add('hidden')
+  document.getElementById('lib-cancel-btn').classList.add('hidden')
+  if (libOriginalArticle) {
+    document.getElementById('lib-article-json').value = JSON.stringify(libOriginalArticle, null, 2)
+    document.getElementById('lib-article-status').textContent = ''
+    document.getElementById('lib-article-errors').classList.add('hidden')
+  }
+  if (libOriginalQuiz) {
+    document.getElementById('lib-quiz-json').value = JSON.stringify(libOriginalQuiz, null, 2)
+    document.getElementById('lib-quiz-status').textContent = ''
+    document.getElementById('lib-quiz-errors').classList.add('hidden')
+  }
+  document.getElementById('lib-is-challenge').checked = libOriginalIsChallenge
+}
+
+// ── Raw Article Modal ─────────────────────────────────────────────────────────
+
+let rawArticlesQueue = []
+let rawModalGenerateTimer = null
+let rawModalArticleValid = false
+let rawModalQuizValid = false
+
+function updateRawGenerateBtn() {
+  const title = document.getElementById('raw-modal-title').value.trim()
+  const text = document.getElementById('raw-modal-text').value.trim()
+  const key = document.getElementById('raw-modal-api-key').value.trim()
+  document.getElementById('raw-modal-generate-btn').disabled = !title || !text || !key
+}
+
+function openRawArticleModal() {
+  if (modelList.length) {
+    const preferred = 'qwen/qwen3.6-flash'
+    document.getElementById('raw-modal-model').value =
+      modelList.includes(preferred) ? preferred : modelList[0]
+  }
+  const existingKey = document.getElementById('openrouter-key').value
+  if (existingKey && !document.getElementById('raw-modal-api-key').value) {
+    document.getElementById('raw-modal-api-key').value = existingKey
+  }
+  document.getElementById('raw-modal').classList.remove('hidden')
+  document.body.style.overflow = 'hidden'
+  updateRawGenerateBtn()
+}
+
+function closeRawArticleModal() {
+  document.getElementById('raw-modal').classList.add('hidden')
+  document.body.style.overflow = ''
+  clearInterval(rawModalGenerateTimer)
+}
+
+function setRawModalStatus(prefix, valid, errors) {
+  const statusEl = document.getElementById(`raw-modal-${prefix}-status`)
+  const errorBox = document.getElementById(`raw-modal-${prefix}-errors`)
+  if (valid) {
+    statusEl.textContent = 'Valid'
+    statusEl.className = 'text-xs text-green-600'
+    errorBox.classList.add('hidden')
+    errorBox.innerHTML = ''
+  } else if (errors.length) {
+    statusEl.textContent = `${errors.length} error${errors.length > 1 ? 's' : ''}`
+    statusEl.className = 'text-xs text-red-600'
+    errorBox.innerHTML = errors.map((e) =>
+      `<p class="text-xs text-red-600 flex items-start gap-1.5"><span class="mt-0.5 shrink-0">✕</span>${escHtml(e)}</p>`
+    ).join('')
+    errorBox.classList.remove('hidden')
+  } else {
+    statusEl.textContent = ''
+    statusEl.className = 'text-xs text-slate-400'
+    errorBox.classList.add('hidden')
+    errorBox.innerHTML = ''
+  }
+}
+
+function onRawModalArticleInput() {
+  let parsed = null
+  try { parsed = JSON.parse(document.getElementById('raw-modal-article-json').value) } catch (_) {}
+  const errs = parsed
+    ? validateArticle(parsed)
+    : document.getElementById('raw-modal-article-json').value.trim() ? ['Invalid JSON'] : []
+  rawModalArticleValid = !!parsed && errs.length === 0
+  setRawModalStatus('article', rawModalArticleValid, errs)
+  updateRawModalActionBtns()
+}
+
+function onRawModalQuizInput() {
+  let parsed = null
+  try { parsed = JSON.parse(document.getElementById('raw-modal-quiz-json').value) } catch (_) {}
+  const errs = parsed
+    ? validateQuiz(parsed)
+    : document.getElementById('raw-modal-quiz-json').value.trim() ? ['Invalid JSON'] : []
+  rawModalQuizValid = !!parsed && errs.length === 0
+  setRawModalStatus('quiz', rawModalQuizValid, errs)
+  updateRawModalActionBtns()
+}
+
+function updateRawModalActionBtns() {
+  let art = null, quiz = null
+  try { art = JSON.parse(document.getElementById('raw-modal-article-json').value) } catch (_) {}
+  try { quiz = JSON.parse(document.getElementById('raw-modal-quiz-json').value) } catch (_) {}
+  const idsOk = !!(art && quiz && art.id && art.id === quiz.articleId)
+  const ok = rawModalArticleValid && rawModalQuizValid && idsOk
+  document.getElementById('raw-modal-add-btn').disabled = !ok
+  document.getElementById('raw-modal-save-btn').disabled = !ok
+}
+
+async function generateRawArticle() {
+  const title = document.getElementById('raw-modal-title').value.trim()
+  const source = document.getElementById('raw-modal-source').value.trim()
+  const text = document.getElementById('raw-modal-text').value.trim()
+  const footnotesText = document.getElementById('raw-modal-footnotes').value.trim()
+  const model = document.getElementById('raw-modal-model').value.trim()
+  const apiKey = document.getElementById('raw-modal-api-key').value.trim()
+
+  // Use prompts from assessment tab if loaded, else fetch them
+  let translationPrompt = document.getElementById('translation-prompt').value || ''
+  let quizPrompt = document.getElementById('quiz-prompt').value || ''
+  if (!translationPrompt || !quizPrompt) {
+    try {
+      const cfg = await fetch('/api/assessment/config').then(r => r.json())
+      translationPrompt = cfg.translationPrompt || ''
+      quizPrompt = cfg.quizPrompt || ''
+      document.getElementById('translation-prompt').value = translationPrompt
+      document.getElementById('quiz-prompt').value = quizPrompt
+      if (!modelList.length) renderModels(cfg.models || [])
+    } catch (_) {}
+  }
+
+  const btn = document.getElementById('raw-modal-generate-btn')
+  btn.disabled = true
+  btn.textContent = 'Generating…'
+  document.getElementById('raw-modal-result').classList.add('hidden')
+  document.getElementById('raw-modal-error').classList.add('hidden')
+  document.getElementById('raw-modal-progress').classList.remove('hidden')
+  document.getElementById('raw-modal-progress-bar').style.width = '0%'
+  document.getElementById('raw-modal-progress-count').textContent = '0 / 2'
+  document.getElementById('raw-modal-progress-step').textContent = ''
+  document.getElementById('raw-modal-progress-label').textContent = 'Running…'
+
+  try {
+    const res = await fetch('/api/generate-article', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, source, text, footnotesText, model, translationPrompt, quizPrompt, apiKey }),
+    })
+    const body = await res.json()
+    if (!res.ok) throw new Error(body.error || 'Failed to start generation')
+    pollRawGenerate(body.runId)
+  } catch (e) {
+    document.getElementById('raw-modal-error').textContent = 'Error: ' + e.message
+    document.getElementById('raw-modal-error').classList.remove('hidden')
+    btn.disabled = false
+    btn.textContent = 'Generate Exercise'
+    updateRawGenerateBtn()
+  }
+}
+
+function pollRawGenerate(runId) {
+  clearInterval(rawModalGenerateTimer)
+  rawModalGenerateTimer = setInterval(async () => {
+    try {
+      const res = await fetch(`/api/generate-article/status/${runId}`)
+      const { status, step, done, total, articleJson, quizJson, error } = await res.json()
+      const pct = total > 0 ? Math.round(done / total * 100) : 0
+      document.getElementById('raw-modal-progress-bar').style.width = pct + '%'
+      document.getElementById('raw-modal-progress-count').textContent = `${done} / ${total}`
+      document.getElementById('raw-modal-progress-step').textContent = step || ''
+      document.getElementById('raw-modal-progress-label').textContent =
+        status === 'running' ? 'Running…' : status === 'done' ? 'Complete' : 'Error'
+
+      if (status === 'done') {
+        clearInterval(rawModalGenerateTimer)
+        document.getElementById('raw-modal-progress-bar').style.width = '100%'
+        document.getElementById('raw-modal-article-json').value = JSON.stringify(articleJson, null, 2)
+        document.getElementById('raw-modal-quiz-json').value = JSON.stringify(quizJson, null, 2)
+        onRawModalArticleInput()
+        onRawModalQuizInput()
+        document.getElementById('raw-modal-result').classList.remove('hidden')
+        document.getElementById('raw-modal-generate-btn').disabled = false
+        document.getElementById('raw-modal-generate-btn').textContent = 'Generate Exercise'
+        updateRawGenerateBtn()
+        showToast('Generation complete!', 'success')
+      } else if (status === 'error') {
+        clearInterval(rawModalGenerateTimer)
+        document.getElementById('raw-modal-error').textContent = 'Generation failed: ' + (error || 'Unknown error')
+        document.getElementById('raw-modal-error').classList.remove('hidden')
+        document.getElementById('raw-modal-generate-btn').disabled = false
+        document.getElementById('raw-modal-generate-btn').textContent = 'Generate Exercise'
+        updateRawGenerateBtn()
+      }
+    } catch (_) { /* ignore transient errors */ }
+  }, 2000)
+}
+
+function renderRawQueue() {
+  const container = document.getElementById('raw-articles-queue')
+  if (!rawArticlesQueue.length) {
+    container.innerHTML = '<p class="text-xs text-slate-400">No raw articles queued</p>'
+    return
+  }
+  container.innerHTML = rawArticlesQueue.map((item, i) => `
+    <div class="flex items-center justify-between gap-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+      <div class="min-w-0">
+        <p class="text-xs font-medium text-amber-800 truncate">${escHtml(item.title)}</p>
+        <p class="text-xs text-amber-600 font-mono">${escHtml(item.id)}</p>
+      </div>
+      <button onclick="removeRawArticle(${i})" class="shrink-0 text-amber-400 hover:text-red-500 text-xs px-1">✕</button>
+    </div>
+  `).join('')
+}
+
+function removeRawArticle(i) {
+  rawArticlesQueue.splice(i, 1)
+  renderRawQueue()
+}
+
+function addRawToAssessment() {
+  let article = null
+  try { article = JSON.parse(document.getElementById('raw-modal-article-json').value) } catch (_) {}
+  if (!article) { showToast('Invalid article JSON', 'error'); return }
+
+  const text = document.getElementById('raw-modal-text').value.trim()
+  rawArticlesQueue.push({
+    id: article.id || 'raw-' + Date.now().toString(36),
+    title: article.title || document.getElementById('raw-modal-title').value.trim(),
+    text,
+  })
+  renderRawQueue()
+  closeRawArticleModal()
+  showToast(`"${article.title}" added to assessment`, 'success')
+}
+
+async function saveRawToLibrary() {
+  let article, quiz
+  try { article = JSON.parse(document.getElementById('raw-modal-article-json').value) }
+  catch (_) { showToast('Article JSON is invalid', 'error'); return }
+  try { quiz = JSON.parse(document.getElementById('raw-modal-quiz-json').value) }
+  catch (_) { showToast('Quiz JSON is invalid', 'error'); return }
+
+  const btn = document.getElementById('raw-modal-save-btn')
+  btn.disabled = true
+  btn.textContent = 'Saving…'
+
+  try {
+    const res = await fetch('/api/exercises', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ article, quiz, isChallenge: document.getElementById('raw-modal-is-challenge').checked }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      showToast(`Error: ${(data.articleErrors || []).concat(data.quizErrors || []).join('; ') || data.error}`, 'error')
+    } else {
+      showToast(`Article "${data.id}" saved to library!`, 'success')
+      closeRawArticleModal()
+      loadExercises()
+    }
+  } catch (e) {
+    showToast(`Network error: ${e.message}`, 'error')
+  }
+
+  btn.textContent = 'Save to Library'
+  updateRawModalActionBtns()
 }
 
 async function loadHistory() {
@@ -1337,6 +1565,141 @@ async function saveGeneratedArticle() {
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 loadExercises()
+assessmentTabLoaded = true
+loadAssessmentConfig()
 </script>
+<!-- ── Raw Article Modal ─────────────────────────────────────────────────── -->
+<div id="raw-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/40" onclick="closeRawArticleModal()"></div>
+  <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+
+    <!-- Modal header -->
+    <div class="px-6 py-4 border-b border-stone-100 flex items-center justify-between sticky top-0 bg-white z-10">
+      <div>
+        <h3 class="font-semibold text-base">Add Raw Article</h3>
+        <p class="text-xs text-slate-400 mt-0.5">Generate article &amp; quiz via LLM, then add to assessment or save to library</p>
+      </div>
+      <button onclick="closeRawArticleModal()" class="text-slate-400 hover:text-slate-700 text-lg leading-none px-1">✕</button>
+    </div>
+
+    <div class="p-6 space-y-4">
+
+      <!-- Title + Source -->
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs font-medium text-slate-600 block mb-1">Title <span class="text-red-400">*</span></label>
+          <input type="text" id="raw-modal-title" placeholder="e.g. 桃花源記" oninput="updateRawGenerateBtn()"
+            class="w-full text-sm border border-stone-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400" />
+        </div>
+        <div>
+          <label class="text-xs font-medium text-slate-600 block mb-1">Source</label>
+          <input type="text" id="raw-modal-source" placeholder="e.g. 《陶淵明集》"
+            class="w-full text-sm border border-stone-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400" />
+        </div>
+      </div>
+
+      <!-- Classical Chinese Text -->
+      <div>
+        <label class="text-xs font-medium text-slate-600 block mb-1">Classical Chinese Text <span class="text-red-400">*</span></label>
+        <textarea id="raw-modal-text" rows="7" oninput="updateRawGenerateBtn()"
+          placeholder="晉太元中，武陵人捕魚為業。緣溪行，忘路之遠近…"
+          class="w-full text-sm border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-stone-50"></textarea>
+        <p class="text-xs text-slate-400 mt-0.5">One sentence per line, or a single block (auto-split at 。！？；)</p>
+      </div>
+
+      <!-- Footnotes -->
+      <div>
+        <label class="text-xs font-medium text-slate-600 block mb-1">Footnotes <span class="text-slate-400 font-normal">(optional)</span></label>
+        <textarea id="raw-modal-footnotes" rows="3"
+          placeholder="武陵：地名，今湖南常德&#10;緣溪：沿著溪流，隨溪走"
+          class="w-full text-sm border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-stone-50"></textarea>
+        <p class="text-xs text-slate-400 mt-0.5">One per line: <code class="bg-stone-100 px-1 rounded">term：explanation</code>. Markers are auto-assigned.</p>
+      </div>
+
+      <!-- Model + API Key -->
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs font-medium text-slate-600 block mb-1">Model</label>
+          <input type="text" id="raw-modal-model" placeholder="e.g. deepseek/deepseek-v4-flash"
+            class="w-full text-sm font-mono border border-stone-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-stone-50" />
+        </div>
+        <div>
+          <label class="text-xs font-medium text-slate-600 block mb-1">OpenRouter API Key <span class="text-red-400">*</span></label>
+          <input type="password" id="raw-modal-api-key" placeholder="sk-or-v1-…" oninput="updateRawGenerateBtn()"
+            class="w-full text-sm border border-stone-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400" />
+        </div>
+      </div>
+
+      <!-- Generate button + progress -->
+      <div>
+        <button id="raw-modal-generate-btn" onclick="generateRawArticle()" disabled
+          class="w-full py-2 rounded-lg text-sm font-semibold bg-amber-600 text-white
+                 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-amber-700 transition-colors">
+          Generate Exercise
+        </button>
+        <div id="raw-modal-progress" class="hidden mt-3">
+          <div class="flex items-center justify-between text-xs text-slate-500 mb-1">
+            <span id="raw-modal-progress-label">Running…</span>
+            <span id="raw-modal-progress-count">0 / 2</span>
+          </div>
+          <div class="w-full bg-stone-200 rounded-full h-1.5">
+            <div id="raw-modal-progress-bar" class="bg-amber-500 h-1.5 rounded-full transition-all duration-500" style="width:0%"></div>
+          </div>
+          <p id="raw-modal-progress-step" class="mt-1 text-xs text-slate-400"></p>
+        </div>
+        <div id="raw-modal-error" class="hidden mt-2 text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"></div>
+      </div>
+
+      <!-- Generated JSON (hidden until generation complete) -->
+      <div id="raw-modal-result" class="hidden space-y-4 pt-4 border-t border-stone-100">
+        <p class="text-xs font-semibold text-slate-600">Review Generated JSON (edit if needed)</p>
+
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-sm font-medium">Article JSON</label>
+            <span id="raw-modal-article-status" class="text-xs text-slate-400"></span>
+          </div>
+          <textarea id="raw-modal-article-json" rows="10" oninput="onRawModalArticleInput()"
+            class="w-full font-mono text-xs border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-stone-50"></textarea>
+          <div id="raw-modal-article-errors" class="mt-1.5 space-y-1 hidden"></div>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-sm font-medium">Quiz JSON</label>
+            <span id="raw-modal-quiz-status" class="text-xs text-slate-400"></span>
+          </div>
+          <textarea id="raw-modal-quiz-json" rows="10" oninput="onRawModalQuizInput()"
+            class="w-full font-mono text-xs border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-stone-50"></textarea>
+          <div id="raw-modal-quiz-errors" class="mt-1.5 space-y-1 hidden"></div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <input type="checkbox" id="raw-modal-is-challenge" class="w-4 h-4 accent-amber-600 cursor-pointer" />
+          <label for="raw-modal-is-challenge" class="text-sm cursor-pointer select-none">
+            章節挑戰 <span class="text-slate-400 font-normal">(mark as chapter challenge)</span>
+          </label>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="flex gap-3 pt-2 border-t border-stone-100">
+          <button id="raw-modal-add-btn" onclick="addRawToAssessment()" disabled
+            class="flex-1 py-2 rounded-lg text-sm font-semibold bg-amber-600 text-white
+                   disabled:opacity-40 disabled:cursor-not-allowed hover:bg-amber-700 transition-colors">
+            Add to Assessment
+          </button>
+          <button id="raw-modal-save-btn" onclick="saveRawToLibrary()" disabled
+            class="flex-1 py-2 rounded-lg text-sm font-semibold bg-green-600 text-white
+                   disabled:opacity-40 disabled:cursor-not-allowed hover:bg-green-700 transition-colors">
+            Save to Library
+          </button>
+        </div>
+
+      </div><!-- /raw-modal-result -->
+
+    </div><!-- /p-6 -->
+  </div><!-- /modal-content -->
+</div><!-- /raw-modal -->
+
 </body>
 </html>

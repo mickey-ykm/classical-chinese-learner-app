@@ -146,6 +146,69 @@ app.post("/api/exercises", (req, res) => {
   }
 })
 
+app.get("/api/exercises/:id", (req, res) => {
+  try {
+    const { id } = req.params
+    const index = readIndex()
+    const entry = index.find((e) => e.id === id)
+    if (!entry) return res.status(404).json({ error: "Exercise not found" })
+
+    const articlePath = path.join(DATA_DIR, "articles", `${id}.json`)
+    const quizPath = path.join(DATA_DIR, "quizzes", `${id}.json`)
+    if (!fs.existsSync(articlePath)) return res.status(404).json({ error: "Article file not found" })
+    if (!fs.existsSync(quizPath)) return res.status(404).json({ error: "Quiz file not found" })
+
+    const article = JSON.parse(fs.readFileSync(articlePath, "utf8"))
+    const quiz = JSON.parse(fs.readFileSync(quizPath, "utf8"))
+    res.json({ article, quiz, isChallenge: entry.type === "challenge" })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
+app.put("/api/exercises/:id", (req, res) => {
+  try {
+    const { id } = req.params
+    const { article, quiz, isChallenge } = req.body || {}
+
+    const index = readIndex()
+    const entryIdx = index.findIndex((e) => e.id === id)
+    if (entryIdx === -1) return res.status(404).json({ error: "Exercise not found" })
+
+    const articleErrors = validateArticle(article)
+    const quizErrors = validateQuiz(quiz)
+    if (articleErrors.length || quizErrors.length) {
+      return res.status(400).json({ articleErrors, quizErrors })
+    }
+
+    if (article.id !== id) {
+      return res.status(400).json({
+        articleErrors: [`article.id "${article.id}" must match exercise id "${id}"`],
+        quizErrors: [],
+      })
+    }
+    if (quiz.articleId !== id) {
+      return res.status(400).json({
+        articleErrors: [],
+        quizErrors: [`quiz.articleId "${quiz.articleId}" must match exercise id "${id}"`],
+      })
+    }
+
+    fs.writeFileSync(path.join(DATA_DIR, "articles", `${id}.json`), JSON.stringify(article, null, 2))
+    fs.writeFileSync(path.join(DATA_DIR, "quizzes",  `${id}.json`), JSON.stringify(quiz, null, 2))
+
+    const totalQuestions = quiz.parts.reduce((s, p) => s + p.questions.length, 0)
+    const entry = { id, title: article.title, source: article.source || "", totalPoints: quiz.totalPoints, totalQuestions }
+    if (isChallenge) entry.type = "challenge"
+    index[entryIdx] = entry
+    writeIndex(index)
+
+    res.json({ success: true })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
 app.delete("/api/exercises/:id", (req, res) => {
   try {
     const { id } = req.params
