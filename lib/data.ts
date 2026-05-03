@@ -8,6 +8,10 @@ const ARTICLES: Record<string, Article> = {
   "mai-you-weng": require("../data/articles/mai-you-weng.json"),
   "chun-ye-xi-yu": require("../data/articles/chun-ye-xi-yu.json"),
   "da-tong-yu-xiao-kang": require("../data/articles/da-tong-yu-xiao-kang.json"),
+  "lun-yu-si-ze": require("../data/articles/lun-yu-si-ze.json"),
+  "er-zi-xue-yi": require("../data/articles/er-zi-xue-yi.json"),
+  "lou-shi-ming": require("../data/articles/lou-shi-ming.json"),
+  "mu-lan-shi-1": require("../data/articles/mu-lan-shi-1.json"),
 }
 
 const QUIZZES: Record<string, Quiz> = {
@@ -17,6 +21,10 @@ const QUIZZES: Record<string, Quiz> = {
   "mai-you-weng": require("../data/quizzes/mai-you-weng.json"),
   "chun-ye-xi-yu": require("../data/quizzes/chun-ye-xi-yu.json"),
   "da-tong-yu-xiao-kang": require("../data/quizzes/da-tong-yu-xiao-kang.json"),
+  "lun-yu-si-ze": require("../data/quizzes/lun-yu-si-ze.json"),
+  "er-zi-xue-yi": require("../data/quizzes/er-zi-xue-yi.json"),
+  "lou-shi-ming": require("../data/quizzes/lou-shi-ming.json"),
+  "mu-lan-shi-1": require("../data/quizzes/mu-lan-shi-1.json"),
 }
 
 export function getArticleIndex(): ArticleEntry[] {
@@ -50,6 +58,10 @@ export const QUIZ_SEQUENCE = [
   "mai-you-weng",
   "chun-ye-xi-yu",
   "da-tong-yu-xiao-kang",
+  "lun-yu-si-ze",
+  "er-zi-xue-yi",
+  "lou-shi-ming",
+  "mu-lan-shi-1",
 ]
 
 export function getNextQuizId(currentId: string): string | null {

@@ -35,7 +35,8 @@
 
   <!-- Tab navigation -->
   <div class="flex gap-1 border-b border-stone-200 pt-5 mb-6">
-    <button id="tab-exercises" onclick="showTab('exercises')" class="tab-active px-5 pb-2.5 text-sm font-medium">Exercises</button>
+    <button id="tab-exercises" onclick="showTab('exercises')" class="tab-active px-5 pb-2.5 text-sm font-medium">Gemini Json Input (legacy)</button>
+    <button id="tab-new-article" onclick="showTab('new-article')" class="px-5 pb-2.5 text-sm font-medium text-slate-500 hover:text-slate-700">Add a new article</button>
     <button id="tab-assessment" onclick="showTab('assessment')" class="px-5 pb-2.5 text-sm font-medium text-slate-500 hover:text-slate-700">LLM Assessment</button>
   </div>
 
@@ -307,6 +308,160 @@
 
   </div><!-- /panel-assessment -->
 
+  <!-- ── New Article panel ──────────────────────────────────────────────────── -->
+  <div id="panel-new-article" class="hidden pb-6">
+
+    <div class="grid grid-cols-2 gap-6">
+
+      <!-- Left: Article input -->
+      <div class="space-y-4">
+        <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+          <div class="px-4 py-3 border-b border-stone-100">
+            <h3 class="font-semibold text-sm">Article Details</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Paste the raw article for AI exercise generation</p>
+          </div>
+          <div class="p-4 space-y-3">
+            <div>
+              <label class="text-xs font-medium text-slate-600 block mb-1">Title <span class="text-red-400">*</span></label>
+              <input type="text" id="na-title" placeholder="e.g. 桃花源記" oninput="updateNaGenerateBtn()"
+                class="w-full text-sm border border-stone-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400" />
+            </div>
+            <div>
+              <label class="text-xs font-medium text-slate-600 block mb-1">Source</label>
+              <input type="text" id="na-source" placeholder="e.g. 《陶淵明集》"
+                class="w-full text-sm border border-stone-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400" />
+            </div>
+            <div>
+              <label class="text-xs font-medium text-slate-600 block mb-1">Classical Chinese Text <span class="text-red-400">*</span></label>
+              <textarea id="na-text" rows="9" oninput="updateNaGenerateBtn()"
+                placeholder="晉太元中，武陵人捕魚為業。緣溪行，忘路之遠近…"
+                class="w-full text-sm border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-stone-50"></textarea>
+              <p class="text-xs text-slate-400 mt-0.5">One sentence per line, or a single block (auto-split at 。！？；)</p>
+            </div>
+            <div>
+              <label class="text-xs font-medium text-slate-600 block mb-1">Footnotes <span class="text-slate-400 font-normal">(optional)</span></label>
+              <textarea id="na-footnotes" rows="4"
+                placeholder="武陵：地名，今湖南常德&#10;緣溪：沿著溪流，隨溪走"
+                class="w-full text-sm border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-stone-50"></textarea>
+              <p class="text-xs text-slate-400 mt-0.5">One per line: <code class="bg-stone-100 px-1 rounded">term：explanation</code>. Markers (1)(2)… are auto-assigned and inserted after each term in the text.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Model + Prompts -->
+      <div class="space-y-4">
+        <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+          <div class="px-4 py-3 border-b border-stone-100">
+            <h3 class="font-semibold text-sm">Model &amp; Prompts</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Pre-loaded from Assessment config</p>
+          </div>
+          <div class="p-4 space-y-3">
+            <div>
+              <label class="text-xs font-medium text-slate-600 block mb-1">Model</label>
+              <input type="text" id="na-model" placeholder="e.g. deepseek/deepseek-v4-flash"
+                class="w-full text-sm font-mono border border-stone-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-stone-50" />
+            </div>
+            <div>
+              <label class="text-xs font-medium text-slate-600 block mb-1">Translation Prompt</label>
+              <textarea id="na-translation-prompt" rows="5"
+                class="w-full text-xs font-mono border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-stone-50"></textarea>
+            </div>
+            <div>
+              <label class="text-xs font-medium text-slate-600 block mb-1">Quiz Prompt</label>
+              <textarea id="na-quiz-prompt" rows="12"
+                class="w-full text-xs font-mono border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-stone-50"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /grid -->
+
+    <!-- Controls bar -->
+    <div class="mt-5 bg-white rounded-xl border border-stone-200 p-4">
+      <div class="flex items-end gap-4">
+        <div class="flex-1">
+          <label class="text-xs font-medium text-slate-600 block mb-1.5">OpenRouter API Key</label>
+          <input type="password" id="na-api-key" placeholder="sk-or-v1-…"
+            oninput="updateNaGenerateBtn()"
+            class="w-full text-sm border border-stone-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400" />
+        </div>
+        <button id="na-generate-btn" onclick="generateArticle()" disabled
+          class="shrink-0 px-5 py-2 rounded-lg text-sm font-semibold bg-amber-600 text-white
+                 disabled:opacity-40 disabled:cursor-not-allowed
+                 hover:bg-amber-700 active:bg-amber-800 transition-colors">
+          Generate Exercise
+        </button>
+      </div>
+      <!-- Progress -->
+      <div id="na-progress" class="hidden mt-4">
+        <div class="flex items-center justify-between text-xs text-slate-500 mb-1.5">
+          <span id="na-progress-label">Running…</span>
+          <span id="na-progress-count">0 / 2</span>
+        </div>
+        <div class="w-full bg-stone-200 rounded-full h-1.5">
+          <div id="na-progress-bar" class="bg-amber-500 h-1.5 rounded-full transition-all duration-500" style="width:0%"></div>
+        </div>
+        <p id="na-progress-step" class="mt-1.5 text-xs text-slate-400"></p>
+      </div>
+      <!-- Error -->
+      <div id="na-error" class="hidden mt-3 text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"></div>
+    </div>
+
+    <!-- Result: review generated JSON -->
+    <div id="na-result" class="hidden mt-5">
+      <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+        <div class="px-4 py-3 border-b border-stone-100">
+          <h3 class="font-semibold text-sm">Review Generated Exercise</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Edit the JSON below if needed, then save to the library</p>
+        </div>
+        <div class="p-4 space-y-5">
+
+          <!-- Article JSON -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-sm font-medium">Article JSON</label>
+              <span id="na-article-status" class="text-xs text-slate-400"></span>
+            </div>
+            <textarea id="na-article-json" rows="14" oninput="onNaArticleInput()"
+              class="w-full font-mono text-xs border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-stone-50"></textarea>
+            <div id="na-article-errors" class="mt-1.5 space-y-1 hidden"></div>
+          </div>
+
+          <!-- Quiz JSON -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-sm font-medium">Quiz JSON</label>
+              <span id="na-quiz-status" class="text-xs text-slate-400"></span>
+            </div>
+            <textarea id="na-quiz-json" rows="14" oninput="onNaQuizInput()"
+              class="w-full font-mono text-xs border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-stone-50"></textarea>
+            <div id="na-quiz-errors" class="mt-1.5 space-y-1 hidden"></div>
+          </div>
+
+          <!-- Save controls -->
+          <div class="flex items-center justify-between pt-3 border-t border-stone-100">
+            <div class="flex items-center gap-3">
+              <input type="checkbox" id="na-is-challenge" class="w-4 h-4 accent-amber-600 cursor-pointer" />
+              <label for="na-is-challenge" class="text-sm font-medium cursor-pointer select-none">
+                章節挑戰 <span class="text-slate-400 font-normal">(mark as chapter challenge)</span>
+              </label>
+            </div>
+            <button id="na-save-btn" onclick="saveGeneratedArticle()" disabled
+              class="px-5 py-2.5 rounded-lg text-sm font-semibold bg-green-600 text-white
+                     disabled:opacity-40 disabled:cursor-not-allowed
+                     hover:bg-green-700 active:bg-green-800 transition-colors">
+              Save to Library
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /panel-new-article -->
+
   <!-- ── Detail panel ─────────────────────────────────────────────────────── -->
   <div id="panel-detail" class="hidden pb-6">
 
@@ -371,21 +526,24 @@ let idsMatch = false
 // ── Tab navigation ────────────────────────────────────────────────────────────
 
 let assessmentTabLoaded = false
+let newArticleTabLoaded = false
+const PANELS = ['exercises', 'new-article', 'assessment']
 
 function showTab(name) {
-  const isExercises = name === 'exercises'
-  document.getElementById('panel-exercises').classList.toggle('hidden', !isExercises)
-  document.getElementById('panel-assessment').classList.toggle('hidden', isExercises)
+  for (const t of PANELS) {
+    document.getElementById(`panel-${t}`).classList.toggle('hidden', t !== name)
+    document.getElementById(`tab-${t}`).className = t === name
+      ? 'tab-active px-5 pb-2.5 text-sm font-medium'
+      : 'px-5 pb-2.5 text-sm font-medium text-slate-500 hover:text-slate-700'
+  }
   document.getElementById('panel-detail').classList.add('hidden')
-  document.getElementById('tab-exercises').className = isExercises
-    ? 'tab-active px-5 pb-2.5 text-sm font-medium'
-    : 'px-5 pb-2.5 text-sm font-medium text-slate-500 hover:text-slate-700'
-  document.getElementById('tab-assessment').className = !isExercises
-    ? 'tab-active px-5 pb-2.5 text-sm font-medium'
-    : 'px-5 pb-2.5 text-sm font-medium text-slate-500 hover:text-slate-700'
-  if (!isExercises && !assessmentTabLoaded) {
+  if (name === 'assessment' && !assessmentTabLoaded) {
     assessmentTabLoaded = true
     loadAssessmentConfig()
+  }
+  if (name === 'new-article' && !newArticleTabLoaded) {
+    newArticleTabLoaded = true
+    loadNewArticleConfig()
   }
 }
 
@@ -432,7 +590,10 @@ function validateQuiz(q) {
         p.questions.forEach((qq, qi) => {
           if (!qq.correctAnswer)
             errs.push(`parts[${pi}].questions[${qi}]: missing correctAnswer`)
-          if (!Array.isArray(qq.options) || qq.options.length < 2)
+          const opts = qq.options
+          const optCount = Array.isArray(opts) ? opts.length
+            : (opts && typeof opts === 'object' ? Object.keys(opts).length : 0)
+          if (optCount < 2)
             errs.push(`parts[${pi}].questions[${qi}]: needs ≥2 options`)
         })
       }
@@ -867,6 +1028,8 @@ async function loadHistory() {
 
 let detailRunId = null
 const detailCache = {}
+let sortDetailCol = -1
+let sortDetailDir = 'asc'
 
 function openDetail(runId, datetime) {
   detailRunId = runId
@@ -881,8 +1044,11 @@ function openDetail(runId, datetime) {
   document.getElementById('panel-assessment').classList.add('hidden')
   document.getElementById('panel-detail').classList.remove('hidden')
   // Ensure assessment tab appears active
-  document.getElementById('tab-assessment').className = 'tab-active px-5 pb-2.5 text-sm font-medium'
-  document.getElementById('tab-exercises').className = 'px-5 pb-2.5 text-sm font-medium text-slate-500 hover:text-slate-700'
+  for (const t of PANELS) {
+    document.getElementById(`tab-${t}`).className = t === 'assessment'
+      ? 'tab-active px-5 pb-2.5 text-sm font-medium'
+      : 'px-5 pb-2.5 text-sm font-medium text-slate-500 hover:text-slate-700'
+  }
   switchDetailTab('summary')
 }
 
@@ -892,6 +1058,8 @@ function closeDetail() {
 }
 
 function switchDetailTab(type) {
+  sortDetailCol = -1
+  sortDetailDir = 'asc'
   for (const t of ['summary', 'translations', 'quiz']) {
     document.getElementById(`dtab-${t}`).className = t === type
       ? 'tab-active px-5 pb-2.5 text-sm font-medium'
@@ -928,19 +1096,44 @@ async function loadDetailTab(runId, type) {
   }
 }
 
+function sortDetailTable(col) {
+  if (sortDetailCol === col) {
+    sortDetailDir = sortDetailDir === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortDetailCol = col
+    sortDetailDir = 'asc'
+  }
+  const activeTab = document.querySelector('[id^="dtab-"].tab-active')?.id.replace('dtab-', '')
+  if (!activeTab || !detailCache[detailRunId]?.[activeTab]) return
+  const { headers, rows } = detailCache[detailRunId][activeTab]
+  const container = document.getElementById('detail-table-container')
+  renderTable(container, headers, rows)
+}
+
 function renderTable(container, headers, rows) {
   if (!headers.length) {
     container.innerHTML = '<div class="px-4 py-8 text-center text-sm text-slate-400">No data</div>'
     return
   }
-  const thCells = headers.map((h) =>
-    `<th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600 bg-stone-50 whitespace-nowrap border-r border-stone-200 last:border-r-0 sticky top-0 z-10">${escHtml(h)}</th>`
-  ).join('')
-  const trs = rows.map((row, ri) => {
+  let displayRows = rows
+  if (sortDetailCol >= 0 && sortDetailCol < headers.length) {
+    displayRows = [...rows].sort((a, b) => {
+      const av = a[sortDetailCol] ?? '', bv = b[sortDetailCol] ?? ''
+      const an = parseFloat(av), bn = parseFloat(bv)
+      const cmp = (!isNaN(an) && !isNaN(bn)) ? an - bn : av.localeCompare(bv, undefined, { numeric: true })
+      return sortDetailDir === 'asc' ? cmp : -cmp
+    })
+  }
+  const thCells = headers.map((h, ci) => {
+    const isActive = ci === sortDetailCol
+    const arrow = isActive ? (sortDetailDir === 'asc' ? ' ▲' : ' ▼') : ' ⇅'
+    const arrowColor = isActive ? 'text-amber-600' : 'text-slate-300'
+    return `<th class="px-3 py-2.5 text-left text-xs font-semibold text-slate-600 bg-stone-50 whitespace-nowrap border-r border-stone-200 last:border-r-0 sticky top-0 z-10 cursor-pointer select-none hover:bg-stone-100" onclick="sortDetailTable(${ci})">${escHtml(h)}<span class="${arrowColor} ml-0.5">${arrow}</span></th>`
+  }).join('')
+  const trs = displayRows.map((row, ri) => {
     const tds = headers.map((_, ci) => {
       const val = row[ci] ?? ''
-      const display = val.length > 100 ? val.slice(0, 100) + '…' : val
-      return `<td class="px-3 py-2 text-xs text-slate-700 border-r border-stone-100 last:border-r-0 max-w-[220px] truncate align-top" title="${escHtml(val)}">${escHtml(display)}</td>`
+      return `<td class="px-3 py-2 text-xs text-slate-700 border-r border-stone-100 last:border-r-0 max-w-[320px] align-top whitespace-pre-wrap break-words">${escHtml(val)}</td>`
     }).join('')
     return `<tr class="${ri % 2 === 0 ? 'bg-white' : 'bg-stone-50/60'} border-b border-stone-100 last:border-b-0">${tds}</tr>`
   }).join('')
@@ -948,6 +1141,197 @@ function renderTable(container, headers, rows) {
     <thead class="border-b border-stone-200"><tr>${thCells}</tr></thead>
     <tbody>${trs}</tbody>
   </table>`
+}
+
+// ── Add New Article ─────────────────────────────────────────────────────────
+
+let naGenerateTimer = null
+let naArticleValid = false
+let naQuizValid = false
+
+async function loadNewArticleConfig() {
+  try {
+    const res = await fetch('/api/assessment/config')
+    const cfg = await res.json()
+    const models = cfg.models || []
+    const preferred = 'qwen/qwen3.6-flash'
+    document.getElementById('na-model').value = models.includes(preferred) ? preferred : (models[0] || '')
+    document.getElementById('na-translation-prompt').value = cfg.translationPrompt || ''
+    document.getElementById('na-quiz-prompt').value = cfg.quizPrompt || ''
+  } catch (_) { /* silent */ }
+}
+
+function updateNaGenerateBtn() {
+  const title = document.getElementById('na-title').value.trim()
+  const text = document.getElementById('na-text').value.trim()
+  const key = document.getElementById('na-api-key').value.trim()
+  document.getElementById('na-generate-btn').disabled = !title || !text || !key
+}
+
+async function generateArticle() {
+  const title = document.getElementById('na-title').value.trim()
+  const source = document.getElementById('na-source').value.trim()
+  const text = document.getElementById('na-text').value.trim()
+  const footnotesText = document.getElementById('na-footnotes').value.trim()
+  const model = document.getElementById('na-model').value.trim()
+  const translationPrompt = document.getElementById('na-translation-prompt').value
+  const quizPrompt = document.getElementById('na-quiz-prompt').value
+  const apiKey = document.getElementById('na-api-key').value.trim()
+
+  const btn = document.getElementById('na-generate-btn')
+  btn.disabled = true
+  btn.textContent = 'Generating…'
+  document.getElementById('na-result').classList.add('hidden')
+  document.getElementById('na-error').classList.add('hidden')
+  document.getElementById('na-progress').classList.remove('hidden')
+  document.getElementById('na-progress-bar').style.width = '0%'
+  document.getElementById('na-progress-count').textContent = '0 / 2'
+  document.getElementById('na-progress-step').textContent = ''
+  document.getElementById('na-progress-label').textContent = 'Running…'
+
+  try {
+    const res = await fetch('/api/generate-article', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, source, text, footnotesText, model, translationPrompt, quizPrompt, apiKey }),
+    })
+    const body = await res.json()
+    if (!res.ok) throw new Error(body.error || 'Failed to start generation')
+    pollGenerate(body.runId)
+  } catch (e) {
+    document.getElementById('na-error').textContent = 'Error: ' + e.message
+    document.getElementById('na-error').classList.remove('hidden')
+    btn.disabled = false
+    btn.textContent = 'Generate Exercise'
+    updateNaGenerateBtn()
+  }
+}
+
+function pollGenerate(runId) {
+  clearInterval(naGenerateTimer)
+  naGenerateTimer = setInterval(async () => {
+    try {
+      const res = await fetch(`/api/generate-article/status/${runId}`)
+      const { status, step, done, total, articleJson, quizJson, error } = await res.json()
+      const pct = total > 0 ? Math.round(done / total * 100) : 0
+      document.getElementById('na-progress-bar').style.width = pct + '%'
+      document.getElementById('na-progress-count').textContent = `${done} / ${total}`
+      document.getElementById('na-progress-step').textContent = step || ''
+      document.getElementById('na-progress-label').textContent =
+        status === 'running' ? 'Running…' : status === 'done' ? 'Complete' : 'Error'
+
+      if (status === 'done') {
+        clearInterval(naGenerateTimer)
+        document.getElementById('na-progress-bar').style.width = '100%'
+        document.getElementById('na-article-json').value = JSON.stringify(articleJson, null, 2)
+        document.getElementById('na-quiz-json').value = JSON.stringify(quizJson, null, 2)
+        onNaArticleInput()
+        onNaQuizInput()
+        document.getElementById('na-result').classList.remove('hidden')
+        document.getElementById('na-generate-btn').disabled = false
+        document.getElementById('na-generate-btn').textContent = 'Generate Exercise'
+        updateNaGenerateBtn()
+        showToast('Generation complete!', 'success')
+      } else if (status === 'error') {
+        clearInterval(naGenerateTimer)
+        document.getElementById('na-error').textContent = 'Generation failed: ' + (error || 'Unknown error')
+        document.getElementById('na-error').classList.remove('hidden')
+        document.getElementById('na-generate-btn').disabled = false
+        document.getElementById('na-generate-btn').textContent = 'Generate Exercise'
+        updateNaGenerateBtn()
+      }
+    } catch (_) { /* ignore transient errors */ }
+  }, 2000)
+}
+
+function setNaStatus(prefix, valid, errors) {
+  const statusEl = document.getElementById(`na-${prefix}-status`)
+  const errorBox = document.getElementById(`na-${prefix}-errors`)
+  if (valid) {
+    statusEl.textContent = 'Valid'
+    statusEl.className = 'text-xs text-green-600'
+    errorBox.classList.add('hidden')
+    errorBox.innerHTML = ''
+  } else if (errors.length) {
+    statusEl.textContent = `${errors.length} error${errors.length > 1 ? 's' : ''}`
+    statusEl.className = 'text-xs text-red-600'
+    errorBox.innerHTML = errors.map((e) =>
+      `<p class="text-xs text-red-600 flex items-start gap-1.5"><span class="mt-0.5 shrink-0">✕</span>${escHtml(e)}</p>`
+    ).join('')
+    errorBox.classList.remove('hidden')
+  } else {
+    statusEl.textContent = ''
+    statusEl.className = 'text-xs text-slate-400'
+    errorBox.classList.add('hidden')
+    errorBox.innerHTML = ''
+  }
+}
+
+function onNaArticleInput() {
+  let parsed = null
+  try { parsed = JSON.parse(document.getElementById('na-article-json').value) } catch (_) {}
+  const errs = parsed
+    ? validateArticle(parsed)
+    : document.getElementById('na-article-json').value.trim() ? ['Invalid JSON'] : []
+  naArticleValid = !!parsed && errs.length === 0
+  setNaStatus('article', naArticleValid, errs)
+  updateNaSaveBtn()
+}
+
+function onNaQuizInput() {
+  let parsed = null
+  try { parsed = JSON.parse(document.getElementById('na-quiz-json').value) } catch (_) {}
+  const errs = parsed
+    ? validateQuiz(parsed)
+    : document.getElementById('na-quiz-json').value.trim() ? ['Invalid JSON'] : []
+  naQuizValid = !!parsed && errs.length === 0
+  setNaStatus('quiz', naQuizValid, errs)
+  updateNaSaveBtn()
+}
+
+function updateNaSaveBtn() {
+  let art = null, quiz = null
+  try { art = JSON.parse(document.getElementById('na-article-json').value) } catch (_) {}
+  try { quiz = JSON.parse(document.getElementById('na-quiz-json').value) } catch (_) {}
+  const idsMatch = !!(art && quiz && art.id && art.id === quiz.articleId)
+  document.getElementById('na-save-btn').disabled = !(naArticleValid && naQuizValid && idsMatch)
+}
+
+async function saveGeneratedArticle() {
+  let article, quiz
+  try { article = JSON.parse(document.getElementById('na-article-json').value) }
+  catch (_) { showToast('Article JSON is invalid', 'error'); return }
+  try { quiz = JSON.parse(document.getElementById('na-quiz-json').value) }
+  catch (_) { showToast('Quiz JSON is invalid', 'error'); return }
+
+  const btn = document.getElementById('na-save-btn')
+  btn.disabled = true
+  btn.textContent = 'Saving…'
+
+  try {
+    const res = await fetch('/api/exercises', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ article, quiz, isChallenge: document.getElementById('na-is-challenge').checked }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      showToast(`Error: ${(data.articleErrors || []).concat(data.quizErrors || []).join('; ') || data.error}`, 'error')
+    } else {
+      showToast(`Article "${data.id}" saved to library!`, 'success')
+      document.getElementById('na-result').classList.add('hidden')
+      document.getElementById('na-article-json').value = ''
+      document.getElementById('na-quiz-json').value = ''
+      document.getElementById('na-is-challenge').checked = false
+      naArticleValid = false
+      naQuizValid = false
+    }
+  } catch (e) {
+    showToast(`Network error: ${e.message}`, 'error')
+  }
+
+  btn.textContent = 'Save to Library'
+  updateNaSaveBtn()
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────

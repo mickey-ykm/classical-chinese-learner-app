@@ -41,5 +41,33 @@
     "totalPoints": 62,
     "totalQuestions": 27,
     "type": "challenge"
+  },
+  {
+    "id": "lun-yu-si-ze",
+    "title": "論語四則",
+    "source": "《論語》",
+    "totalPoints": 34,
+    "totalQuestions": 18
+  },
+  {
+    "id": "er-zi-xue-yi",
+    "title": "二子學弈",
+    "source": "孟子",
+    "totalPoints": 34,
+    "totalQuestions": 18
+  },
+  {
+    "id": "lou-shi-ming",
+    "title": "陋室銘",
+    "source": "劉禹錫",
+    "totalPoints": 40,
+    "totalQuestions": 22
+  },
+  {
+    "id": "mu-lan-shi-1",
+    "title": "木蘭詩",
+    "source": "佚名",
+    "totalPoints": 40,
+    "totalQuestions": 22
   }
 ]

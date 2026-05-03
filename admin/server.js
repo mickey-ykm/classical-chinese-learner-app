@@ -173,6 +173,7 @@ app.delete("/api/exercises/:id", (req, res) => {
 const ASSESSMENT_CONFIG_FILE = path.join(__dirname, "assessment-config.json")
 const ASSESSMENT_RESULTS_DIR = path.join(__dirname, "assessment-results")
 const runs = {}
+const generateRuns = {}
 
 const DEFAULT_ASSESSMENT_CONFIG = {
   models: [
@@ -182,9 +183,9 @@ const DEFAULT_ASSESSMENT_CONFIG = {
     "z-ai/glm-5",
   ],
   translationPrompt:
-    "你是一位古典漢語（文言文）專家。請將所提供的文言文翻譯成流暢的現代白話文。請參考所附的注釋來理解詞彙。只需回傳一個有效的 JSON 物件，不要包含 markdown、不要附加說明。格式如下：{\"modernTranslation\": [\"段落一\", \"段落二\", ...]}。請將相關句子歸納成自然流暢的段落。",
+    "你是一位古典漢語（文言文）專家。將提供的文言文內容翻譯成白話文，請按文言字詞的意思翻譯(不要意譯)，你不能夠省略原有字詞來完成翻譯。請參考所附的注釋來理解詞彙。只需回傳一個有效的 JSON 物件，不要包含 markdown、不要附加說明。格式如下：{\"modernTranslation\": [\"段落一\", \"段落二\", ...]}。請將相關句子歸納成段落。",
   quizPrompt:
-    "你是一位專業的文言文教師，正在為學生編制評量題目。請為所提供的文言文設計一份四部分的測驗。只需回傳一個有效的 JSON 物件，不要包含 markdown、不要附加說明。\n\n請確切設計：\n- 第一部分：6道字詞釋義選擇題（每題1分）\n- 第二部分：4道句子翻譯與語法辨析題（每題2分）\n- 第三部分：4道文意理解題（每題3分）\n- 第四部分：4道修辭與人物形象題（每題2分）\n\n每題須包含4個選項（A/B/C/D）、一個正確答案（correctAnswer）及簡短的解題說明（explanation）。\n\nJSON 格式如下：\n{\n  \"parts\": [\n    {\n      \"part\": 1,\n      \"title\": \"第一部分：字詞釋義選擇題\",\n      \"pointsPerQuestion\": 1,\n      \"questions\": [\n        {\n          \"id\": 1, \"part\": 1, \"points\": 1,\n          \"stem\": \"「詞語」在文中的意思是：\",\n          \"options\": [{\"key\":\"A\",\"text\":\"選項\"},{\"key\":\"B\",\"text\":\"選項\"},{\"key\":\"C\",\"text\":\"選項\"},{\"key\":\"D\",\"text\":\"選項\"}],\n          \"correctAnswer\": \"B\",\n          \"explanation\": \"解釋為何B正確\"\n        }\n      ]\n    },\n    {\"part\":2,\"title\":\"第二部分：句子翻譯與語法辨析\",\"pointsPerQuestion\":2,\"questions\":[...]},\n    {\"part\":3,\"title\":\"第三部分：文意理解題\",\"pointsPerQuestion\":3,\"questions\":[...]},\n    {\"part\":4,\"title\":\"第四部分：修辭與人物形象\",\"pointsPerQuestion\":2,\"questions\":[...]}\n  ]\n}",
+    "你作為香港中學中文教師，將上述文言文內容設計題目，要按照文章所示的教授年級來制定難度；同時，你要考慮我提供的文章特點設計題目。\n\n設計如下︰(初中5篇)\n第1部分︰10條字詞釋義題\n第2部分︰4條句子語譯題，如文章出現文言特殊句式，即「判斷句、被動句、倒裝句、疑問句」，請優先設題，最多設2題\n第3部分︰6條文意理解題，\n如敘事/遊記相關，可設計文章敘事次序、重點情節與人物形象、抒發情感等分析；\n如哲理/孟子/論語，應集中設計說明什麼道理、說明手法、論證手法的題目；\n如文章為詩詞，應設計1-2條關於詩詞格律的題目\n第4部分︰2條修辭相關題目\n\n設計如下︰(高中5篇)\n第1部分︰15條字詞釋義題\n第2部分︰6條句子語譯題，如文章出現文言特殊句式，即「判斷句、被動句、倒裝句、疑問句」，請優先設題，最多設2題\n第3部分︰8條文意理解題，\n如敘事/遊記相關，可設計文章敘事次序、重點情節、人物形象、抒發情感等分析；\n如哲理/孟子/論語，應集中設計說明什麼道理、說明手法、論證手法的題目；\n如文章為詩詞，應設計1-2條關於詩詞格律的題目(赤壁懷古要減至6題)\n第4部分︰2條修辭相關題目(赤壁懷古要加至4題)\n\n每題須包含4個選項(A/B/C/D)，一個正確答案及簡短解題，設計選項時，應有1個錯誤答案容易跟正確答案混淆。\n\n只需回傳一個有效的 JSON 物件，不要包含 markdown、不要附加說明。\nJSON 格式如下：\n{\n  \"parts\": [\n    {\n      \"part\": 1,\n      \"title\": \"第一部分：字詞釋義題\",\n      \"pointsPerQuestion\": 1,\n      \"questions\": [\n        {\n          \"id\": 1, \"part\": 1, \"points\": 1,\n          \"stem\": \"「詞語」在文中的意思是：\",\n          \"options\": [{\"key\":\"A\",\"text\":\"選項\"},{\"key\":\"B\",\"text\":\"選項\"},{\"key\":\"C\",\"text\":\"選項\"},{\"key\":\"D\",\"text\":\"選項\"}],\n          \"correctAnswer\": \"B\",\n          \"explanation\": \"解釋為何B正確\"\n        }\n      ]\n    },\n    {\"part\":2,\"title\":\"第二部分：句子語譯題\",\"pointsPerQuestion\":2,\"questions\":[...]},\n    {\"part\":3,\"title\":\"第三部分：文意理解題\",\"pointsPerQuestion\":3,\"questions\":[...]},\n    {\"part\":4,\"title\":\"第四部分：修辭相關題目\",\"pointsPerQuestion\":2,\"questions\":[...]}\n  ]\n}",
 }
 
 function readAssessmentConfig() {
@@ -351,6 +352,150 @@ function parseCSVContent(content) {
   if (row.length || field) { row.push(field); rows.push(row) }
   while (rows.length && rows[rows.length - 1].every((f) => f === "")) rows.pop()
   return rows
+}
+
+function segmentText(text) {
+  const lines = text.split(/\n+/).map((s) => s.trim()).filter(Boolean)
+  if (lines.length > 1) return lines.map((t) => ({ text: t }))
+  const segs = []
+  let current = ""
+  for (const char of text) {
+    current += char
+    if ("。！？；".includes(char)) {
+      if (current.trim()) segs.push({ text: current.trim() })
+      current = ""
+    }
+  }
+  if (current.trim()) segs.push({ text: current.trim() })
+  return segs.length ? segs : [{ text: text.trim() }]
+}
+
+function escapeRegex(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+function segmentTextWithFootnotes(text, footnotes) {
+  if (!footnotes.length) return segmentText(text)
+
+  // If normalized markers (1)(2)… are already embedded in the text, use marker-based splitting
+  const hasEmbeddedMarkers = footnotes.some((f) => text.includes(f.marker))
+  if (hasEmbeddedMarkers) {
+    const sorted = [...footnotes].sort((a, b) => b.marker.length - a.marker.length)
+    const pattern = new RegExp(sorted.map((f) => escapeRegex(f.marker)).join("|"), "g")
+    const segments = []
+    let lastIndex = 0
+    let m
+    while ((m = pattern.exec(text)) !== null) {
+      if (m.index > lastIndex) {
+        text.slice(lastIndex, m.index).split(/\n+/).forEach((line) => {
+          if (line.trim()) segments.push({ text: line.trim() })
+        })
+      }
+      const fn = footnotes.find((f) => f.marker === m[0])
+      if (fn) segments.push({ text: m[0], footnoteId: fn.id })
+      lastIndex = pattern.lastIndex
+    }
+    if (lastIndex < text.length) {
+      text.slice(lastIndex).split(/\n+/).forEach((line) => {
+        if (line.trim()) segments.push({ text: line.trim() })
+      })
+    }
+    return segments.length ? segments : [{ text: text.trim() }]
+  }
+
+  // Arabic numeral markers: in classical Chinese, Arabic numerals are footnote references.
+  // e.g., "弈秋1，通國2之善弈者也" where 1, 2 reference footnotes 1, 2.
+  const footnoteById = Object.fromEntries(footnotes.map((f) => [f.id, f]))
+  const sortedIds = footnotes.map((f) => f.id).sort((a, b) => b.length - a.length)
+  const numeralRe = new RegExp(`(?<!\\d)(${sortedIds.map(escapeRegex).join("|")})(?!\\d)`, "g")
+  if (numeralRe.test(text)) {
+    numeralRe.lastIndex = 0
+    const segments = []
+    let lastIndex = 0
+    let m
+    while ((m = numeralRe.exec(text)) !== null) {
+      const fn = footnoteById[m[1]]
+      if (!fn) continue
+      if (m.index > lastIndex) {
+        text.slice(lastIndex, m.index).split(/\n+/).forEach((line) => {
+          if (line.trim()) segments.push({ text: line.trim() })
+        })
+      }
+      segments.push({ text: fn.marker, footnoteId: fn.id })
+      lastIndex = m.index + m[1].length
+    }
+    if (lastIndex < text.length) {
+      text.slice(lastIndex).split(/\n+/).forEach((line) => {
+        if (line.trim()) segments.push({ text: line.trim() })
+      })
+    }
+    return segments.length ? segments : segmentText(text)
+  }
+
+  // Term-based: insert marker immediately after each term's first occurrence in the text
+  const insertions = []
+  for (const fn of footnotes) {
+    const idx = text.indexOf(fn.term)
+    if (idx !== -1) insertions.push({ pos: idx + fn.term.length, fn })
+  }
+  insertions.sort((a, b) => a.pos - b.pos)
+  if (!insertions.length) return segmentText(text)
+
+  const segments = []
+  let pos = 0
+  for (const { pos: insertPos, fn } of insertions) {
+    if (insertPos <= pos) continue
+    const chunk = text.slice(pos, insertPos)
+    if (chunk.trim()) {
+      chunk.split(/\n+/).forEach((line) => { if (line.trim()) segments.push({ text: line.trim() }) })
+    }
+    segments.push({ text: fn.marker, footnoteId: fn.id })
+    pos = insertPos
+  }
+  if (pos < text.length) {
+    text.slice(pos).split(/\n+/).forEach((line) => { if (line.trim()) segments.push({ text: line.trim() }) })
+  }
+  return segments.length ? segments : segmentText(text)
+}
+
+function parseFootnotesText(raw) {
+  if (!raw || !raw.trim()) return []
+  // Normalize circled CJK dialect markers: ○粵 → [粵], ○漢 → [漢], etc.
+  raw = raw.replace(/○([一-鿿])/g, "[$1]")
+  // Normalize inline multi-footnote strings: "1. termA︰exp 2. termB︰exp …" → one entry per line
+  raw = raw.replace(/\s+(?=\d+[.。]\s)/g, "\n")
+  const footnotes = []
+  let idNum = 1
+  for (const line of raw.split("\n").map((l) => l.trim()).filter(Boolean)) {
+    // ︰ (U+FE30), ︓ (U+FE13), ：(U+FF1A fullwidth colon) and : (ASCII) are all accepted
+    // Marker prefix formats: (1) term  ① term  1. / 1  / 1、 term
+    const withMarker = line.match(/^([①-⑳]|[（(]\d+[)）]|\[\d+\]|\d+[.。、）)\s])\s*([^：:︓︰]+)[：:︓︰]\s*(.+)$/)
+    if (withMarker) {
+      footnotes.push({ id: String(idNum), marker: `(${idNum})`, term: withMarker[2].trim(), explanation: withMarker[3].trim() })
+      idNum++
+      continue
+    }
+    // No marker: term︰explanation
+    const noMarker = line.match(/^([^：:︓︰]+)[：:︓︰]\s*(.+)$/)
+    if (noMarker) {
+      footnotes.push({ id: String(idNum), marker: `(${idNum})`, term: noMarker[1].trim(), explanation: noMarker[2].trim() })
+      idNum++
+      continue
+    }
+    // Continuation line: append to the previous footnote's explanation
+    if (footnotes.length) {
+      footnotes[footnotes.length - 1].explanation += line
+    }
+  }
+  return footnotes
+}
+
+function normalizeOptions(opts) {
+  if (Array.isArray(opts)) return opts
+  if (opts && typeof opts === "object") {
+    return Object.entries(opts).map(([key, text]) => ({ key, text: String(text) }))
+  }
+  return []
 }
 
 app.get("/api/assessment/config", (_req, res) => {
@@ -538,6 +683,101 @@ app.get("/api/assessment/data/:runId/:type", (req, res) => {
   } catch (e) {
     res.status(500).json({ error: e.message })
   }
+})
+
+// ── Generate Article ─────────────────────────────────────────────────────────
+
+app.post("/api/generate-article", (req, res) => {
+  const { title, source, text, footnotesText, model, translationPrompt, quizPrompt, apiKey } = req.body || {}
+  if (!apiKey) return res.status(400).json({ error: "apiKey is required" })
+  if (!title) return res.status(400).json({ error: "title is required" })
+  if (!text) return res.status(400).json({ error: "text is required" })
+  if (!model) return res.status(400).json({ error: "model is required" })
+
+  const runId = "gen_" + Date.now().toString()
+  generateRuns[runId] = { status: "running", step: "", done: 0, total: 2, articleJson: null, quizJson: null, error: null }
+  res.json({ runId })
+
+  ;(async () => {
+    try {
+      let parsedFootnotes = parseFootnotesText(footnotesText || "")
+
+      // If no footnotes were provided but the text contains Arabic numerals,
+      // auto-create stub entries so the numerals get linked into segments.
+      // The user can fill in term/explanation by editing the generated JSON before saving.
+      if (!parsedFootnotes.length) {
+        const found = [...new Set(
+          [...(title + " " + text).matchAll(/(?<!\d)(\d+)(?!\d)/g)].map((m) => m[1])
+        )].sort((a, b) => Number(a) - Number(b))
+        if (found.length) {
+          parsedFootnotes = found.map((n) => ({ id: n, marker: `(${n})`, term: "", explanation: "" }))
+        }
+      }
+      const fnLines = parsedFootnotes.length
+        ? parsedFootnotes.map((f) => `${f.marker} ${f.term}：${f.explanation}`).join("\n")
+        : "（無注釋）"
+      const context = `標題：${title}\n來源：${source || "—"}\n\n原文：\n${text}\n\n注釋：\n${fnLines}`
+
+      // Translation — also ask model to suggest a pinyin slug for the article ID
+      generateRuns[runId].step = "生成現代文翻譯…"
+      const tRes = await callOpenRouter(model, [
+        { role: "system", content: translationPrompt },
+        { role: "user", content: `請翻譯以下文言文。在 JSON 回覆中額外加入 "suggestedId" 欄位，值為標題的漢語拼音（全小寫、以連字號分隔，例如 "chun-ye-xi-yu"）。\n\n${context}` },
+      ], apiKey)
+      const tParsed = JSON.parse(tRes.content)
+      if (!Array.isArray(tParsed.modernTranslation)) throw new Error("Translation response missing modernTranslation[]")
+      const articleId = (typeof tParsed.suggestedId === "string" && /^[a-z0-9-]+$/.test(tParsed.suggestedId))
+        ? tParsed.suggestedId
+        : "art-" + Date.now().toString(36)
+      generateRuns[runId].done++
+
+      // Quiz
+      generateRuns[runId].step = "生成測驗題目…"
+      const qRes = await callOpenRouter(model, [
+        { role: "system", content: quizPrompt },
+        { role: "user", content: `請為以下文言文出題：\n\n${context}` },
+      ], apiKey)
+      const qParsed = JSON.parse(qRes.content)
+      if (!Array.isArray(qParsed.parts)) throw new Error("Quiz response missing parts[]")
+      generateRuns[runId].done++
+
+      // Assemble — normalize options to [{key,text}] array (LLMs sometimes return {A:text,B:text,...})
+      const parts = qParsed.parts.map((p) => ({
+        ...p,
+        questions: (p.questions || []).map((q) => ({ ...q, options: normalizeOptions(q.options) })),
+      }))
+      const titleNumeral = title.match(/(\d+)$/)
+      const cleanTitle = titleNumeral ? title.slice(0, -titleNumeral[1].length).trim() : title.trim()
+      const articleJson = {
+        id: articleId,
+        title: cleanTitle,
+        ...(titleNumeral ? { titleFootnoteId: titleNumeral[1] } : {}),
+        source: source || "",
+        segments: segmentTextWithFootnotes(text, parsedFootnotes),
+        footnotes: parsedFootnotes,
+        modernTranslation: tParsed.modernTranslation,
+      }
+      const totalPoints = parts.reduce(
+        (s, p) => s + (p.questions?.length || 0) * (p.pointsPerQuestion || 1),
+        0
+      )
+      const quizJson = { articleId, totalPoints, parts }
+
+      generateRuns[runId].articleJson = articleJson
+      generateRuns[runId].quizJson = quizJson
+      generateRuns[runId].step = ""
+      generateRuns[runId].status = "done"
+    } catch (e) {
+      generateRuns[runId].status = "error"
+      generateRuns[runId].error = e.message
+    }
+  })()
+})
+
+app.get("/api/generate-article/status/:runId", (req, res) => {
+  const run = generateRuns[req.params.runId]
+  if (!run) return res.status(404).json({ error: "Run not found" })
+  res.json({ status: run.status, step: run.step, done: run.done, total: run.total, articleJson: run.articleJson, quizJson: run.quizJson, error: run.error })
 })
 
 app.listen(PORT, () => {

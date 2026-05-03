@@ -44,9 +44,19 @@ export default function ReadScreen() {
             <Text className="text-sm text-slate-400">← 返回</Text>
           </Pressable>
 
-          <Text className="text-xl font-bold text-slate-800 mb-1" style={{ fontFamily: "Georgia" }}>
-            {article.title}
-          </Text>
+          <View className="flex-row items-baseline mb-1">
+            <Text className="text-xl font-bold text-slate-800" style={{ fontFamily: "Georgia" }}>
+              {article.title}
+            </Text>
+            {article.titleFootnoteId && (
+              <Text
+                onPress={() => handleFootnoteTap(article.titleFootnoteId!)}
+                className="text-amber-600 font-bold text-sm ml-0.5"
+              >
+                {article.footnotes.find((f) => f.id === article.titleFootnoteId)?.marker ?? `(${article.titleFootnoteId})`}
+              </Text>
+            )}
+          </View>
           <Text className="text-xs text-slate-400 mb-6">{article.source ?? ""}</Text>
 
           <View className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">

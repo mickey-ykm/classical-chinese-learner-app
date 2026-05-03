@@ -13,6 +13,7 @@ export interface ArticleSegment {
 export interface Article {
   id: string
   title: string
+  titleFootnoteId?: string
   source?: string
   segments: ArticleSegment[]
   footnotes: Footnote[]
