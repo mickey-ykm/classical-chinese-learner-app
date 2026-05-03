@@ -1,8 +1,9 @@
-import { ScrollView, View, Text, Pressable } from "react-native"
+import { ScrollView, View, Text, Pressable, Image } from "react-native"
 import { useRouter } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { getArticleIndex } from "@/lib/data"
 import { Logo } from "@/components/Logo"
+import { useAuth } from "@/hooks/useAuth"
 import type { ArticleEntry } from "@/lib/types"
 
 const TOTAL_LESSONS = 50
@@ -94,6 +95,7 @@ function PlaceholderCard({ num }: { num: number }) {
 export default function HomeScreen() {
   const router = useRouter()
   const articles = getArticleIndex()
+  const { user, profile } = useAuth()
 
   const lessons = Array.from({ length: TOTAL_LESSONS }, (_, i) => {
     const article = i < articles.length ? articles[i] : null
@@ -111,15 +113,35 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View className="items-center mb-10">
-          <Logo size={84} />
-          <Text
-            className="text-xl font-bold text-slate-800 mt-4"
-            style={{ fontFamily: "Georgia" }}
-          >
-            歡迎回來文言教室！
-          </Text>
-          <Text className="text-xs text-slate-400 mt-1">選擇今日的學習課程</Text>
+        <View className="mb-10">
+          <View className="items-end">
+            <Pressable
+              onPress={() => router.push(user ? "/account" : "/login")}
+              hitSlop={12}
+              className="p-1"
+            >
+              {user && profile?.avatar_url ? (
+                <Image
+                  source={{ uri: profile.avatar_url }}
+                  style={{ width: 32, height: 32, borderRadius: 16 }}
+                />
+              ) : (
+                <View className="w-8 h-8 rounded-full bg-slate-200 items-center justify-center">
+                  <Text className="text-slate-500 text-sm">👤</Text>
+                </View>
+              )}
+            </Pressable>
+          </View>
+          <View className="items-center">
+            <Logo size={84} />
+            <Text
+              className="text-xl font-bold text-slate-800 mt-4"
+              style={{ fontFamily: "Georgia" }}
+            >
+              歡迎回來文言教室！
+            </Text>
+            <Text className="text-xs text-slate-400 mt-1">選擇今日的學習課程</Text>
+          </View>
         </View>
 
         {/* Journey map */}

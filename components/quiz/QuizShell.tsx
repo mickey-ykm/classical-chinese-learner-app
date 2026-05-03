@@ -1,8 +1,10 @@
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { View, Pressable, Text } from "react-native"
 import type { Question, QuizAnswer, OptionKey } from "@/lib/types"
-import { checkAnswer } from "@/lib/quiz"
+import { checkAnswer, calculateScore } from "@/lib/quiz"
 import { getArticle } from "@/lib/data"
+import { useAuth } from "@/hooks/useAuth"
+import { saveQuizAttempt } from "@/lib/quizHistory"
 import QuizProgressBar from "./QuizProgressBar"
 import QuizQuestion from "./QuizQuestion"
 import ScoreScreen from "./ScoreScreen"
@@ -24,7 +26,15 @@ export default function QuizShell({ questions, partTitles, articleId }: Props) {
   const [isFinished, setIsFinished] = useState(false)
   const [showArticle, setShowArticle] = useState(false)
 
+  const { user } = useAuth()
   const article = getArticle(articleId)
+
+  useEffect(() => {
+    if (!isFinished || !user) return
+    const { earned, total } = calculateScore(questions, answers)
+    saveQuizAttempt(user.id, articleId, questions, answers, earned, total).catch(() => {})
+  }, [isFinished])
+
   const currentQuestion = questions[currentIndex]
   const isLastQuestion = currentIndex + 1 >= questions.length
 

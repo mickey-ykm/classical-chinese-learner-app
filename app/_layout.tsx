@@ -4,6 +4,7 @@ import { StatusBar } from "expo-status-bar"
 import { useEffect, useRef } from "react"
 import { Animated, ActivityIndicator } from "react-native"
 import { Logo } from "@/components/Logo"
+import { AuthProvider } from "@/contexts/AuthContext"
 import "../global.css"
 
 function SplashOverlay() {
@@ -43,9 +44,11 @@ function SplashOverlay() {
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <Stack screenOptions={{ headerShown: false }} />
-      <StatusBar style="dark" />
-      <SplashOverlay />
+      <AuthProvider>
+        <Stack screenOptions={{ headerShown: false }} />
+        <StatusBar style="dark" />
+        <SplashOverlay />
+      </AuthProvider>
     </SafeAreaProvider>
   )
 }

@@ -12,6 +12,14 @@ const ARTICLES: Record<string, Article> = {
   "er-zi-xue-yi": require("../data/articles/er-zi-xue-yi.json"),
   "lou-shi-ming": require("../data/articles/lou-shi-ming.json"),
   "mu-lan-shi-1": require("../data/articles/mu-lan-shi-1.json"),
+  "lun-si-duan": require("../data/articles/lun-si-duan.json"),
+  "ai-lian-shuo": require("../data/articles/ai-lian-shuo.json"),
+  "zou-ji-feng-qi-wang-na-jian": require("../data/articles/zou-ji-feng-qi-wang-na-jian.json"),
+  "cao-gui-lun-zhan": require("../data/articles/cao-gui-lun-zhan.json"),
+  "xiao-yao-you-jie-lu": require("../data/articles/xiao-yao-you-jie-lu.json"),
+  "shi-de-xi-shan-yan-you-ji": require("../data/articles/shi-de-xi-shan-yan-you-ji.json"),
+  "lun-ren-lun-xiao-lun-jun-zi": require("../data/articles/lun-ren-lun-xiao-lun-jun-zi.json"),
+  "nian-nu-jiao-chi-bi-huai-gu": require("../data/articles/nian-nu-jiao-chi-bi-huai-gu.json"),
 }
 
 const QUIZZES: Record<string, Quiz> = {
@@ -25,6 +33,14 @@ const QUIZZES: Record<string, Quiz> = {
   "er-zi-xue-yi": require("../data/quizzes/er-zi-xue-yi.json"),
   "lou-shi-ming": require("../data/quizzes/lou-shi-ming.json"),
   "mu-lan-shi-1": require("../data/quizzes/mu-lan-shi-1.json"),
+  "lun-si-duan": require("../data/quizzes/lun-si-duan.json"),
+  "ai-lian-shuo": require("../data/quizzes/ai-lian-shuo.json"),
+  "zou-ji-feng-qi-wang-na-jian": require("../data/quizzes/zou-ji-feng-qi-wang-na-jian.json"),
+  "cao-gui-lun-zhan": require("../data/quizzes/cao-gui-lun-zhan.json"),
+  "xiao-yao-you-jie-lu": require("../data/quizzes/xiao-yao-you-jie-lu.json"),
+  "shi-de-xi-shan-yan-you-ji": require("../data/quizzes/shi-de-xi-shan-yan-you-ji.json"),
+  "lun-ren-lun-xiao-lun-jun-zi": require("../data/quizzes/lun-ren-lun-xiao-lun-jun-zi.json"),
+  "nian-nu-jiao-chi-bi-huai-gu": require("../data/quizzes/nian-nu-jiao-chi-bi-huai-gu.json"),
 }
 
 export function getArticleIndex(): ArticleEntry[] {
@@ -62,6 +78,14 @@ export const QUIZ_SEQUENCE = [
   "er-zi-xue-yi",
   "lou-shi-ming",
   "mu-lan-shi-1",
+  "lun-si-duan",
+  "ai-lian-shuo",
+  "zou-ji-feng-qi-wang-na-jian",
+  "cao-gui-lun-zhan",
+  "xiao-yao-you-jie-lu",
+  "shi-de-xi-shan-yan-you-ji",
+  "lun-ren-lun-xiao-lun-jun-zi",
+  "nian-nu-jiao-chi-bi-huai-gu",
 ]
 
 export function getNextQuizId(currentId: string): string | null {

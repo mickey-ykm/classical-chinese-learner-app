@@ -61,13 +61,79 @@
     "title": "陋室銘",
     "source": "劉禹錫",
     "totalPoints": 40,
-    "totalQuestions": 22
+    "totalQuestions": 22,
+    "level": 2
   },
   {
     "id": "mu-lan-shi-1",
     "title": "木蘭詩",
     "source": "佚名",
     "totalPoints": 40,
-    "totalQuestions": 22
+    "totalQuestions": 22,
+    "level": 1
+  },
+  {
+    "id": "lun-si-duan",
+    "title": "論四端",
+    "source": "孟子",
+    "totalPoints": 40,
+    "totalQuestions": 22,
+    "level": 3
+  },
+  {
+    "id": "ai-lian-shuo",
+    "title": "愛蓮說",
+    "source": "周敦頤",
+    "totalPoints": 40,
+    "totalQuestions": 22,
+    "level": 2
+  },
+  {
+    "id": "zou-ji-feng-qi-wang-na-jian",
+    "title": "鄒忌諷齊王納諫",
+    "source": "戰國策",
+    "totalPoints": 55,
+    "totalQuestions": 31,
+    "level": 3
+  },
+  {
+    "id": "cao-gui-lun-zhan",
+    "title": "曹劌論戰",
+    "source": "左傳",
+    "totalPoints": 40,
+    "totalQuestions": 22,
+    "level": 4
+  },
+  {
+    "id": "xiao-yao-you-jie-lu",
+    "title": "逍遙遊 (節錄)",
+    "source": "莊子",
+    "totalPoints": 55,
+    "totalQuestions": 31,
+    "level": 7
+  },
+  {
+    "id": "shi-de-xi-shan-yan-you-ji",
+    "title": "始得西山宴遊記",
+    "source": "柳宗元",
+    "totalPoints": 55,
+    "totalQuestions": 31,
+    "level": 7
+  },
+  {
+    "id": "lun-ren-lun-xiao-lun-jun-zi",
+    "title": "論仁、論孝、論君子",
+    "source": "論語",
+    "totalPoints": 40,
+    "totalQuestions": 22,
+    "level": 7
+  },
+  {
+    "id": "nian-nu-jiao-chi-bi-huai-gu",
+    "title": "念奴嬌 赤壁懷古",
+    "source": "蘇軾",
+    "totalPoints": 59,
+    "totalQuestions": 33,
+    "level": 7
   }
 ]
