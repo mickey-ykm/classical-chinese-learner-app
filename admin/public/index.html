@@ -37,102 +37,226 @@
   <div class="flex gap-1 border-b border-stone-200 pt-5 mb-6">
     <button id="tab-exercises" onclick="showTab('exercises')" class="tab-active px-5 pb-2.5 text-sm font-medium">Article Library</button>
     <button id="tab-new-article" onclick="showTab('new-article')" class="px-5 pb-2.5 text-sm font-medium text-slate-500 hover:text-slate-700">Add a new article</button>
+    <button id="tab-quiz-prompts" onclick="showTab('quiz-prompts')" class="px-5 pb-2.5 text-sm font-medium text-slate-500 hover:text-slate-700">Quiz Prompts</button>
     <button id="tab-assessment" onclick="showTab('assessment')" class="px-5 pb-2.5 text-sm font-medium text-slate-500 hover:text-slate-700">LLM Assessment</button>
   </div>
 
-  <!-- ── Exercises panel ──────────────────────────────────────────────────── -->
-  <div id="panel-exercises" class="flex gap-6 pb-6">
+  <!-- ── Article Library: Listing ───────────────────────────────────────────── -->
+  <div id="panel-exercises" class="pb-6">
 
-    <!-- Left panel: Exercise list -->
-    <aside class="w-72 shrink-0">
-      <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
-        <div class="px-4 py-3 border-b border-stone-100 flex items-center justify-between">
-          <h2 class="font-semibold text-sm">Exercises</h2>
-          <button onclick="loadExercises()" class="text-xs text-amber-600 hover:text-amber-700">Refresh</button>
+    <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+      <div class="px-4 py-3 border-b border-stone-100 flex items-center justify-between">
+        <div>
+          <h2 class="font-semibold text-sm">Article Library</h2>
+          <p class="text-xs text-slate-400 mt-0.5">All articles, with or without quizzes</p>
         </div>
-        <div id="exercise-list" class="divide-y divide-stone-100 min-h-[120px]">
-          <div class="px-4 py-8 text-center text-sm text-slate-400">Loading…</div>
-        </div>
+        <button onclick="loadExercises()" class="text-xs text-amber-600 hover:text-amber-700">Refresh</button>
       </div>
-    </aside>
-
-    <!-- Right panel: Preview / Edit -->
-    <main class="flex-1 min-w-0">
-
-      <div id="lib-empty" class="bg-white rounded-xl border border-stone-200 p-12 text-center">
-        <p class="text-sm text-slate-400">Select an article from the list to preview its JSON files</p>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead class="bg-stone-50 text-xs text-slate-500 uppercase tracking-wider">
+            <tr>
+              <th class="px-4 py-2.5 text-left font-medium">Title</th>
+              <th class="px-4 py-2.5 text-left font-medium">Generated</th>
+              <th class="px-4 py-2.5 text-center font-medium">Quizzes</th>
+              <th class="px-4 py-2.5 text-left font-medium">Level</th>
+              <th class="px-4 py-2.5 text-left font-medium">Status</th>
+              <th class="px-4 py-2.5 text-right font-medium"></th>
+            </tr>
+          </thead>
+          <tbody id="exercise-list" class="divide-y divide-stone-100">
+            <tr><td colspan="6" class="px-4 py-8 text-center text-sm text-slate-400">Loading…</td></tr>
+          </tbody>
+        </table>
       </div>
-
-      <div id="lib-preview" class="hidden bg-white rounded-xl border border-stone-200 overflow-hidden">
-        <div class="px-6 py-4 border-b border-stone-100 flex items-center justify-between gap-4">
-          <div class="min-w-0">
-            <h2 class="font-semibold truncate" id="lib-preview-title">—</h2>
-            <p class="text-xs text-slate-500 font-mono mt-0.5" id="lib-preview-id">—</p>
-          </div>
-          <div class="flex items-center gap-3 shrink-0">
-            <div class="flex items-center gap-2">
-              <input type="checkbox" id="lib-is-challenge" disabled class="w-4 h-4 accent-amber-600 cursor-pointer" />
-              <label for="lib-is-challenge" class="text-sm text-slate-600 cursor-pointer select-none">章節挑戰</label>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <label for="lib-level" class="text-sm text-slate-600 select-none">程度</label>
-              <select id="lib-level" disabled
-                class="text-sm border border-stone-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-white disabled:bg-stone-50 disabled:text-slate-400">
-                <option value="">—</option>
-                <option value="1">中一</option>
-                <option value="2">中二</option>
-                <option value="3">中三</option>
-                <option value="4">中四</option>
-                <option value="5">中五</option>
-                <option value="6">中六</option>
-                <option value="7">高中DSE</option>
-              </select>
-            </div>
-            <button id="lib-edit-btn" onclick="editLibrary()"
-              class="px-4 py-1.5 rounded-lg text-sm font-medium border border-stone-200 hover:bg-stone-50 transition-colors">
-              Edit
-            </button>
-            <button id="lib-save-btn" onclick="saveLibraryEdits()" disabled
-              class="hidden px-4 py-1.5 rounded-lg text-sm font-semibold bg-green-600 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-green-700 transition-colors">
-              Save
-            </button>
-            <button id="lib-cancel-btn" onclick="cancelLibraryEdit()"
-              class="hidden px-4 py-1.5 rounded-lg text-sm font-medium border border-stone-200 hover:bg-stone-50 transition-colors">
-              Cancel
-            </button>
-          </div>
-        </div>
-
-        <div class="p-6 space-y-5">
-
-          <!-- Article JSON -->
-          <div>
-            <div class="flex items-center justify-between mb-1.5">
-              <label class="text-sm font-medium">Article JSON</label>
-              <span id="lib-article-status" class="text-xs text-slate-400"></span>
-            </div>
-            <textarea id="lib-article-json" rows="14" readonly oninput="onLibArticleInput()"
-              class="w-full font-mono text-xs border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-stone-50"></textarea>
-            <div id="lib-article-errors" class="mt-1.5 space-y-1 hidden"></div>
-          </div>
-
-          <!-- Quiz JSON -->
-          <div>
-            <div class="flex items-center justify-between mb-1.5">
-              <label class="text-sm font-medium">Quiz JSON</label>
-              <span id="lib-quiz-status" class="text-xs text-slate-400"></span>
-            </div>
-            <textarea id="lib-quiz-json" rows="14" readonly oninput="onLibQuizInput()"
-              class="w-full font-mono text-xs border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-stone-50"></textarea>
-            <div id="lib-quiz-errors" class="mt-1.5 space-y-1 hidden"></div>
-          </div>
-
-        </div>
-      </div>
-
-    </main>
+    </div>
 
   </div><!-- /panel-exercises -->
+
+  <!-- ── Article Library: Detail ───────────────────────────────────────────── -->
+  <div id="panel-article-detail" class="hidden pb-6">
+
+    <div class="flex items-center gap-4 mb-5">
+      <button onclick="closeArticleDetail()"
+        class="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors shrink-0">
+        ← Back
+      </button>
+      <div class="flex-1 min-w-0">
+        <h2 class="font-semibold text-base truncate" id="ad-title">—</h2>
+        <p class="text-xs text-slate-400 font-mono" id="ad-id">—</p>
+      </div>
+      <div class="flex items-center gap-3 shrink-0">
+        <div class="flex items-center gap-1.5">
+          <label for="ad-status" class="text-sm text-slate-600 select-none">狀態</label>
+          <select id="ad-status" disabled
+            class="text-sm border border-stone-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-white disabled:bg-stone-50 disabled:text-slate-400">
+            <option value="published">Published</option>
+            <option value="draft">Draft</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="checkbox" id="ad-is-challenge" disabled class="w-4 h-4 accent-amber-600 cursor-pointer" />
+          <label for="ad-is-challenge" class="text-sm text-slate-600 cursor-pointer select-none">章節挑戰</label>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <label for="ad-level" class="text-sm text-slate-600 select-none">程度</label>
+          <select id="ad-level" disabled
+            class="text-sm border border-stone-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-white disabled:bg-stone-50 disabled:text-slate-400">
+            <option value="">—</option>
+            <option value="4">中四</option>
+            <option value="5">中五</option>
+            <option value="6">中六</option>
+            <option value="7">高中DSE</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <label for="ad-expected-minutes" class="text-sm text-slate-600 select-none">預期(分)</label>
+          <input type="number" id="ad-expected-minutes" disabled min="1" max="240" placeholder="—"
+            class="w-16 text-sm border border-stone-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-white disabled:bg-stone-50 disabled:text-slate-400" />
+        </div>
+        <button id="ad-edit-btn" onclick="editArticleDetail()"
+          class="px-4 py-1.5 rounded-lg text-sm font-medium border border-stone-200 hover:bg-stone-50 transition-colors">
+          Edit
+        </button>
+        <button id="ad-save-btn" onclick="saveArticleDetail()" disabled
+          class="hidden px-4 py-1.5 rounded-lg text-sm font-semibold bg-green-600 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-green-700 transition-colors">
+          Save
+        </button>
+        <button id="ad-cancel-btn" onclick="cancelArticleDetail()"
+          class="hidden px-4 py-1.5 rounded-lg text-sm font-medium border border-stone-200 hover:bg-stone-50 transition-colors">
+          Cancel
+        </button>
+      </div>
+    </div>
+
+    <div id="ad-legacy-warning" class="hidden mb-4 px-4 py-2.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm">
+      ⚠ This article is tagged at a level (中一/中二/中三) no longer supported in the MVP. You can re-tag to 中四–高中DSE.
+    </div>
+
+    <div class="bg-white rounded-xl border border-stone-200 p-6 space-y-5">
+
+      <!-- Article JSON -->
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="text-sm font-medium">Article JSON</label>
+          <span id="ad-article-status" class="text-xs text-slate-400"></span>
+        </div>
+        <textarea id="ad-article-json" rows="14" readonly oninput="onAdArticleInput()"
+          class="w-full font-mono text-xs border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-stone-50"></textarea>
+        <div id="ad-article-errors" class="mt-1.5 space-y-1 hidden"></div>
+      </div>
+
+      <!-- Quiz Prompt selector + Generate -->
+      <div class="border-t border-stone-100 pt-5">
+        <div class="flex items-end gap-3 mb-3">
+          <div class="flex-1 min-w-0">
+            <label class="block text-sm font-medium mb-1.5">Quiz Prompt</label>
+            <select id="ad-quiz-prompt-id"
+              class="w-full text-sm border border-stone-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white">
+              <option value="">Loading prompts…</option>
+            </select>
+            <p id="ad-quiz-prompt-desc" class="text-xs text-slate-400 mt-1"></p>
+          </div>
+          <div class="w-56 shrink-0">
+            <label class="block text-sm font-medium mb-1.5">Model</label>
+            <input type="text" id="ad-quiz-model" placeholder="qwen/qwen3.6-flash"
+              class="w-full text-sm border border-stone-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400" />
+          </div>
+          <div class="w-72 shrink-0">
+            <label class="block text-sm font-medium mb-1.5">OpenRouter API Key</label>
+            <input type="password" id="ad-quiz-api-key" placeholder="sk-or-…"
+              class="w-full text-sm border border-stone-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400" />
+          </div>
+          <button id="ad-generate-quiz-btn" onclick="generateQuizForArticle()"
+            class="shrink-0 px-4 py-2 rounded-lg text-sm font-semibold bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            Generate Quiz
+          </button>
+        </div>
+        <div id="ad-generate-status" class="hidden text-xs text-slate-500 mb-3"></div>
+      </div>
+
+      <!-- Quiz JSON -->
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="text-sm font-medium">Quiz JSON</label>
+          <span id="ad-quiz-status" class="text-xs text-slate-400"></span>
+        </div>
+        <textarea id="ad-quiz-json" rows="14" readonly oninput="onAdQuizInput()"
+          class="w-full font-mono text-xs border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-stone-50"></textarea>
+        <div id="ad-quiz-errors" class="mt-1.5 space-y-1 hidden"></div>
+      </div>
+
+    </div>
+  </div><!-- /panel-article-detail -->
+
+  <!-- ── Quiz Prompt MGT ──────────────────────────────────────────────────── -->
+  <div id="panel-quiz-prompts" class="hidden pb-6">
+
+    <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+      <div class="px-4 py-3 border-b border-stone-100 flex items-center justify-between">
+        <div>
+          <h2 class="font-semibold text-sm">Quiz Prompts</h2>
+          <p class="text-xs text-slate-400 mt-0.5">Templates for Article Library → Generate Quiz</p>
+        </div>
+        <button onclick="openQuizPromptForm(null)" class="text-xs px-3 py-1.5 rounded-lg bg-amber-600 text-white font-semibold hover:bg-amber-700 transition-colors">+ Add Prompt</button>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead class="bg-stone-50 text-xs text-slate-500 uppercase tracking-wider">
+            <tr>
+              <th class="px-4 py-2.5 text-left font-medium">Name</th>
+              <th class="px-4 py-2.5 text-left font-medium">Description</th>
+              <th class="px-4 py-2.5 text-left font-medium">Default Model</th>
+              <th class="px-4 py-2.5 text-left font-medium">Updated</th>
+              <th class="px-4 py-2.5 text-right font-medium"></th>
+            </tr>
+          </thead>
+          <tbody id="prompt-list" class="divide-y divide-stone-100">
+            <tr><td colspan="5" class="px-4 py-8 text-center text-sm text-slate-400">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Add/Edit form (inline) -->
+    <div id="prompt-form" class="hidden mt-5 bg-white rounded-xl border border-stone-200 p-6 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 id="prompt-form-title" class="font-semibold">Add Prompt</h3>
+        <button onclick="closeQuizPromptForm()" class="text-sm text-slate-400 hover:text-slate-600">✕</button>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1.5">Name</label>
+        <input type="text" id="prompt-form-name" placeholder="e.g. DSE Mock Quiz"
+          class="w-full text-sm border border-stone-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1.5">Description</label>
+        <input type="text" id="prompt-form-description" placeholder="One-line summary"
+          class="w-full text-sm border border-stone-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1.5">Default Model</label>
+        <input type="text" id="prompt-form-default-model" placeholder="qwen/qwen3.6-flash"
+          class="w-full text-sm border border-stone-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1.5">Prompt Template</label>
+        <textarea id="prompt-form-template" rows="14" placeholder="System prompt sent to the model when generating a quiz…"
+          class="w-full font-mono text-xs border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400"></textarea>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button onclick="closeQuizPromptForm()"
+          class="px-4 py-1.5 rounded-lg text-sm font-medium border border-stone-200 hover:bg-stone-50 transition-colors">
+          Cancel
+        </button>
+        <button id="prompt-form-save-btn" onclick="saveQuizPrompt()"
+          class="px-4 py-1.5 rounded-lg text-sm font-semibold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition-colors">
+          Save
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /panel-quiz-prompts -->
 
   <!-- ── Assessment panel ─────────────────────────────────────────────────── -->
   <div id="panel-assessment" class="hidden pb-6">
@@ -312,9 +436,6 @@
               <select id="na-level"
                 class="w-full text-sm border border-stone-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-white">
                 <option value="">— unset —</option>
-                <option value="1">中一</option>
-                <option value="2">中二</option>
-                <option value="3">中三</option>
                 <option value="4">中四</option>
                 <option value="5">中五</option>
                 <option value="6">中六</option>
@@ -343,8 +464,8 @@
       <div class="space-y-4">
         <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
           <div class="px-4 py-3 border-b border-stone-100">
-            <h3 class="font-semibold text-sm">Model &amp; Prompts</h3>
-            <p class="text-xs text-slate-400 mt-0.5">Pre-loaded from Assessment config</p>
+            <h3 class="font-semibold text-sm">Model &amp; Translation Prompt</h3>
+            <p class="text-xs text-slate-400 mt-0.5">This tab only generates the article (translation). Quizzes are generated later in <strong>Article Library → Detail</strong> using a managed prompt.</p>
           </div>
           <div class="p-4 space-y-3">
             <div>
@@ -354,12 +475,7 @@
             </div>
             <div>
               <label class="text-xs font-medium text-slate-600 block mb-1">Translation Prompt</label>
-              <textarea id="na-translation-prompt" rows="5"
-                class="w-full text-xs font-mono border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-stone-50"></textarea>
-            </div>
-            <div>
-              <label class="text-xs font-medium text-slate-600 block mb-1">Quiz Prompt</label>
-              <textarea id="na-quiz-prompt" rows="12"
+              <textarea id="na-translation-prompt" rows="8"
                 class="w-full text-xs font-mono border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-stone-50"></textarea>
             </div>
           </div>
@@ -381,14 +497,14 @@
           class="shrink-0 px-5 py-2 rounded-lg text-sm font-semibold bg-amber-600 text-white
                  disabled:opacity-40 disabled:cursor-not-allowed
                  hover:bg-amber-700 active:bg-amber-800 transition-colors">
-          Generate Exercise
+          Generate Article
         </button>
       </div>
       <!-- Progress -->
       <div id="na-progress" class="hidden mt-4">
         <div class="flex items-center justify-between text-xs text-slate-500 mb-1.5">
           <span id="na-progress-label">Running…</span>
-          <span id="na-progress-count">0 / 2</span>
+          <span id="na-progress-count">0 / 1</span>
         </div>
         <div class="w-full bg-stone-200 rounded-full h-1.5">
           <div id="na-progress-bar" class="bg-amber-500 h-1.5 rounded-full transition-all duration-500" style="width:0%"></div>
@@ -399,12 +515,12 @@
       <div id="na-error" class="hidden mt-3 text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"></div>
     </div>
 
-    <!-- Result: review generated JSON -->
+    <!-- Result: review generated article -->
     <div id="na-result" class="hidden mt-5">
       <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
         <div class="px-4 py-3 border-b border-stone-100">
-          <h3 class="font-semibold text-sm">Review Generated Exercise</h3>
-          <p class="text-xs text-slate-400 mt-0.5">Edit the JSON below if needed, then save to the library</p>
+          <h3 class="font-semibold text-sm">Review Generated Article</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Edit the JSON below if needed, then save to the library. The article will land as a Draft with no quizzes yet — generate quizzes later from <strong>Article Library → Detail</strong>.</p>
         </div>
         <div class="p-4 space-y-5">
 
@@ -417,17 +533,6 @@
             <textarea id="na-article-json" rows="14" oninput="onNaArticleInput()"
               class="w-full font-mono text-xs border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-stone-50"></textarea>
             <div id="na-article-errors" class="mt-1.5 space-y-1 hidden"></div>
-          </div>
-
-          <!-- Quiz JSON -->
-          <div>
-            <div class="flex items-center justify-between mb-1.5">
-              <label class="text-sm font-medium">Quiz JSON</label>
-              <span id="na-quiz-status" class="text-xs text-slate-400"></span>
-            </div>
-            <textarea id="na-quiz-json" rows="14" oninput="onNaQuizInput()"
-              class="w-full font-mono text-xs border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-stone-50"></textarea>
-            <div id="na-quiz-errors" class="mt-1.5 space-y-1 hidden"></div>
           </div>
 
           <!-- Save controls -->
@@ -513,7 +618,8 @@
 
 let assessmentTabLoaded = false
 let newArticleTabLoaded = false
-const PANELS = ['exercises', 'new-article', 'assessment']
+let quizPromptsTabLoaded = false
+const PANELS = ['exercises', 'new-article', 'quiz-prompts', 'assessment']
 
 function showTab(name) {
   for (const t of PANELS) {
@@ -522,7 +628,13 @@ function showTab(name) {
       ? 'tab-active px-5 pb-2.5 text-sm font-medium'
       : 'px-5 pb-2.5 text-sm font-medium text-slate-500 hover:text-slate-700'
   }
+  // Always close transient sub-panels when switching tabs
   document.getElementById('panel-detail').classList.add('hidden')
+  document.getElementById('panel-article-detail').classList.add('hidden')
+  if (name === 'exercises') {
+    // Re-show the listing in case article-detail was open
+    document.getElementById('panel-exercises').classList.remove('hidden')
+  }
   if (name === 'assessment' && !assessmentTabLoaded) {
     assessmentTabLoaded = true
     loadAssessmentConfig()
@@ -530,6 +642,10 @@ function showTab(name) {
   if (name === 'new-article' && !newArticleTabLoaded) {
     newArticleTabLoaded = true
     loadNewArticleConfig()
+  }
+  if (name === 'quiz-prompts' && !quizPromptsTabLoaded) {
+    quizPromptsTabLoaded = true
+    loadQuizPrompts()
   }
 }
 
@@ -575,37 +691,64 @@ function validateQuiz(q) {
 
 // ── Exercises API calls ───────────────────────────────────────────────────────
 
+function fmtDate(iso) {
+  if (!iso) return '—'
+  try {
+    const d = new Date(iso)
+    return d.toLocaleString('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })
+  } catch {
+    return iso
+  }
+}
+
+function levelLabel(n) {
+  return ({ 1: '中一', 2: '中二', 3: '中三', 4: '中四', 5: '中五', 6: '中六', 7: '高中DSE' })[n] || '—'
+}
+
 async function loadExercises() {
-  const list = document.getElementById('exercise-list')
-  list.innerHTML = '<div class="px-4 py-8 text-center text-sm text-slate-400">Loading…</div>'
+  const tbody = document.getElementById('exercise-list')
+  tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-sm text-slate-400">Loading…</td></tr>'
   try {
     const res = await fetch('/api/exercises')
     const data = await res.json()
     if (!data.length) {
-      list.innerHTML = '<div class="px-4 py-8 text-center text-sm text-slate-400">No exercises yet</div>'
+      tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-sm text-slate-400">No articles yet</td></tr>'
       return
     }
-    list.innerHTML = data.map((ex, i) => `
-      <div class="px-4 py-3 hover:bg-stone-50 group flex items-start justify-between gap-2 cursor-pointer${currentLibId === ex.id ? ' bg-amber-50' : ''}"
-           onclick="previewExercise('${escHtml(ex.id)}')">
-        <div class="min-w-0">
-          <div class="flex items-center gap-2">
-            <span class="w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs font-bold flex items-center justify-center shrink-0">${i + 1}</span>
-            <p class="text-sm font-medium truncate">${escHtml(ex.title)}</p>
-            ${ex.type === 'challenge' ? '<span class="shrink-0 text-[10px] bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded">挑戰</span>' : ''}
-          </div>
-          <p class="text-xs text-slate-400 mt-0.5 pl-7">${escHtml(ex.id)} · ${ex.totalQuestions}Q · ${ex.totalPoints}pt</p>
-          ${ex.source ? `<p class="text-xs text-slate-400 pl-7 truncate">${escHtml(ex.source)}</p>` : ''}
-        </div>
-        <button
-          onclick="event.stopPropagation(); deleteExercise('${escHtml(ex.id)}')"
-          title="Delete"
-          class="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5 text-slate-400 hover:text-red-500 text-xs px-1.5 py-0.5 rounded hover:bg-red-50"
-        >✕</button>
-      </div>
-    `).join('')
+    tbody.innerHTML = data.map((ex) => {
+      const status = ex.status || 'published'
+      const statusBadge = status === 'published'
+        ? '<span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Published</span>'
+        : '<span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-stone-100 text-slate-600">Draft</span>'
+      const hasQuiz = ex.hasQuizzes
+        ? '<span class="text-green-600 font-bold">✓</span>'
+        : '<span class="text-slate-300">✗</span>'
+      const challengeBadge = ex.type === 'challenge'
+        ? ' <span class="shrink-0 text-[10px] bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded">挑戰</span>'
+        : ''
+      return `
+        <tr class="hover:bg-stone-50">
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="text-sm font-medium truncate">${escHtml(ex.title)}</span>${challengeBadge}
+            </div>
+            <p class="text-xs text-slate-400 font-mono mt-0.5">${escHtml(ex.id)}${ex.source ? ' · ' + escHtml(ex.source) : ''}</p>
+          </td>
+          <td class="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">${fmtDate(ex.createdAt)}</td>
+          <td class="px-4 py-3 text-center">${hasQuiz}${ex.hasQuizzes ? `<span class="text-xs text-slate-400 ml-1">(${ex.totalQuestions}Q)</span>` : ''}</td>
+          <td class="px-4 py-3 text-xs text-slate-600 whitespace-nowrap">${levelLabel(ex.level)}</td>
+          <td class="px-4 py-3">${statusBadge}</td>
+          <td class="px-4 py-3 text-right whitespace-nowrap">
+            <button onclick="openArticleDetail('${escHtml(ex.id)}')"
+              class="text-xs px-3 py-1 rounded-lg border border-stone-200 hover:bg-stone-50 transition-colors">Detail</button>
+            <button onclick="deleteExercise('${escHtml(ex.id)}')"
+              class="ml-1 text-xs px-2 py-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+              title="Delete">✕</button>
+          </td>
+        </tr>`
+    }).join('')
   } catch (e) {
-    list.innerHTML = `<div class="px-4 py-4 text-sm text-red-500">Failed to load: ${escHtml(e.message)}</div>`
+    tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-4 text-sm text-red-500">Failed to load: ${escHtml(e.message)}</td></tr>`
   }
 }
 
@@ -814,21 +957,19 @@ function renderDownloads(runId) {
   loadHistory()
 }
 
-// ── Article Library ───────────────────────────────────────────────────────────
+// ── Article Detail ────────────────────────────────────────────────────────────
 
-let currentLibId = null
-let libOriginalArticle = null
-let libOriginalQuiz = null
-let libOriginalIsChallenge = false
-let libOriginalLevel = null
-let libArticleValid = false
-let libQuizValid = false
+let currentArticleId = null
+let adOriginal = null
+let adArticleValid = false
+let adQuizValid = true
+let quizPromptsCache = []
 
-function setLibStatus(prefix, valid, errors) {
-  const statusEl = document.getElementById(`lib-${prefix}-status`)
-  const errorBox = document.getElementById(`lib-${prefix}-errors`)
+function setAdStatus(prefix, valid, errors) {
+  const statusEl = document.getElementById(`ad-${prefix}-status`)
+  const errorBox = document.getElementById(`ad-${prefix}-errors`)
   if (valid) {
-    statusEl.textContent = 'Valid'
+    statusEl.textContent = errors.length ? '' : (prefix === 'quiz' && !document.getElementById('ad-quiz-json').value.trim() ? '' : 'Valid')
     statusEl.className = 'text-xs text-green-600'
     errorBox.classList.add('hidden')
     errorBox.innerHTML = ''
@@ -847,118 +988,143 @@ function setLibStatus(prefix, valid, errors) {
   }
 }
 
-function onLibArticleInput() {
+function onAdArticleInput() {
   let parsed = null
-  try { parsed = JSON.parse(document.getElementById('lib-article-json').value) } catch (_) {}
-  const errs = parsed
-    ? validateArticle(parsed)
-    : document.getElementById('lib-article-json').value.trim() ? ['Invalid JSON'] : []
-  libArticleValid = !!parsed && errs.length === 0
-  setLibStatus('article', libArticleValid, errs)
-  updateLibSaveBtn()
+  try { parsed = JSON.parse(document.getElementById('ad-article-json').value) } catch (_) {}
+  const val = document.getElementById('ad-article-json').value.trim()
+  const errs = parsed ? validateArticle(parsed) : (val ? ['Invalid JSON'] : [])
+  adArticleValid = !!parsed && errs.length === 0
+  setAdStatus('article', adArticleValid, errs)
+  updateAdSaveBtn()
 }
 
-function onLibQuizInput() {
+function onAdQuizInput() {
+  const val = document.getElementById('ad-quiz-json').value.trim()
+  // Empty quiz is valid (article without a quiz yet)
+  if (!val || val === 'null') {
+    adQuizValid = true
+    setAdStatus('quiz', true, [])
+    updateAdSaveBtn()
+    return
+  }
   let parsed = null
-  try { parsed = JSON.parse(document.getElementById('lib-quiz-json').value) } catch (_) {}
-  const errs = parsed
-    ? validateQuiz(parsed)
-    : document.getElementById('lib-quiz-json').value.trim() ? ['Invalid JSON'] : []
-  libQuizValid = !!parsed && errs.length === 0
-  setLibStatus('quiz', libQuizValid, errs)
-  updateLibSaveBtn()
+  try { parsed = JSON.parse(val) } catch (_) {}
+  const errs = parsed ? validateQuiz(parsed) : ['Invalid JSON']
+  adQuizValid = !!parsed && errs.length === 0
+  setAdStatus('quiz', adQuizValid, errs)
+  updateAdSaveBtn()
 }
 
-function updateLibSaveBtn() {
+function updateAdSaveBtn() {
   let art = null, quiz = null
-  try { art = JSON.parse(document.getElementById('lib-article-json').value) } catch (_) {}
-  try { quiz = JSON.parse(document.getElementById('lib-quiz-json').value) } catch (_) {}
-  const idsOk = !!(art && quiz && art.id && art.id === quiz.articleId)
-  document.getElementById('lib-save-btn').disabled = !(libArticleValid && libQuizValid && idsOk)
+  try { art = JSON.parse(document.getElementById('ad-article-json').value) } catch (_) {}
+  const quizVal = document.getElementById('ad-quiz-json').value.trim()
+  const hasQuiz = quizVal && quizVal !== 'null'
+  if (hasQuiz) try { quiz = JSON.parse(quizVal) } catch (_) {}
+  const idsOk = !!(art && (!hasQuiz || (quiz && quiz.articleId === art.id)))
+  document.getElementById('ad-save-btn').disabled = !(adArticleValid && adQuizValid && idsOk)
 }
 
-async function previewExercise(id) {
-  currentLibId = id
-  libArticleValid = false
-  libQuizValid = false
+async function openArticleDetail(id) {
+  currentArticleId = id
+  adArticleValid = false
+  adQuizValid = true
 
-  document.getElementById('lib-empty').classList.add('hidden')
-  document.getElementById('lib-preview').classList.remove('hidden')
-  document.getElementById('lib-preview-title').textContent = '…'
-  document.getElementById('lib-preview-id').textContent = id
-  document.getElementById('lib-article-json').value = 'Loading…'
-  document.getElementById('lib-quiz-json').value = ''
-  document.getElementById('lib-article-status').textContent = ''
-  document.getElementById('lib-quiz-status').textContent = ''
-  document.getElementById('lib-article-errors').classList.add('hidden')
-  document.getElementById('lib-quiz-errors').classList.add('hidden')
+  document.getElementById('panel-exercises').classList.add('hidden')
+  document.getElementById('panel-article-detail').classList.remove('hidden')
+  document.getElementById('ad-title').textContent = '…'
+  document.getElementById('ad-id').textContent = id
+  document.getElementById('ad-article-json').value = 'Loading…'
+  document.getElementById('ad-quiz-json').value = ''
+  document.getElementById('ad-article-status').textContent = ''
+  document.getElementById('ad-quiz-status').textContent = ''
+  document.getElementById('ad-article-errors').classList.add('hidden')
+  document.getElementById('ad-quiz-errors').classList.add('hidden')
+  document.getElementById('ad-generate-status').classList.add('hidden')
+  document.getElementById('ad-legacy-warning').classList.add('hidden')
 
-  // Re-render list to highlight selected item
-  loadExercises()
+  await loadQuizPromptsCache()
+  populateAdPromptSelector()
 
   try {
     const res = await fetch(`/api/exercises/${encodeURIComponent(id)}`)
     if (!res.ok) throw new Error('Failed to load')
     const data = await res.json()
 
-    libOriginalArticle = data.article
-    libOriginalQuiz = data.quiz
-    libOriginalIsChallenge = !!data.isChallenge
-    libOriginalLevel = data.level ?? null
+    adOriginal = data
 
-    document.getElementById('lib-preview-title').textContent = data.article.title || id
-    document.getElementById('lib-article-json').value = JSON.stringify(data.article, null, 2)
-    document.getElementById('lib-quiz-json').value = JSON.stringify(data.quiz, null, 2)
-    document.getElementById('lib-is-challenge').checked = libOriginalIsChallenge
-    document.getElementById('lib-level').value = libOriginalLevel ?? ''
+    document.getElementById('ad-title').textContent = data.article.title || id
+    document.getElementById('ad-article-json').value = JSON.stringify(data.article, null, 2)
+    document.getElementById('ad-quiz-json').value = data.hasQuizzes && data.quiz
+      ? JSON.stringify(data.quiz, null, 2) : ''
+    document.getElementById('ad-is-challenge').checked = !!data.isChallenge
+    document.getElementById('ad-level').value = data.level ?? ''
+    document.getElementById('ad-status').value = data.status || 'published'
+    document.getElementById('ad-expected-minutes').value = data.expectedMinutes ?? ''
 
-    // Ensure read-only mode
-    document.getElementById('lib-article-json').readOnly = true
-    document.getElementById('lib-quiz-json').readOnly = true
-    document.getElementById('lib-is-challenge').disabled = true
-    document.getElementById('lib-level').disabled = true
-    document.getElementById('lib-edit-btn').classList.remove('hidden')
-    document.getElementById('lib-save-btn').classList.add('hidden')
-    document.getElementById('lib-cancel-btn').classList.add('hidden')
+    if (data.level && data.level <= 3) {
+      document.getElementById('ad-legacy-warning').classList.remove('hidden')
+    }
+
+    setAdReadOnly(true)
   } catch (e) {
-    document.getElementById('lib-preview-title').textContent = 'Error'
-    document.getElementById('lib-article-json').value = 'Failed to load: ' + e.message
+    document.getElementById('ad-title').textContent = 'Error'
+    document.getElementById('ad-article-json').value = 'Failed to load: ' + e.message
   }
 }
 
-function editLibrary() {
-  document.getElementById('lib-article-json').readOnly = false
-  document.getElementById('lib-quiz-json').readOnly = false
-  document.getElementById('lib-is-challenge').disabled = false
-  document.getElementById('lib-level').disabled = false
-  document.getElementById('lib-edit-btn').classList.add('hidden')
-  document.getElementById('lib-save-btn').classList.remove('hidden')
-  document.getElementById('lib-cancel-btn').classList.remove('hidden')
-  onLibArticleInput()
-  onLibQuizInput()
-  document.getElementById('lib-article-json').focus()
+function closeArticleDetail() {
+  document.getElementById('panel-article-detail').classList.add('hidden')
+  document.getElementById('panel-exercises').classList.remove('hidden')
+  currentArticleId = null
+  adOriginal = null
+  loadExercises()
 }
 
-async function saveLibraryEdits() {
-  let article, quiz
-  try { article = JSON.parse(document.getElementById('lib-article-json').value) }
-  catch (_) { showToast('Article JSON is invalid', 'error'); return }
-  try { quiz = JSON.parse(document.getElementById('lib-quiz-json').value) }
-  catch (_) { showToast('Quiz JSON is invalid', 'error'); return }
+function setAdReadOnly(readOnly) {
+  document.getElementById('ad-article-json').readOnly = readOnly
+  document.getElementById('ad-quiz-json').readOnly = readOnly
+  document.getElementById('ad-is-challenge').disabled = readOnly
+  document.getElementById('ad-level').disabled = readOnly
+  document.getElementById('ad-status').disabled = readOnly
+  document.getElementById('ad-expected-minutes').disabled = readOnly
+  document.getElementById('ad-edit-btn').classList.toggle('hidden', !readOnly)
+  document.getElementById('ad-save-btn').classList.toggle('hidden', readOnly)
+  document.getElementById('ad-cancel-btn').classList.toggle('hidden', readOnly)
+}
 
-  const btn = document.getElementById('lib-save-btn')
+function editArticleDetail() {
+  setAdReadOnly(false)
+  onAdArticleInput()
+  onAdQuizInput()
+  document.getElementById('ad-article-json').focus()
+}
+
+async function saveArticleDetail() {
+  let article, quiz = null
+  try { article = JSON.parse(document.getElementById('ad-article-json').value) }
+  catch (_) { showToast('Article JSON is invalid', 'error'); return }
+  const quizVal = document.getElementById('ad-quiz-json').value.trim()
+  if (quizVal && quizVal !== 'null') {
+    try { quiz = JSON.parse(quizVal) } catch (_) { showToast('Quiz JSON is invalid', 'error'); return }
+  }
+
+  const btn = document.getElementById('ad-save-btn')
   btn.disabled = true
   btn.textContent = 'Saving…'
 
   try {
-    const res = await fetch(`/api/exercises/${encodeURIComponent(currentLibId)}`, {
+    const expectedMinutes = parseInt(document.getElementById('ad-expected-minutes').value)
+    const res = await fetch(`/api/exercises/${encodeURIComponent(currentArticleId)}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         article,
         quiz,
-        isChallenge: document.getElementById('lib-is-challenge').checked,
-        level: parseInt(document.getElementById('lib-level').value) || null,
+        isChallenge: document.getElementById('ad-is-challenge').checked,
+        level: parseInt(document.getElementById('ad-level').value) || null,
+        status: document.getElementById('ad-status').value,
+        expectedMinutes: Number.isFinite(expectedMinutes) ? expectedMinutes : null,
       }),
     })
     const data = await res.json()
@@ -967,48 +1133,238 @@ async function saveLibraryEdits() {
       showToast('Save failed: ' + msg, 'error')
     } else {
       showToast('Saved successfully!', 'success')
-      libOriginalArticle = article
-      libOriginalQuiz = quiz
-      libOriginalIsChallenge = document.getElementById('lib-is-challenge').checked
-      libOriginalLevel = parseInt(document.getElementById('lib-level').value) || null
-      document.getElementById('lib-preview-title').textContent = article.title || currentLibId
-      document.getElementById('lib-article-json').readOnly = true
-      document.getElementById('lib-quiz-json').readOnly = true
-      document.getElementById('lib-is-challenge').disabled = true
-      document.getElementById('lib-level').disabled = true
-      document.getElementById('lib-edit-btn').classList.remove('hidden')
-      document.getElementById('lib-save-btn').classList.add('hidden')
-      document.getElementById('lib-cancel-btn').classList.add('hidden')
-      loadExercises()
+      adOriginal = {
+        ...adOriginal,
+        article,
+        quiz,
+        hasQuizzes: !!quiz && Array.isArray(quiz.parts) && quiz.parts.some((p) => Array.isArray(p.questions) && p.questions.length > 0),
+        status: document.getElementById('ad-status').value,
+        level: parseInt(document.getElementById('ad-level').value) || null,
+        isChallenge: document.getElementById('ad-is-challenge').checked,
+        expectedMinutes: Number.isFinite(expectedMinutes) ? expectedMinutes : null,
+      }
+      document.getElementById('ad-title').textContent = article.title || currentArticleId
+      setAdReadOnly(true)
     }
   } catch (e) {
     showToast('Network error: ' + e.message, 'error')
   }
 
   btn.textContent = 'Save'
-  updateLibSaveBtn()
+  updateAdSaveBtn()
 }
 
-function cancelLibraryEdit() {
-  document.getElementById('lib-article-json').readOnly = true
-  document.getElementById('lib-quiz-json').readOnly = true
-  document.getElementById('lib-is-challenge').disabled = true
-  document.getElementById('lib-level').disabled = true
-  document.getElementById('lib-edit-btn').classList.remove('hidden')
-  document.getElementById('lib-save-btn').classList.add('hidden')
-  document.getElementById('lib-cancel-btn').classList.add('hidden')
-  if (libOriginalArticle) {
-    document.getElementById('lib-article-json').value = JSON.stringify(libOriginalArticle, null, 2)
-    document.getElementById('lib-article-status').textContent = ''
-    document.getElementById('lib-article-errors').classList.add('hidden')
+function cancelArticleDetail() {
+  setAdReadOnly(true)
+  if (adOriginal) {
+    document.getElementById('ad-article-json').value = JSON.stringify(adOriginal.article, null, 2)
+    document.getElementById('ad-quiz-json').value = adOriginal.hasQuizzes && adOriginal.quiz
+      ? JSON.stringify(adOriginal.quiz, null, 2) : ''
+    document.getElementById('ad-is-challenge').checked = !!adOriginal.isChallenge
+    document.getElementById('ad-level').value = adOriginal.level ?? ''
+    document.getElementById('ad-status').value = adOriginal.status || 'published'
+    document.getElementById('ad-expected-minutes').value = adOriginal.expectedMinutes ?? ''
+    document.getElementById('ad-article-status').textContent = ''
+    document.getElementById('ad-quiz-status').textContent = ''
+    document.getElementById('ad-article-errors').classList.add('hidden')
+    document.getElementById('ad-quiz-errors').classList.add('hidden')
+    document.getElementById('ad-generate-status').classList.add('hidden')
   }
-  if (libOriginalQuiz) {
-    document.getElementById('lib-quiz-json').value = JSON.stringify(libOriginalQuiz, null, 2)
-    document.getElementById('lib-quiz-status').textContent = ''
-    document.getElementById('lib-quiz-errors').classList.add('hidden')
+}
+
+function populateAdPromptSelector() {
+  const sel = document.getElementById('ad-quiz-prompt-id')
+  sel.innerHTML = quizPromptsCache.length
+    ? quizPromptsCache.map((p) => `<option value="${escHtml(p.id)}">${escHtml(p.name)}</option>`).join('')
+    : '<option value="">No prompts available</option>'
+  sel.onchange = () => onAdPromptChange()
+  if (quizPromptsCache.length) {
+    sel.value = quizPromptsCache[0].id
+    onAdPromptChange()
   }
-  document.getElementById('lib-is-challenge').checked = libOriginalIsChallenge
-  document.getElementById('lib-level').value = libOriginalLevel ?? ''
+}
+
+function onAdPromptChange() {
+  const id = document.getElementById('ad-quiz-prompt-id').value
+  const p = quizPromptsCache.find((x) => x.id === id)
+  document.getElementById('ad-quiz-prompt-desc').textContent = p?.description || ''
+  if (p?.defaultModel && !document.getElementById('ad-quiz-model').value) {
+    document.getElementById('ad-quiz-model').value = p.defaultModel
+  }
+}
+
+async function generateQuizForArticle() {
+  const promptId = document.getElementById('ad-quiz-prompt-id').value
+  const fallbackModel = quizPromptsCache.find((p) => p.id === promptId)?.defaultModel || 'qwen/qwen3.6-flash'
+  const model = document.getElementById('ad-quiz-model').value.trim() || fallbackModel
+  const apiKey = document.getElementById('ad-quiz-api-key').value.trim()
+  if (!apiKey) { showToast('OpenRouter API key required', 'error'); return }
+  if (!promptId) { showToast('Select a prompt first', 'error'); return }
+
+  const btn = document.getElementById('ad-generate-quiz-btn')
+  const statusEl = document.getElementById('ad-generate-status')
+  btn.disabled = true
+  btn.textContent = 'Generating…'
+  statusEl.classList.remove('hidden')
+  statusEl.textContent = '正在啟動…'
+
+  try {
+    const res = await fetch(`/api/exercises/${encodeURIComponent(currentArticleId)}/generate-quiz`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ promptId, model, apiKey }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Failed to start')
+
+    const runId = data.runId
+    let done = false
+    while (!done) {
+      await new Promise((r) => setTimeout(r, 2000))
+      const sRes = await fetch(`/api/exercises/${encodeURIComponent(currentArticleId)}/generate-quiz/status/${runId}`)
+      const s = await sRes.json()
+      statusEl.textContent = s.step || `Status: ${s.status}`
+      if (s.status === 'done') {
+        setAdReadOnly(false)
+        document.getElementById('ad-quiz-json').value = JSON.stringify(s.quizJson, null, 2)
+        onAdArticleInput()
+        onAdQuizInput()
+        showToast('Quiz generated — review then click Save', 'success')
+        statusEl.textContent = '✓ Generated. Review the JSON above and click Save to persist.'
+        done = true
+      } else if (s.status === 'error') {
+        showToast('Generation failed: ' + s.error, 'error')
+        statusEl.textContent = '✕ ' + s.error
+        done = true
+      }
+    }
+  } catch (e) {
+    showToast('Generation failed: ' + e.message, 'error')
+    statusEl.textContent = '✕ ' + e.message
+  }
+
+  btn.disabled = false
+  btn.textContent = 'Generate Quiz'
+}
+
+// ── Quiz Prompts MGT ─────────────────────────────────────────────────────────
+
+let editingPromptId = null
+
+async function loadQuizPromptsCache() {
+  try {
+    const res = await fetch('/api/quiz-prompts')
+    if (!res.ok) throw new Error('Failed to load')
+    quizPromptsCache = await res.json()
+  } catch (e) {
+    quizPromptsCache = []
+    console.error('Failed to load quiz prompts:', e)
+  }
+}
+
+async function loadQuizPrompts() {
+  const tbody = document.getElementById('prompt-list')
+  tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-sm text-slate-400">Loading…</td></tr>'
+  await loadQuizPromptsCache()
+  if (!quizPromptsCache.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-sm text-slate-400">No prompts yet</td></tr>'
+    return
+  }
+  tbody.innerHTML = quizPromptsCache.map((p) => `
+    <tr class="hover:bg-stone-50">
+      <td class="px-4 py-3">
+        <p class="text-sm font-medium">${escHtml(p.name)}</p>
+        <p class="text-xs text-slate-400 font-mono mt-0.5">${escHtml(p.id)}</p>
+      </td>
+      <td class="px-4 py-3 text-xs text-slate-600 max-w-md">${escHtml(p.description || '—')}</td>
+      <td class="px-4 py-3 text-xs text-slate-600 font-mono whitespace-nowrap">${escHtml(p.defaultModel || '—')}</td>
+      <td class="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">${fmtDate(p.updatedAt)}</td>
+      <td class="px-4 py-3 text-right whitespace-nowrap">
+        <button onclick="openQuizPromptForm('${escHtml(p.id)}')"
+          class="text-xs px-3 py-1 rounded-lg border border-stone-200 hover:bg-stone-50 transition-colors">Edit</button>
+        <button onclick="deleteQuizPrompt('${escHtml(p.id)}')"
+          class="ml-1 text-xs px-2 py-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+          title="Delete">✕</button>
+      </td>
+    </tr>`).join('')
+}
+
+function openQuizPromptForm(id) {
+  editingPromptId = id || null
+  document.getElementById('prompt-form').classList.remove('hidden')
+  document.getElementById('prompt-form-title').textContent = id ? 'Edit Prompt' : 'Add Prompt'
+  if (id) {
+    const p = quizPromptsCache.find((x) => x.id === id)
+    if (!p) { showToast('Prompt not found', 'error'); return }
+    document.getElementById('prompt-form-name').value = p.name || ''
+    document.getElementById('prompt-form-description').value = p.description || ''
+    document.getElementById('prompt-form-default-model').value = p.defaultModel || ''
+    document.getElementById('prompt-form-template').value = p.promptTemplate || ''
+  } else {
+    document.getElementById('prompt-form-name').value = ''
+    document.getElementById('prompt-form-description').value = ''
+    document.getElementById('prompt-form-default-model').value = 'qwen/qwen3.6-flash'
+    document.getElementById('prompt-form-template').value = ''
+  }
+  document.getElementById('prompt-form-name').focus()
+}
+
+function closeQuizPromptForm() {
+  document.getElementById('prompt-form').classList.add('hidden')
+  editingPromptId = null
+}
+
+async function saveQuizPrompt() {
+  const body = {
+    name: document.getElementById('prompt-form-name').value.trim(),
+    description: document.getElementById('prompt-form-description').value.trim(),
+    defaultModel: document.getElementById('prompt-form-default-model').value.trim(),
+    promptTemplate: document.getElementById('prompt-form-template').value,
+  }
+  if (!body.name) { showToast('Name is required', 'error'); return }
+  if (!body.promptTemplate.trim()) { showToast('Prompt template is required', 'error'); return }
+
+  const btn = document.getElementById('prompt-form-save-btn')
+  btn.disabled = true
+  btn.textContent = 'Saving…'
+  try {
+    const url = editingPromptId
+      ? `/api/quiz-prompts/${encodeURIComponent(editingPromptId)}`
+      : '/api/quiz-prompts'
+    const res = await fetch(url, {
+      method: editingPromptId ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      showToast('Save failed: ' + (data.errors?.join('; ') || data.error), 'error')
+    } else {
+      showToast(editingPromptId ? 'Prompt updated' : 'Prompt created', 'success')
+      closeQuizPromptForm()
+      loadQuizPrompts()
+    }
+  } catch (e) {
+    showToast('Network error: ' + e.message, 'error')
+  }
+  btn.disabled = false
+  btn.textContent = 'Save'
+}
+
+async function deleteQuizPrompt(id) {
+  if (!confirm(`Delete prompt "${id}"?`)) return
+  try {
+    const res = await fetch(`/api/quiz-prompts/${encodeURIComponent(id)}`, { method: 'DELETE' })
+    const data = await res.json()
+    if (!res.ok) {
+      showToast('Delete failed: ' + data.error, 'error')
+    } else {
+      showToast('Prompt deleted', 'success')
+      loadQuizPrompts()
+    }
+  } catch (e) {
+    showToast('Network error: ' + e.message, 'error')
+  }
 }
 
 // ── Raw Article Modal ─────────────────────────────────────────────────────────
@@ -1422,7 +1778,6 @@ function renderTable(container, headers, rows) {
 
 let naGenerateTimer = null
 let naArticleValid = false
-let naQuizValid = false
 
 async function loadNewArticleConfig() {
   try {
@@ -1432,7 +1787,6 @@ async function loadNewArticleConfig() {
     const preferred = 'qwen/qwen3.6-flash'
     document.getElementById('na-model').value = models.includes(preferred) ? preferred : (models[0] || '')
     document.getElementById('na-translation-prompt').value = cfg.translationPrompt || ''
-    document.getElementById('na-quiz-prompt').value = cfg.quizPrompt || ''
   } catch (_) { /* silent */ }
 }
 
@@ -1450,7 +1804,6 @@ async function generateArticle() {
   const footnotesText = document.getElementById('na-footnotes').value.trim()
   const model = document.getElementById('na-model').value.trim()
   const translationPrompt = document.getElementById('na-translation-prompt').value
-  const quizPrompt = document.getElementById('na-quiz-prompt').value
   const apiKey = document.getElementById('na-api-key').value.trim()
 
   const btn = document.getElementById('na-generate-btn')
@@ -1460,7 +1813,7 @@ async function generateArticle() {
   document.getElementById('na-error').classList.add('hidden')
   document.getElementById('na-progress').classList.remove('hidden')
   document.getElementById('na-progress-bar').style.width = '0%'
-  document.getElementById('na-progress-count').textContent = '0 / 2'
+  document.getElementById('na-progress-count').textContent = '0 / 1'
   document.getElementById('na-progress-step').textContent = ''
   document.getElementById('na-progress-label').textContent = 'Running…'
 
@@ -1468,7 +1821,7 @@ async function generateArticle() {
     const res = await fetch('/api/generate-article', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, source, text, footnotesText, model, translationPrompt, quizPrompt, apiKey }),
+      body: JSON.stringify({ title, source, text, footnotesText, model, translationPrompt, apiKey, skipQuiz: true }),
     })
     const body = await res.json()
     if (!res.ok) throw new Error(body.error || 'Failed to start generation')
@@ -1477,7 +1830,7 @@ async function generateArticle() {
     document.getElementById('na-error').textContent = 'Error: ' + e.message
     document.getElementById('na-error').classList.remove('hidden')
     btn.disabled = false
-    btn.textContent = 'Generate Exercise'
+    btn.textContent = 'Generate Article'
     updateNaGenerateBtn()
   }
 }
@@ -1487,7 +1840,7 @@ function pollGenerate(runId) {
   naGenerateTimer = setInterval(async () => {
     try {
       const res = await fetch(`/api/generate-article/status/${runId}`)
-      const { status, step, done, total, articleJson, quizJson, error } = await res.json()
+      const { status, step, done, total, articleJson, error } = await res.json()
       const pct = total > 0 ? Math.round(done / total * 100) : 0
       document.getElementById('na-progress-bar').style.width = pct + '%'
       document.getElementById('na-progress-count').textContent = `${done} / ${total}`
@@ -1499,20 +1852,18 @@ function pollGenerate(runId) {
         clearInterval(naGenerateTimer)
         document.getElementById('na-progress-bar').style.width = '100%'
         document.getElementById('na-article-json').value = JSON.stringify(articleJson, null, 2)
-        document.getElementById('na-quiz-json').value = JSON.stringify(quizJson, null, 2)
         onNaArticleInput()
-        onNaQuizInput()
         document.getElementById('na-result').classList.remove('hidden')
         document.getElementById('na-generate-btn').disabled = false
-        document.getElementById('na-generate-btn').textContent = 'Generate Exercise'
+        document.getElementById('na-generate-btn').textContent = 'Generate Article'
         updateNaGenerateBtn()
-        showToast('Generation complete!', 'success')
+        showToast('Article generated! Review and save.', 'success')
       } else if (status === 'error') {
         clearInterval(naGenerateTimer)
         document.getElementById('na-error').textContent = 'Generation failed: ' + (error || 'Unknown error')
         document.getElementById('na-error').classList.remove('hidden')
         document.getElementById('na-generate-btn').disabled = false
-        document.getElementById('na-generate-btn').textContent = 'Generate Exercise'
+        document.getElementById('na-generate-btn').textContent = 'Generate Article'
         updateNaGenerateBtn()
       }
     } catch (_) { /* ignore transient errors */ }
@@ -1553,31 +1904,16 @@ function onNaArticleInput() {
   updateNaSaveBtn()
 }
 
-function onNaQuizInput() {
-  let parsed = null
-  try { parsed = JSON.parse(document.getElementById('na-quiz-json').value) } catch (_) {}
-  const errs = parsed
-    ? validateQuiz(parsed)
-    : document.getElementById('na-quiz-json').value.trim() ? ['Invalid JSON'] : []
-  naQuizValid = !!parsed && errs.length === 0
-  setNaStatus('quiz', naQuizValid, errs)
-  updateNaSaveBtn()
-}
-
 function updateNaSaveBtn() {
-  let art = null, quiz = null
+  let art = null
   try { art = JSON.parse(document.getElementById('na-article-json').value) } catch (_) {}
-  try { quiz = JSON.parse(document.getElementById('na-quiz-json').value) } catch (_) {}
-  const idsMatch = !!(art && quiz && art.id && art.id === quiz.articleId)
-  document.getElementById('na-save-btn').disabled = !(naArticleValid && naQuizValid && idsMatch)
+  document.getElementById('na-save-btn').disabled = !(naArticleValid && !!art && !!art.id)
 }
 
 async function saveGeneratedArticle() {
-  let article, quiz
+  let article
   try { article = JSON.parse(document.getElementById('na-article-json').value) }
   catch (_) { showToast('Article JSON is invalid', 'error'); return }
-  try { quiz = JSON.parse(document.getElementById('na-quiz-json').value) }
-  catch (_) { showToast('Quiz JSON is invalid', 'error'); return }
 
   const btn = document.getElementById('na-save-btn')
   btn.disabled = true
@@ -1589,23 +1925,22 @@ async function saveGeneratedArticle() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         article,
-        quiz,
+        quiz: null, // skipQuiz path: article saved with no quiz; admin generates later via Library Detail
         isChallenge: document.getElementById('na-is-challenge').checked,
         level: parseInt(document.getElementById('na-level').value) || null,
+        status: 'draft', // articles without quizzes start as drafts
       }),
     })
     const data = await res.json()
     if (!res.ok) {
       showToast(`Error: ${(data.articleErrors || []).concat(data.quizErrors || []).join('; ') || data.error}`, 'error')
     } else {
-      showToast(`Article "${data.id}" saved to library!`, 'success')
+      showToast(`Article "${data.id}" saved as draft! Open it in Article Library to generate a quiz.`, 'success')
       document.getElementById('na-result').classList.add('hidden')
       document.getElementById('na-article-json').value = ''
-      document.getElementById('na-quiz-json').value = ''
       document.getElementById('na-is-challenge').checked = false
       document.getElementById('na-level').value = ''
       naArticleValid = false
-      naQuizValid = false
     }
   } catch (e) {
     showToast(`Network error: ${e.message}`, 'error')
@@ -1739,9 +2074,6 @@ loadAssessmentConfig()
             <select id="raw-modal-level"
               class="text-sm border border-stone-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-white">
               <option value="">— unset —</option>
-              <option value="1">中一</option>
-              <option value="2">中二</option>
-              <option value="3">中三</option>
               <option value="4">中四</option>
               <option value="5">中五</option>
               <option value="6">中六</option>

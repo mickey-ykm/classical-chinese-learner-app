@@ -82,6 +82,67 @@ function removeFromDataTs(id) {
   fs.writeFileSync(DATA_TS, c)
 }
 
+function isRegisteredInDataTs(id) {
+  try {
+    const c = fs.readFileSync(DATA_TS, "utf8")
+    return new RegExp(`"${id}": require\\(`).test(c)
+  } catch {
+    return false
+  }
+}
+
+// ── Phase 3 helpers ──────────────────────────────────────────────────────────
+
+function nowIso() {
+  return new Date().toISOString()
+}
+
+function fileMtimeIso(filePath) {
+  try {
+    return fs.statSync(filePath).mtime.toISOString()
+  } catch {
+    return nowIso()
+  }
+}
+
+function quizHasQuestions(quiz) {
+  if (!quiz || !Array.isArray(quiz.parts) || !quiz.parts.length) return false
+  return quiz.parts.some((p) => Array.isArray(p.questions) && p.questions.length > 0)
+}
+
+function entryHasQuizFromDisk(id) {
+  const qPath = path.join(DATA_DIR, "quizzes", `${id}.json`)
+  if (!fs.existsSync(qPath)) return false
+  try {
+    return quizHasQuestions(JSON.parse(fs.readFileSync(qPath, "utf8")))
+  } catch {
+    return false
+  }
+}
+
+function backfillIndex() {
+  const index = readIndex()
+  let changed = false
+  for (const e of index) {
+    if (!e.createdAt) {
+      e.createdAt = fileMtimeIso(path.join(DATA_DIR, "articles", `${e.id}.json`))
+      changed = true
+    }
+    if (!e.status) {
+      e.status = "published"
+      changed = true
+    }
+    if (typeof e.hasQuizzes !== "boolean") {
+      e.hasQuizzes = entryHasQuizFromDisk(e.id)
+      changed = true
+    }
+  }
+  if (changed) {
+    writeIndex(index)
+    console.log(`  ✓ Backfilled ${index.length} entries in data/index.json`)
+  }
+}
+
 // ── Routes ───────────────────────────────────────────────────────────────────
 
 app.get("/api/exercises", (_req, res) => {
@@ -94,20 +155,25 @@ app.get("/api/exercises", (_req, res) => {
 
 app.post("/api/exercises", (req, res) => {
   try {
-    const { article, quiz, isChallenge, level } = req.body || {}
+    const { article, quiz, isChallenge, level, status, expectedMinutes, exerciseTemplate } = req.body || {}
 
     const articleErrors = validateArticle(article)
-    const quizErrors = validateQuiz(quiz)
-
-    if (articleErrors.length || quizErrors.length) {
-      return res.status(400).json({ articleErrors, quizErrors })
+    if (articleErrors.length) {
+      return res.status(400).json({ articleErrors, quizErrors: [] })
     }
 
-    if (article.id !== quiz.articleId) {
-      return res.status(400).json({
-        articleErrors: [],
-        quizErrors: [`quiz.articleId "${quiz.articleId}" does not match article.id "${article.id}"`],
-      })
+    const hasQuizPayload = quiz != null
+    if (hasQuizPayload) {
+      const quizErrors = validateQuiz(quiz)
+      if (quizErrors.length) {
+        return res.status(400).json({ articleErrors: [], quizErrors })
+      }
+      if (article.id !== quiz.articleId) {
+        return res.status(400).json({
+          articleErrors: [],
+          quizErrors: [`quiz.articleId "${quiz.articleId}" does not match article.id "${article.id}"`],
+        })
+      }
     }
 
     const id = article.id
@@ -120,26 +186,37 @@ app.post("/api/exercises", (req, res) => {
       })
     }
 
+    // Always write a quiz file (placeholder if skipQuiz)
+    const finalQuiz = hasQuizPayload ? quiz : { articleId: id, totalPoints: 0, parts: [] }
+
     // Write JSON files
     fs.writeFileSync(path.join(DATA_DIR, "articles", `${id}.json`), JSON.stringify(article, null, 2))
-    fs.writeFileSync(path.join(DATA_DIR, "quizzes",  `${id}.json`), JSON.stringify(quiz, null, 2))
+    fs.writeFileSync(path.join(DATA_DIR, "quizzes",  `${id}.json`), JSON.stringify(finalQuiz, null, 2))
 
     // Update index.json
-    const totalQuestions = quiz.parts.reduce((s, p) => s + p.questions.length, 0)
+    const totalQuestions = finalQuiz.parts.reduce((s, p) => s + (p.questions?.length || 0), 0)
+    const hasQuizzes = quizHasQuestions(finalQuiz)
     const entry = {
       id,
       title: article.title,
       source: article.source || "",
-      totalPoints: quiz.totalPoints,
+      totalPoints: finalQuiz.totalPoints,
       totalQuestions,
+      createdAt: nowIso(),
+      status: status === "draft" ? "draft" : "published",
+      hasQuizzes,
     }
     if (isChallenge) entry.type = "challenge"
-    if (level >= 1 && level <= 7) entry.level = level
+    if (level >= 4 && level <= 7) entry.level = level
+    if (typeof expectedMinutes === "number" && expectedMinutes > 0) entry.expectedMinutes = expectedMinutes
+    if (Array.isArray(exerciseTemplate)) entry.exerciseTemplate = exerciseTemplate
     index.push(entry)
     writeIndex(index)
 
-    // Update lib/data.ts
-    updateDataTs(id)
+    // Register in lib/data.ts only when there's a usable quiz AND status is published
+    if (hasQuizzes && entry.status === "published") {
+      updateDataTs(id)
+    }
 
     res.json({ success: true, id })
   } catch (e) {
@@ -157,11 +234,20 @@ app.get("/api/exercises/:id", (req, res) => {
     const articlePath = path.join(DATA_DIR, "articles", `${id}.json`)
     const quizPath = path.join(DATA_DIR, "quizzes", `${id}.json`)
     if (!fs.existsSync(articlePath)) return res.status(404).json({ error: "Article file not found" })
-    if (!fs.existsSync(quizPath)) return res.status(404).json({ error: "Quiz file not found" })
 
     const article = JSON.parse(fs.readFileSync(articlePath, "utf8"))
-    const quiz = JSON.parse(fs.readFileSync(quizPath, "utf8"))
-    res.json({ article, quiz, isChallenge: entry.type === "challenge", level: entry.level ?? null })
+    const quiz = fs.existsSync(quizPath) ? JSON.parse(fs.readFileSync(quizPath, "utf8")) : null
+    res.json({
+      article,
+      quiz,
+      isChallenge: entry.type === "challenge",
+      level: entry.level ?? null,
+      status: entry.status || "published",
+      hasQuizzes: typeof entry.hasQuizzes === "boolean" ? entry.hasQuizzes : quizHasQuestions(quiz),
+      expectedMinutes: entry.expectedMinutes ?? null,
+      exerciseTemplate: entry.exerciseTemplate ?? null,
+      createdAt: entry.createdAt || null,
+    })
   } catch (e) {
     res.status(500).json({ error: e.message })
   }
@@ -170,40 +256,75 @@ app.get("/api/exercises/:id", (req, res) => {
 app.put("/api/exercises/:id", (req, res) => {
   try {
     const { id } = req.params
-    const { article, quiz, isChallenge, level } = req.body || {}
+    const { article, quiz, isChallenge, level, status, expectedMinutes, exerciseTemplate } = req.body || {}
 
     const index = readIndex()
     const entryIdx = index.findIndex((e) => e.id === id)
     if (entryIdx === -1) return res.status(404).json({ error: "Exercise not found" })
+    const prev = index[entryIdx]
 
     const articleErrors = validateArticle(article)
-    const quizErrors = validateQuiz(quiz)
-    if (articleErrors.length || quizErrors.length) {
-      return res.status(400).json({ articleErrors, quizErrors })
+    if (articleErrors.length) {
+      return res.status(400).json({ articleErrors, quizErrors: [] })
     }
-
     if (article.id !== id) {
       return res.status(400).json({
         articleErrors: [`article.id "${article.id}" must match exercise id "${id}"`],
         quizErrors: [],
       })
     }
-    if (quiz.articleId !== id) {
-      return res.status(400).json({
-        articleErrors: [],
-        quizErrors: [`quiz.articleId "${quiz.articleId}" must match exercise id "${id}"`],
-      })
+
+    const hasQuizPayload = quiz != null
+    if (hasQuizPayload) {
+      const quizErrors = validateQuiz(quiz)
+      if (quizErrors.length) {
+        return res.status(400).json({ articleErrors: [], quizErrors })
+      }
+      if (quiz.articleId !== id) {
+        return res.status(400).json({
+          articleErrors: [],
+          quizErrors: [`quiz.articleId "${quiz.articleId}" must match exercise id "${id}"`],
+        })
+      }
     }
 
-    fs.writeFileSync(path.join(DATA_DIR, "articles", `${id}.json`), JSON.stringify(article, null, 2))
-    fs.writeFileSync(path.join(DATA_DIR, "quizzes",  `${id}.json`), JSON.stringify(quiz, null, 2))
+    const finalQuiz = hasQuizPayload ? quiz : { articleId: id, totalPoints: 0, parts: [] }
 
-    const totalQuestions = quiz.parts.reduce((s, p) => s + p.questions.length, 0)
-    const entry = { id, title: article.title, source: article.source || "", totalPoints: quiz.totalPoints, totalQuestions }
+    fs.writeFileSync(path.join(DATA_DIR, "articles", `${id}.json`), JSON.stringify(article, null, 2))
+    fs.writeFileSync(path.join(DATA_DIR, "quizzes",  `${id}.json`), JSON.stringify(finalQuiz, null, 2))
+
+    const totalQuestions = finalQuiz.parts.reduce((s, p) => s + (p.questions?.length || 0), 0)
+    const hasQuizzes = quizHasQuestions(finalQuiz)
+    const nextStatus = status === "draft" ? "draft" : status === "published" ? "published" : (prev.status || "published")
+
+    const entry = {
+      id,
+      title: article.title,
+      source: article.source || "",
+      totalPoints: finalQuiz.totalPoints,
+      totalQuestions,
+      createdAt: prev.createdAt || nowIso(),
+      status: nextStatus,
+      hasQuizzes,
+    }
     if (isChallenge) entry.type = "challenge"
-    if (level >= 1 && level <= 7) entry.level = level
+    // PUT preserves existing level (1-7) so legacy F1-F3 articles don't lose their tag.
+    // The admin UI still restricts new selections to 4-7.
+    const incomingLevel = typeof level === "number" ? level : prev.level
+    if (incomingLevel >= 1 && incomingLevel <= 7) entry.level = incomingLevel
+    const incomingExpected = typeof expectedMinutes === "number" ? expectedMinutes : prev.expectedMinutes
+    if (typeof incomingExpected === "number" && incomingExpected > 0) entry.expectedMinutes = incomingExpected
+    const incomingTemplate = Array.isArray(exerciseTemplate) ? exerciseTemplate : prev.exerciseTemplate
+    if (Array.isArray(incomingTemplate)) entry.exerciseTemplate = incomingTemplate
+
     index[entryIdx] = entry
     writeIndex(index)
+
+    // Register / unregister in lib/data.ts based on (hasQuizzes && status === "published")
+    const shouldBeRegistered = hasQuizzes && entry.status === "published"
+    const isRegistered = isRegisteredInDataTs(id)
+    if (shouldBeRegistered && !isRegistered) updateDataTs(id)
+    else if (!shouldBeRegistered && isRegistered) removeFromDataTs(id)
 
     res.json({ success: true })
   } catch (e) {
@@ -233,6 +354,69 @@ app.delete("/api/exercises/:id", (req, res) => {
   }
 })
 
+// Generate a quiz JSON for an existing article using a managed prompt.
+// Async; returns runId. Client polls /api/exercises/:id/generate-quiz/status/:runId.
+// Does NOT save automatically — the client reviews then calls PUT /api/exercises/:id.
+app.post("/api/exercises/:id/generate-quiz", (req, res) => {
+  const { id } = req.params
+  const { promptId, model, apiKey } = req.body || {}
+  if (!apiKey) return res.status(400).json({ error: "apiKey is required" })
+  if (!promptId) return res.status(400).json({ error: "promptId is required" })
+
+  const articlePath = path.join(DATA_DIR, "articles", `${id}.json`)
+  if (!fs.existsSync(articlePath)) return res.status(404).json({ error: "Article not found" })
+  const article = JSON.parse(fs.readFileSync(articlePath, "utf8"))
+
+  const prompts = readQuizPrompts()
+  const prompt = prompts.find((p) => p.id === promptId)
+  if (!prompt) return res.status(404).json({ error: "Prompt not found" })
+
+  const usedModel = model || prompt.defaultModel || "qwen/qwen3.6-flash"
+
+  const runId = "qz_" + Date.now().toString(36)
+  generateRuns[runId] = { kind: "quiz", status: "running", step: "生成測驗題目…", done: 0, total: 1, quizJson: null, error: null }
+  res.json({ runId })
+
+  ;(async () => {
+    try {
+      const rawText = (article.segments || []).map((s) => s.text || "").join("")
+      const fnLines = (article.footnotes || []).length
+        ? article.footnotes.map((f) => `${f.marker} ${f.term}：${f.explanation}`).join("\n")
+        : "（無注釋）"
+      const context = `標題：${article.title}\n來源：${article.source || "—"}\n\n原文：\n${rawText}\n\n注釋：\n${fnLines}`
+
+      const qRes = await callOpenRouter(usedModel, [
+        { role: "system", content: prompt.promptTemplate },
+        { role: "user", content: `請為以下文言文出題：\n\n${context}` },
+      ], apiKey)
+      const qParsed = JSON.parse(qRes.content)
+      if (!Array.isArray(qParsed.parts)) throw new Error("Quiz response missing parts[]")
+
+      const parts = qParsed.parts.map((p) => ({
+        ...p,
+        questions: (p.questions || []).map((q) => ({ ...q, options: normalizeOptions(q.options) })),
+      }))
+      const totalPoints = parts.reduce(
+        (s, p) => s + (p.questions?.length || 0) * (p.pointsPerQuestion || 1),
+        0
+      )
+      generateRuns[runId].quizJson = { articleId: id, totalPoints, parts }
+      generateRuns[runId].done++
+      generateRuns[runId].step = ""
+      generateRuns[runId].status = "done"
+    } catch (e) {
+      generateRuns[runId].status = "error"
+      generateRuns[runId].error = e.message
+    }
+  })()
+})
+
+app.get("/api/exercises/:id/generate-quiz/status/:runId", (req, res) => {
+  const run = generateRuns[req.params.runId]
+  if (!run) return res.status(404).json({ error: "Run not found" })
+  res.json({ status: run.status, step: run.step, done: run.done, total: run.total, quizJson: run.quizJson, error: run.error })
+})
+
 // ── LLM Assessment ───────────────────────────────────────────────────────────
 
 const ASSESSMENT_CONFIG_FILE = path.join(__dirname, "assessment-config.json")
@@ -260,6 +444,145 @@ function readAssessmentConfig() {
     return DEFAULT_ASSESSMENT_CONFIG
   }
 }
+
+// ── Quiz Prompt MGT (Phase 3) ────────────────────────────────────────────────
+//
+// Storage: assessment-config.json gains a `quizPrompts` array. The legacy
+// singular `quizPrompt` field at the top level is preserved for back-compat
+// with the existing LLM Assessment tab; on first load we seed `quizPrompts`
+// with one entry derived from it.
+
+const PROMPT_DEFAULT_ID = "default"
+
+function readQuizPrompts() {
+  let cfg
+  try {
+    cfg = JSON.parse(fs.readFileSync(ASSESSMENT_CONFIG_FILE, "utf8"))
+  } catch {
+    cfg = { ...DEFAULT_ASSESSMENT_CONFIG }
+  }
+  if (!Array.isArray(cfg.quizPrompts)) {
+    cfg.quizPrompts = [
+      {
+        id: PROMPT_DEFAULT_ID,
+        name: "Default Quiz Prompt",
+        description: "Original 4-part quiz: word meaning, sentence translation, comprehension, rhetoric",
+        promptTemplate: cfg.quizPrompt || DEFAULT_ASSESSMENT_CONFIG.quizPrompt,
+        defaultModel: (Array.isArray(cfg.models) && cfg.models[0]) || "qwen/qwen3.6-flash",
+        createdAt: nowIso(),
+        updatedAt: nowIso(),
+      },
+    ]
+    fs.writeFileSync(ASSESSMENT_CONFIG_FILE, JSON.stringify(cfg, null, 2))
+    console.log("  ✓ Seeded quizPrompts[] from legacy quizPrompt")
+  }
+  return cfg.quizPrompts
+}
+
+function writeQuizPrompts(prompts) {
+  let cfg
+  try {
+    cfg = JSON.parse(fs.readFileSync(ASSESSMENT_CONFIG_FILE, "utf8"))
+  } catch {
+    cfg = { ...DEFAULT_ASSESSMENT_CONFIG }
+  }
+  cfg.quizPrompts = prompts
+  fs.writeFileSync(ASSESSMENT_CONFIG_FILE, JSON.stringify(cfg, null, 2))
+}
+
+function slugifyPromptId(name) {
+  return (name || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60) || "prompt-" + Date.now().toString(36)
+}
+
+function validatePromptPayload(p) {
+  const errs = []
+  if (!p || typeof p !== "object") return ["Prompt must be a JSON object"]
+  if (!p.name || typeof p.name !== "string" || !p.name.trim()) errs.push("Missing: name")
+  if (!p.promptTemplate || typeof p.promptTemplate !== "string" || !p.promptTemplate.trim()) errs.push("Missing: promptTemplate")
+  return errs
+}
+
+app.get("/api/quiz-prompts", (_req, res) => {
+  try {
+    res.json(readQuizPrompts())
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
+app.post("/api/quiz-prompts", (req, res) => {
+  try {
+    const { name, description, promptTemplate, defaultModel } = req.body || {}
+    const errs = validatePromptPayload({ name, promptTemplate })
+    if (errs.length) return res.status(400).json({ errors: errs })
+
+    const prompts = readQuizPrompts()
+    let id = slugifyPromptId(name)
+    let n = 2
+    while (prompts.find((p) => p.id === id)) id = slugifyPromptId(name) + "-" + n++
+
+    const ts = nowIso()
+    const next = {
+      id,
+      name: name.trim(),
+      description: (description || "").trim(),
+      promptTemplate,
+      defaultModel: defaultModel || null,
+      createdAt: ts,
+      updatedAt: ts,
+    }
+    prompts.push(next)
+    writeQuizPrompts(prompts)
+    res.json({ success: true, prompt: next })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
+app.put("/api/quiz-prompts/:id", (req, res) => {
+  try {
+    const { id } = req.params
+    const { name, description, promptTemplate, defaultModel } = req.body || {}
+    const errs = validatePromptPayload({ name, promptTemplate })
+    if (errs.length) return res.status(400).json({ errors: errs })
+
+    const prompts = readQuizPrompts()
+    const idx = prompts.findIndex((p) => p.id === id)
+    if (idx === -1) return res.status(404).json({ error: "Prompt not found" })
+
+    prompts[idx] = {
+      ...prompts[idx],
+      name: name.trim(),
+      description: (description || "").trim(),
+      promptTemplate,
+      defaultModel: defaultModel || prompts[idx].defaultModel || null,
+      updatedAt: nowIso(),
+    }
+    writeQuizPrompts(prompts)
+    res.json({ success: true, prompt: prompts[idx] })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
+app.delete("/api/quiz-prompts/:id", (req, res) => {
+  try {
+    const { id } = req.params
+    const prompts = readQuizPrompts()
+    if (prompts.length <= 1) return res.status(400).json({ error: "Cannot delete the last quiz prompt" })
+    const next = prompts.filter((p) => p.id !== id)
+    if (next.length === prompts.length) return res.status(404).json({ error: "Prompt not found" })
+    writeQuizPrompts(next)
+    res.json({ success: true })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
 
 // Prices per 1M tokens (USD) from OpenRouter API, verified 2026-04-29
 const MODEL_PRICING = {
@@ -758,14 +1081,16 @@ app.get("/api/assessment/data/:runId/:type", (req, res) => {
 // ── Generate Article ─────────────────────────────────────────────────────────
 
 app.post("/api/generate-article", (req, res) => {
-  const { title, source, text, footnotesText, model, translationPrompt, quizPrompt, apiKey } = req.body || {}
+  const { title, source, text, footnotesText, model, translationPrompt, quizPrompt, apiKey, skipQuiz } = req.body || {}
   if (!apiKey) return res.status(400).json({ error: "apiKey is required" })
   if (!title) return res.status(400).json({ error: "title is required" })
   if (!text) return res.status(400).json({ error: "text is required" })
   if (!model) return res.status(400).json({ error: "model is required" })
+  if (!skipQuiz && !quizPrompt) return res.status(400).json({ error: "quizPrompt is required (or pass skipQuiz: true)" })
 
   const runId = "gen_" + Date.now().toString()
-  generateRuns[runId] = { status: "running", step: "", done: 0, total: 2, articleJson: null, quizJson: null, error: null }
+  const total = skipQuiz ? 1 : 2
+  generateRuns[runId] = { status: "running", step: "", done: 0, total, articleJson: null, quizJson: null, skipQuiz: !!skipQuiz, error: null }
   res.json({ runId })
 
   ;(async () => {
@@ -801,21 +1126,24 @@ app.post("/api/generate-article", (req, res) => {
         : "art-" + Date.now().toString(36)
       generateRuns[runId].done++
 
-      // Quiz
-      generateRuns[runId].step = "生成測驗題目…"
-      const qRes = await callOpenRouter(model, [
-        { role: "system", content: quizPrompt },
-        { role: "user", content: `請為以下文言文出題：\n\n${context}` },
-      ], apiKey)
-      const qParsed = JSON.parse(qRes.content)
-      if (!Array.isArray(qParsed.parts)) throw new Error("Quiz response missing parts[]")
-      generateRuns[runId].done++
+      // Quiz (skipped when skipQuiz: true — user generates later from Article Detail)
+      let parts = []
+      if (!skipQuiz) {
+        generateRuns[runId].step = "生成測驗題目…"
+        const qRes = await callOpenRouter(model, [
+          { role: "system", content: quizPrompt },
+          { role: "user", content: `請為以下文言文出題：\n\n${context}` },
+        ], apiKey)
+        const qParsed = JSON.parse(qRes.content)
+        if (!Array.isArray(qParsed.parts)) throw new Error("Quiz response missing parts[]")
+        generateRuns[runId].done++
 
-      // Assemble — normalize options to [{key,text}] array (LLMs sometimes return {A:text,B:text,...})
-      const parts = qParsed.parts.map((p) => ({
-        ...p,
-        questions: (p.questions || []).map((q) => ({ ...q, options: normalizeOptions(q.options) })),
-      }))
+        parts = qParsed.parts.map((p) => ({
+          ...p,
+          questions: (p.questions || []).map((q) => ({ ...q, options: normalizeOptions(q.options) })),
+        }))
+      }
+
       const titleNumeral = title.match(/(\d+)$/)
       const cleanTitle = titleNumeral ? title.slice(0, -titleNumeral[1].length).trim() : title.trim()
       const articleJson = {
@@ -831,7 +1159,7 @@ app.post("/api/generate-article", (req, res) => {
         (s, p) => s + (p.questions?.length || 0) * (p.pointsPerQuestion || 1),
         0
       )
-      const quizJson = { articleId, totalPoints, parts }
+      const quizJson = skipQuiz ? null : { articleId, totalPoints, parts }
 
       generateRuns[runId].articleJson = articleJson
       generateRuns[runId].quizJson = quizJson
@@ -852,4 +1180,6 @@ app.get("/api/generate-article/status/:runId", (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`\n  ✦ 文言教室 Admin Portal\n  → http://localhost:${PORT}\n`)
+  backfillIndex()
+  readQuizPrompts() // triggers migration if needed
 })

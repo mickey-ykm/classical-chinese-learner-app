@@ -4,35 +4,50 @@
     "title": "王戎、和嶠同時遭大喪",
     "source": "《世說新語》",
     "totalPoints": 46,
-    "totalQuestions": 31
+    "totalQuestions": 31,
+    "createdAt": "2026-05-06T06:18:16.632Z",
+    "status": "published",
+    "hasQuizzes": true
   },
   {
     "id": "zeng-zi-sha-zhu",
     "title": "曾子殺豬",
     "source": "《韓非子》",
     "totalPoints": 26,
-    "totalQuestions": 26
+    "totalQuestions": 26,
+    "createdAt": "2026-04-22T03:01:32.675Z",
+    "status": "published",
+    "hasQuizzes": true
   },
   {
     "id": "hua-xin-wang-lang",
     "title": "華歆、王朗俱乘船避難",
     "source": "《世說新語》",
     "totalPoints": 28,
-    "totalQuestions": 28
+    "totalQuestions": 28,
+    "createdAt": "2026-04-22T09:55:23.739Z",
+    "status": "published",
+    "hasQuizzes": true
   },
   {
     "id": "mai-you-weng",
     "title": "賣油翁",
     "source": "",
     "totalPoints": 44,
-    "totalQuestions": 26
+    "totalQuestions": 26,
+    "createdAt": "2026-04-23T15:54:08.322Z",
+    "status": "published",
+    "hasQuizzes": true
   },
   {
     "id": "chun-ye-xi-yu",
     "title": "春夜喜雨",
     "source": "《杜工部集》",
     "totalPoints": 65,
-    "totalQuestions": 26
+    "totalQuestions": 26,
+    "createdAt": "2026-04-23T16:04:51.821Z",
+    "status": "published",
+    "hasQuizzes": true
   },
   {
     "id": "da-tong-yu-xiao-kang",
@@ -40,21 +55,30 @@
     "source": "《禮記·禮運》",
     "totalPoints": 62,
     "totalQuestions": 27,
-    "type": "challenge"
+    "type": "challenge",
+    "createdAt": "2026-04-23T16:20:40.426Z",
+    "status": "published",
+    "hasQuizzes": true
   },
   {
     "id": "lun-yu-si-ze",
     "title": "論語四則",
     "source": "《論語》",
     "totalPoints": 34,
-    "totalQuestions": 18
+    "totalQuestions": 18,
+    "createdAt": "2026-04-30T08:36:37.452Z",
+    "status": "published",
+    "hasQuizzes": true
   },
   {
     "id": "er-zi-xue-yi",
     "title": "二子學弈",
     "source": "孟子",
     "totalPoints": 34,
-    "totalQuestions": 18
+    "totalQuestions": 18,
+    "createdAt": "2026-04-30T09:52:18.981Z",
+    "status": "published",
+    "hasQuizzes": true
   },
   {
     "id": "lou-shi-ming",
@@ -62,7 +86,10 @@
     "source": "劉禹錫",
     "totalPoints": 40,
     "totalQuestions": 22,
-    "level": 2
+    "level": 2,
+    "createdAt": "2026-05-03T10:03:04.486Z",
+    "status": "published",
+    "hasQuizzes": true
   },
   {
     "id": "mu-lan-shi-1",
@@ -70,7 +97,10 @@
     "source": "佚名",
     "totalPoints": 40,
     "totalQuestions": 22,
-    "level": 1
+    "level": 1,
+    "createdAt": "2026-05-03T10:03:17.427Z",
+    "status": "published",
+    "hasQuizzes": true
   },
   {
     "id": "lun-si-duan",
@@ -78,7 +108,10 @@
     "source": "孟子",
     "totalPoints": 40,
     "totalQuestions": 22,
-    "level": 3
+    "level": 3,
+    "createdAt": "2026-05-03T10:03:33.730Z",
+    "status": "published",
+    "hasQuizzes": true
   },
   {
     "id": "ai-lian-shuo",
@@ -86,7 +119,10 @@
     "source": "周敦頤",
     "totalPoints": 40,
     "totalQuestions": 22,
-    "level": 2
+    "level": 2,
+    "createdAt": "2026-05-03T10:03:54.226Z",
+    "status": "published",
+    "hasQuizzes": true
   },
   {
     "id": "zou-ji-feng-qi-wang-na-jian",
@@ -94,7 +130,10 @@
     "source": "戰國策",
     "totalPoints": 55,
     "totalQuestions": 31,
-    "level": 3
+    "level": 3,
+    "createdAt": "2026-05-03T10:04:07.345Z",
+    "status": "published",
+    "hasQuizzes": true
   },
   {
     "id": "cao-gui-lun-zhan",
@@ -102,7 +141,10 @@
     "source": "左傳",
     "totalPoints": 40,
     "totalQuestions": 22,
-    "level": 4
+    "level": 4,
+    "createdAt": "2026-05-03T10:04:18.007Z",
+    "status": "published",
+    "hasQuizzes": true
   },
   {
     "id": "xiao-yao-you-jie-lu",
@@ -110,7 +152,10 @@
     "source": "莊子",
     "totalPoints": 55,
     "totalQuestions": 31,
-    "level": 7
+    "level": 7,
+    "createdAt": "2026-05-03T10:04:28.957Z",
+    "status": "published",
+    "hasQuizzes": true
   },
   {
     "id": "shi-de-xi-shan-yan-you-ji",
@@ -118,7 +163,10 @@
     "source": "柳宗元",
     "totalPoints": 55,
     "totalQuestions": 31,
-    "level": 7
+    "level": 7,
+    "createdAt": "2026-05-03T10:05:03.158Z",
+    "status": "published",
+    "hasQuizzes": true
   },
   {
     "id": "lun-ren-lun-xiao-lun-jun-zi",
@@ -126,7 +174,10 @@
     "source": "論語",
     "totalPoints": 40,
     "totalQuestions": 22,
-    "level": 7
+    "level": 7,
+    "createdAt": "2026-05-03T10:05:16.181Z",
+    "status": "published",
+    "hasQuizzes": true
   },
   {
     "id": "nian-nu-jiao-chi-bi-huai-gu",
@@ -134,6 +185,9 @@
     "source": "蘇軾",
     "totalPoints": 59,
     "totalQuestions": 33,
-    "level": 7
+    "level": 7,
+    "createdAt": "2026-05-03T10:05:21.131Z",
+    "status": "published",
+    "hasQuizzes": true
   }
 ]
