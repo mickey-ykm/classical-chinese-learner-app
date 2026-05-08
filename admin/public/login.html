@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>文言教室 Admin — Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-stone-50 text-slate-800 min-h-screen flex items-center justify-center">
+
+<div class="w-full max-w-sm bg-white rounded-xl border border-stone-200 shadow-sm p-8">
+  <div class="flex items-center gap-3 mb-8">
+    <div class="w-9 h-9 rounded-md bg-amber-600 flex items-center justify-center text-white font-bold text-sm">文</div>
+    <div>
+      <h1 class="font-bold text-lg leading-tight">文言教室 Admin</h1>
+      <p class="text-xs text-slate-500">Exercise Management Portal</p>
+    </div>
+  </div>
+
+  <form id="loginForm" class="space-y-4">
+    <div>
+      <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+      <input id="email" type="email" required autocomplete="email"
+        class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+      <input id="password" type="password" required autocomplete="current-password"
+        class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+    </div>
+
+    <div id="error" class="hidden text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2"></div>
+
+    <button type="submit" id="submitBtn"
+      class="w-full bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg px-4 py-2 text-sm transition-colors">
+      Sign In
+    </button>
+  </form>
+</div>
+
+<script>
+  document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault()
+    const btn = document.getElementById("submitBtn")
+    const errorEl = document.getElementById("error")
+    btn.disabled = true
+    btn.textContent = "Signing in…"
+    errorEl.classList.add("hidden")
+
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: document.getElementById("email").value,
+          password: document.getElementById("password").value,
+        }),
+      })
+      if (res.ok) {
+        window.location.href = "/"
+      } else {
+        const { error } = await res.json()
+        errorEl.textContent = error || "Login failed"
+        errorEl.classList.remove("hidden")
+      }
+    } catch {
+      errorEl.textContent = "Network error — please try again"
+      errorEl.classList.remove("hidden")
+    } finally {
+      btn.disabled = false
+      btn.textContent = "Sign In"
+    }
+  })
+</script>
+</body>
+</html>

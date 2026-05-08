@@ -22,12 +22,20 @@
 </head>
 <body class="bg-stone-50 text-slate-800 min-h-screen">
 
+<script>
+  fetch("/api/admin/me").then(r => { if (!r.ok) window.location.href = "/login.html" })
+</script>
+
 <!-- Header -->
 <header class="bg-white border-b border-stone-200 px-6 py-4 flex items-center gap-3">
   <div class="w-9 h-9 rounded-md bg-amber-600 flex items-center justify-center text-white font-bold text-sm">文</div>
   <div>
     <h1 class="font-bold text-lg leading-tight">文言教室 Admin</h1>
     <p class="text-xs text-slate-500">Exercise Management Portal</p>
+  </div>
+  <div class="ml-auto flex items-center gap-3">
+    <span id="adminEmail" class="text-xs text-slate-400"></span>
+    <button onclick="signOut()" class="text-xs text-slate-500 hover:text-slate-700 border border-stone-200 rounded px-3 py-1.5">Sign Out</button>
   </div>
 </header>
 
@@ -2101,6 +2109,17 @@ loadAssessmentConfig()
     </div><!-- /p-6 -->
   </div><!-- /modal-content -->
 </div><!-- /raw-modal -->
+
+<script>
+  fetch("/api/admin/me").then(r => r.json()).then(d => {
+    if (d.email) document.getElementById("adminEmail").textContent = d.email
+  })
+
+  async function signOut() {
+    await fetch("/api/admin/logout", { method: "POST" })
+    window.location.href = "/login.html"
+  }
+</script>
 
 </body>
 </html>

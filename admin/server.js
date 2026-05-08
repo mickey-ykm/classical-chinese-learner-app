@@ -1,6 +1,8 @@
 require("dotenv").config({ path: require("path").join(__dirname, "..", ".env") })
 
 const express = require("express")
+const session = require("express-session")
+const bcrypt = require("bcryptjs")
 const fs = require("fs")
 const path = require("path")
 const { createClient } = require("@supabase/supabase-js")
@@ -12,6 +14,16 @@ const ROOT = path.join(__dirname, "..")
 const DATA_DIR = path.join(ROOT, "data")
 
 app.use(express.json({ limit: "10mb" }))
+app.use(session({
+  secret: process.env.ADMIN_SESSION_SECRET || "dev-secret-change-in-prod",
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  },
+}))
 app.use(express.static(path.join(__dirname, "public")))
 
 // ── Supabase client (service-role key for admin writes) ───────────────────────
@@ -211,6 +223,47 @@ async function createVersionSnapshot(articleId, snapshot) {
     edited_by: "admin",
   })
 }
+
+// ── Auth routes ───────────────────────────────────────────────────────────────
+
+app.get("/api/admin/me", (req, res) => {
+  if (!req.session.adminId) return res.status(401).json({ error: "Unauthorized" })
+  res.json({ email: req.session.adminEmail })
+})
+
+app.post("/api/admin/login", async (req, res) => {
+  const { email, password } = req.body || {}
+  if (!email || !password) return res.status(400).json({ error: "Email and password required" })
+  if (!requireSupabase(res)) return
+  try {
+    const { data, error } = await supabase
+      .from("admin_users")
+      .select("id, email, password_hash")
+      .eq("email", email)
+      .single()
+    if (error || !data) return res.status(401).json({ error: "Invalid credentials" })
+    const valid = await bcrypt.compare(password, data.password_hash)
+    if (!valid) return res.status(401).json({ error: "Invalid credentials" })
+    req.session.adminId = data.id
+    req.session.adminEmail = data.email
+    res.json({ ok: true })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
+app.post("/api/admin/logout", (req, res) => {
+  req.session.destroy(() => res.json({ ok: true }))
+})
+
+// ── Auth guard (all /api/* except auth routes) ────────────────────────────────
+
+app.use((req, res, next) => {
+  if (!req.path.startsWith("/api/")) return next()
+  if (req.path.startsWith("/api/admin/login") || req.path.startsWith("/api/admin/logout")) return next()
+  if (!req.session.adminId) return res.status(401).json({ error: "Unauthorized" })
+  next()
+})
 
 // ── Routes: exercises ─────────────────────────────────────────────────────────
 
