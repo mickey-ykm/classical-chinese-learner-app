@@ -331,7 +331,7 @@ AuthProvider wraps the whole app and exposes:
 
 ---
 
-## Phase 3 — Admin Portal Restructure (local)
+## Phase 3 — Admin Portal Restructure (local) ✅ COMPLETE
 
 Goal: split article creation from quiz creation; introduce Quiz Prompt MGT; lay groundwork for Supabase migration. Still runs locally on port 3001 writing to `data/` JSON files in this phase — no deploy yet.
 
@@ -361,9 +361,16 @@ Goal: split article creation from quiz creation; introduce Quiz Prompt MGT; lay 
 - Selector only offers 中四–中六 + 高中DSE (`level: 4–7`)
 - Existing F1–F3 articles (if any are tagged) are not deleted — they remain `level` unchanged but can no longer be assigned that value via UI
 
+### Implementation notes
+- Article Library Listing: `ad-*` element IDs; table driven by `GET /api/exercises` (Supabase in Phase 4)
+- Article Library Detail: Article JSON editor + Quiz Prompt selector + Quiz JSON editor + Generate Quiz button
+- Add a New Article: translation-only (`skipQuiz: true`); saves as draft with `hasQuizzes: false`
+- Quiz Prompt MGT: backed by `admin/assessment-config.json` (`quizPrompts[]` array); seeded from legacy `quizPrompt` on first boot
+- Level selectors: all three entry points (Detail, Add Article, Raw Article modal) restrict to 中四–高中DSE (4–7)
+
 ---
 
-## Phase 4 — Content Schema Migration to Supabase
+## Phase 4 — Content Schema Migration to Supabase ✅ COMPLETE
 
 Goal: move articles + questions + prompts from JSON files into Supabase tables. Establish validation pipeline.
 
@@ -391,6 +398,13 @@ Goal: move articles + questions + prompts from JSON files into Supabase tables. 
 
 ### Mobile in this phase
 - Still reads bundled JSON. Phase 6 cuts over.
+
+### Implementation notes
+- `shared/schema.ts` — Zod v4 schemas: `ArticleSchema`, `QuizSchema`, `QuizPromptSchema`, `ExerciseTemplateSchema`, `QUESTION_TYPES`
+- `scripts/migrate-content.ts` — idempotent; run with `npm run migrate`; migrated 18 articles + 458 questions + 1 quiz prompt
+- `admin/server.js` — rewired to Supabase service-role key; removed `readIndex`/`writeIndex`/`updateDataTs`/`removeFromDataTs`/`backfillIndex`; kept quiz prompt routes (still `assessment-config.json`); kept all assessment/LLM routes
+- SQL deviations from plan: `modern_translation jsonb` (not `text`); `quiz_json jsonb` added to `articles`; `level check (level between 1 and 7)` (not 4–7, to preserve legacy F1–F3 articles)
+- `npm run migrate` must be run once after creating the Phase 4 tables in Supabase
 
 ---
 

@@ -1,108 +1,103 @@
+require("dotenv").config({ path: require("path").join(__dirname, "..", ".env") })
+
 const express = require("express")
 const fs = require("fs")
 const path = require("path")
+const { createClient } = require("@supabase/supabase-js")
+const { z } = require("zod")
 
 const app = express()
 const PORT = 3001
 const ROOT = path.join(__dirname, "..")
 const DATA_DIR = path.join(ROOT, "data")
-const DATA_TS = path.join(ROOT, "lib", "data.ts")
 
 app.use(express.json({ limit: "10mb" }))
 app.use(express.static(path.join(__dirname, "public")))
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Supabase client (service-role key for admin writes) ───────────────────────
 
-function readIndex() {
-  return JSON.parse(fs.readFileSync(path.join(DATA_DIR, "index.json"), "utf8"))
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+let supabase = null
+if (SUPABASE_URL && SUPABASE_SERVICE_KEY) {
+  supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+    auth: { persistSession: false },
+  })
+} else {
+  console.warn("  ⚠ Supabase not configured — set SUPABASE_SERVICE_ROLE_KEY in .env")
 }
 
-function writeIndex(data) {
-  fs.writeFileSync(path.join(DATA_DIR, "index.json"), JSON.stringify(data, null, 2))
-}
-
-function validateArticle(a) {
-  if (!a || typeof a !== "object") return ["Article must be a JSON object"]
-  const errs = []
-  if (!a.id || typeof a.id !== "string") errs.push("Missing: id (string)")
-  if (!a.title || typeof a.title !== "string") errs.push("Missing: title (string)")
-  if (!Array.isArray(a.segments) || !a.segments.length) errs.push("Missing/empty: segments[]")
-  if (!Array.isArray(a.footnotes)) errs.push("Missing: footnotes[]")
-  if (!Array.isArray(a.modernTranslation) || !a.modernTranslation.length)
-    errs.push("Missing/empty: modernTranslation[]")
-  return errs
-}
-
-function validateQuiz(q) {
-  if (!q || typeof q !== "object") return ["Quiz must be a JSON object"]
-  const errs = []
-  if (!q.articleId || typeof q.articleId !== "string") errs.push("Missing: articleId (string)")
-  if (typeof q.totalPoints !== "number") errs.push("Missing/invalid: totalPoints (must be a number)")
-  if (!Array.isArray(q.parts) || !q.parts.length) errs.push("Missing/empty: parts[]")
-  else {
-    q.parts.forEach((p, pi) => {
-      if (!Array.isArray(p.questions) || !p.questions.length) {
-        errs.push(`parts[${pi}]: empty questions[]`)
-      } else {
-        p.questions.forEach((qq, qi) => {
-          if (!qq.correctAnswer)
-            errs.push(`parts[${pi}].questions[${qi}]: missing correctAnswer`)
-          if (!Array.isArray(qq.options) || qq.options.length < 2)
-            errs.push(`parts[${pi}].questions[${qi}]: needs ≥2 options`)
-        })
-      }
-    })
-  }
-  return errs
-}
-
-// Append a line before the closing delimiter of a named block.
-// Uses character-class negation so the match never overshoots into a sibling block.
-function appendToBlock(content, pattern, newLine) {
-  if (content.includes(newLine.trim())) return content // already present
-  return content.replace(pattern, (_, body, close) => body + newLine + "\n" + close)
-}
-
-function updateDataTs(id) {
-  let c = fs.readFileSync(DATA_TS, "utf8")
-  // [^}]* and [^\]]* match across newlines but stop at the first closing delimiter,
-  // so they can never slip into a sibling block or function body.
-  c = appendToBlock(c, /(const ARTICLES[^{]*\{[^}]*)(\})/,              `  "${id}": require("../data/articles/${id}.json"),`)
-  c = appendToBlock(c, /(const QUIZZES[^{]*\{[^}]*)(\})/,               `  "${id}": require("../data/quizzes/${id}.json"),`)
-  c = appendToBlock(c, /(export const QUIZ_SEQUENCE\s*=\s*\[[^\]]*)(\])/, `  "${id}",`)
-  fs.writeFileSync(DATA_TS, c)
-}
-
-function removeFromDataTs(id) {
-  let c = fs.readFileSync(DATA_TS, "utf8")
-  // Remove require lines (articles + quizzes)
-  c = c.replace(new RegExp(`[ \\t]*"${id}": require\\([^)]+\\),?\\n`, "g"), "")
-  // Remove from QUIZ_SEQUENCE
-  c = c.replace(new RegExp(`[ \\t]*"${id}",?\\n`, "g"), "")
-  fs.writeFileSync(DATA_TS, c)
-}
-
-function isRegisteredInDataTs(id) {
-  try {
-    const c = fs.readFileSync(DATA_TS, "utf8")
-    return new RegExp(`"${id}": require\\(`).test(c)
-  } catch {
+function requireSupabase(res) {
+  if (!supabase) {
+    res.status(503).json({ error: "Supabase not configured: SUPABASE_SERVICE_ROLE_KEY missing" })
     return false
   }
+  return true
 }
 
-// ── Phase 3 helpers ──────────────────────────────────────────────────────────
+// ── Zod validation schemas ────────────────────────────────────────────────────
+
+const SegmentSchema = z.object({
+  text: z.string(),
+  footnoteId: z.string().optional(),
+})
+
+const FootnoteSchema = z.object({
+  id: z.string(),
+  marker: z.string(),
+  term: z.string(),
+  explanation: z.string(),
+})
+
+const ArticleSchema = z.object({
+  id: z.string().min(1, "id is required"),
+  title: z.string().min(1, "title is required"),
+  titleFootnoteId: z.string().optional(),
+  source: z.string().optional(),
+  segments: z.array(SegmentSchema).min(1, "segments[] must not be empty"),
+  footnotes: z.array(FootnoteSchema),
+  modernTranslation: z.array(z.string()).min(1, "modernTranslation[] must not be empty"),
+})
+
+const QuizOptionSchema = z.object({
+  key: z.enum(["A", "B", "C", "D"]),
+  text: z.string().min(1),
+})
+
+const QuizQuestionSchema = z.object({
+  id: z.union([z.number(), z.string()]),
+  part: z.number().int().positive().optional(),
+  points: z.number().int().positive().optional(),
+  stem: z.string().min(1, "stem is required"),
+  options: z.array(QuizOptionSchema).min(2, "options[] needs ≥2 items"),
+  correctAnswer: z.enum(["A", "B", "C", "D"], {
+    errorMap: () => ({ message: "correctAnswer must be A, B, C, or D" }),
+  }),
+  explanation: z.string().optional(),
+})
+
+const QuizPartSchema = z.object({
+  part: z.number().int().positive(),
+  title: z.string(),
+  pointsPerQuestion: z.number().int().positive(),
+  questions: z.array(QuizQuestionSchema).min(1, "questions[] must not be empty"),
+})
+
+const QuizSchema = z.object({
+  articleId: z.string().min(1, "articleId is required"),
+  totalPoints: z.number().int().nonnegative(),
+  parts: z.array(QuizPartSchema).min(1, "parts[] must not be empty"),
+})
+
+function formatZodErrors(zodError) {
+  return zodError.issues.map((i) => `${i.path.join(".") || "root"}: ${i.message}`)
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function nowIso() {
   return new Date().toISOString()
-}
-
-function fileMtimeIso(filePath) {
-  try {
-    return fs.statSync(filePath).mtime.toISOString()
-  } catch {
-    return nowIso()
-  }
 }
 
 function quizHasQuestions(quiz) {
@@ -110,162 +105,227 @@ function quizHasQuestions(quiz) {
   return quiz.parts.some((p) => Array.isArray(p.questions) && p.questions.length > 0)
 }
 
-function entryHasQuizFromDisk(id) {
-  const qPath = path.join(DATA_DIR, "quizzes", `${id}.json`)
-  if (!fs.existsSync(qPath)) return false
-  try {
-    return quizHasQuestions(JSON.parse(fs.readFileSync(qPath, "utf8")))
-  } catch {
-    return false
+function countQuestions(quiz) {
+  if (!quiz || !Array.isArray(quiz.parts)) return 0
+  return quiz.parts.reduce((s, p) => s + (p.questions?.length || 0), 0)
+}
+
+// Maps camelCase article + meta fields to Supabase snake_case row.
+function articleToRow(article, meta) {
+  const level =
+    typeof meta.level === "number" && meta.level >= 1 && meta.level <= 7 ? meta.level : null
+  return {
+    id: article.id,
+    title: article.title,
+    title_footnote_id: article.titleFootnoteId || null,
+    source: article.source || "",
+    segments: article.segments,
+    footnotes: article.footnotes,
+    modern_translation: article.modernTranslation,
+    level,
+    is_challenge: meta.isChallenge || false,
+    status: meta.status === "draft" ? "draft" : "published",
+    expected_minutes:
+      typeof meta.expectedMinutes === "number" && meta.expectedMinutes > 0
+        ? meta.expectedMinutes
+        : null,
+    exercise_template: Array.isArray(meta.exerciseTemplate) ? meta.exerciseTemplate : null,
+    quiz_json: meta.quizJson || null,
   }
 }
 
-function backfillIndex() {
-  const index = readIndex()
-  let changed = false
-  for (const e of index) {
-    if (!e.createdAt) {
-      e.createdAt = fileMtimeIso(path.join(DATA_DIR, "articles", `${e.id}.json`))
-      changed = true
-    }
-    if (!e.status) {
-      e.status = "published"
-      changed = true
-    }
-    if (typeof e.hasQuizzes !== "boolean") {
-      e.hasQuizzes = entryHasQuizFromDisk(e.id)
-      changed = true
-    }
-  }
-  if (changed) {
-    writeIndex(index)
-    console.log(`  ✓ Backfilled ${index.length} entries in data/index.json`)
+// Converts a Supabase article row back to the API response shape the HTML expects.
+function rowToExercise(row) {
+  return {
+    article: {
+      id: row.id,
+      title: row.title,
+      ...(row.title_footnote_id ? { titleFootnoteId: row.title_footnote_id } : {}),
+      source: row.source || "",
+      segments: row.segments,
+      footnotes: row.footnotes,
+      modernTranslation: row.modern_translation,
+    },
+    quiz: row.quiz_json || null,
+    isChallenge: row.is_challenge || false,
+    level: row.level ?? null,
+    status: row.status || "published",
+    hasQuizzes: quizHasQuestions(row.quiz_json),
+    expectedMinutes: row.expected_minutes ?? null,
+    exerciseTemplate: row.exercise_template ?? null,
+    createdAt: row.created_at || null,
   }
 }
 
-// ── Routes ───────────────────────────────────────────────────────────────────
+function rowToIndexEntry(row) {
+  const entry = {
+    id: row.id,
+    title: row.title,
+    source: row.source || "",
+    totalPoints: row.quiz_json?.totalPoints || 0,
+    totalQuestions: countQuestions(row.quiz_json),
+    createdAt: row.created_at,
+    status: row.status,
+    hasQuizzes: quizHasQuestions(row.quiz_json),
+  }
+  if (row.is_challenge) entry.type = "challenge"
+  if (row.level != null) entry.level = row.level
+  if (row.expected_minutes != null) entry.expectedMinutes = row.expected_minutes
+  if (row.exercise_template != null) entry.exerciseTemplate = row.exercise_template
+  return entry
+}
 
-app.get("/api/exercises", (_req, res) => {
+async function upsertQuestions(articleId, quiz) {
+  // Clear all questions for this article, then re-insert from quiz JSON.
+  await supabase.from("questions").delete().eq("article_id", articleId)
+  if (!quiz || !Array.isArray(quiz.parts)) return
+  const rows = []
+  for (const part of quiz.parts) {
+    for (const q of part.questions ?? []) {
+      const optMap = {}
+      for (const o of q.options ?? []) optMap[o.key] = o.text
+      rows.push({
+        article_id: articleId,
+        type: "comprehension", // Phase 7 will add proper type tagging
+        format: "mc",
+        part: part.part,
+        points: q.points ?? part.pointsPerQuestion ?? 1,
+        stem: q.stem,
+        options: optMap,
+        correct_answer: q.correctAnswer,
+        explanation: q.explanation || null,
+        status: "published",
+      })
+    }
+  }
+  if (rows.length > 0) {
+    const { error } = await supabase.from("questions").insert(rows)
+    if (error) throw new Error("Failed to save questions: " + error.message)
+  }
+}
+
+async function createVersionSnapshot(articleId, snapshot) {
+  await supabase.from("article_versions").insert({
+    article_id: articleId,
+    snapshot,
+    edited_by: "admin",
+  })
+}
+
+// ── Routes: exercises ─────────────────────────────────────────────────────────
+
+app.get("/api/exercises", async (_req, res) => {
   try {
-    res.json(readIndex())
+    if (!requireSupabase(res)) return
+    const { data, error } = await supabase
+      .from("articles")
+      .select(
+        "id, title, source, level, is_challenge, status, created_at, expected_minutes, exercise_template, quiz_json"
+      )
+      .order("created_at", { ascending: true })
+    if (error) throw new Error(error.message)
+    res.json((data || []).map(rowToIndexEntry))
   } catch (e) {
     res.status(500).json({ error: e.message })
   }
 })
 
-app.post("/api/exercises", (req, res) => {
+app.post("/api/exercises", async (req, res) => {
   try {
-    const { article, quiz, isChallenge, level, status, expectedMinutes, exerciseTemplate } = req.body || {}
+    if (!requireSupabase(res)) return
+    const { article, quiz, isChallenge, level, status, expectedMinutes, exerciseTemplate } =
+      req.body || {}
 
-    const articleErrors = validateArticle(article)
-    if (articleErrors.length) {
-      return res.status(400).json({ articleErrors, quizErrors: [] })
+    const articleResult = ArticleSchema.safeParse(article)
+    if (!articleResult.success) {
+      return res
+        .status(400)
+        .json({ articleErrors: formatZodErrors(articleResult.error), quizErrors: [] })
     }
 
-    const hasQuizPayload = quiz != null
+    const hasQuizPayload = quiz != null && quizHasQuestions(quiz)
     if (hasQuizPayload) {
-      const quizErrors = validateQuiz(quiz)
-      if (quizErrors.length) {
-        return res.status(400).json({ articleErrors: [], quizErrors })
+      const quizResult = QuizSchema.safeParse(quiz)
+      if (!quizResult.success) {
+        return res
+          .status(400)
+          .json({ articleErrors: [], quizErrors: formatZodErrors(quizResult.error) })
       }
       if (article.id !== quiz.articleId) {
         return res.status(400).json({
           articleErrors: [],
-          quizErrors: [`quiz.articleId "${quiz.articleId}" does not match article.id "${article.id}"`],
+          quizErrors: [
+            `quiz.articleId "${quiz.articleId}" does not match article.id "${article.id}"`,
+          ],
         })
       }
     }
 
-    const id = article.id
-    const index = readIndex()
-
-    if (index.find((e) => e.id === id)) {
-      return res.status(409).json({
-        articleErrors: [`An exercise with id "${id}" already exists`],
-        quizErrors: [],
-      })
-    }
-
-    // Always write a quiz file (placeholder if skipQuiz)
-    const finalQuiz = hasQuizPayload ? quiz : { articleId: id, totalPoints: 0, parts: [] }
-
-    // Write JSON files
-    fs.writeFileSync(path.join(DATA_DIR, "articles", `${id}.json`), JSON.stringify(article, null, 2))
-    fs.writeFileSync(path.join(DATA_DIR, "quizzes",  `${id}.json`), JSON.stringify(finalQuiz, null, 2))
-
-    // Update index.json
-    const totalQuestions = finalQuiz.parts.reduce((s, p) => s + (p.questions?.length || 0), 0)
-    const hasQuizzes = quizHasQuestions(finalQuiz)
-    const entry = {
-      id,
-      title: article.title,
-      source: article.source || "",
-      totalPoints: finalQuiz.totalPoints,
-      totalQuestions,
-      createdAt: nowIso(),
-      status: status === "draft" ? "draft" : "published",
-      hasQuizzes,
-    }
-    if (isChallenge) entry.type = "challenge"
-    if (level >= 4 && level <= 7) entry.level = level
-    if (typeof expectedMinutes === "number" && expectedMinutes > 0) entry.expectedMinutes = expectedMinutes
-    if (Array.isArray(exerciseTemplate)) entry.exerciseTemplate = exerciseTemplate
-    index.push(entry)
-    writeIndex(index)
-
-    // Register in lib/data.ts only when there's a usable quiz AND status is published
-    if (hasQuizzes && entry.status === "published") {
-      updateDataTs(id)
-    }
-
-    res.json({ success: true, id })
-  } catch (e) {
-    res.status(500).json({ error: e.message })
-  }
-})
-
-app.get("/api/exercises/:id", (req, res) => {
-  try {
-    const { id } = req.params
-    const index = readIndex()
-    const entry = index.find((e) => e.id === id)
-    if (!entry) return res.status(404).json({ error: "Exercise not found" })
-
-    const articlePath = path.join(DATA_DIR, "articles", `${id}.json`)
-    const quizPath = path.join(DATA_DIR, "quizzes", `${id}.json`)
-    if (!fs.existsSync(articlePath)) return res.status(404).json({ error: "Article file not found" })
-
-    const article = JSON.parse(fs.readFileSync(articlePath, "utf8"))
-    const quiz = fs.existsSync(quizPath) ? JSON.parse(fs.readFileSync(quizPath, "utf8")) : null
-    res.json({
-      article,
-      quiz,
-      isChallenge: entry.type === "challenge",
-      level: entry.level ?? null,
-      status: entry.status || "published",
-      hasQuizzes: typeof entry.hasQuizzes === "boolean" ? entry.hasQuizzes : quizHasQuestions(quiz),
-      expectedMinutes: entry.expectedMinutes ?? null,
-      exerciseTemplate: entry.exerciseTemplate ?? null,
-      createdAt: entry.createdAt || null,
+    const finalQuiz = hasQuizPayload ? quiz : null
+    const row = articleToRow(article, {
+      isChallenge,
+      level,
+      status,
+      expectedMinutes,
+      exerciseTemplate,
+      quizJson: finalQuiz,
     })
+
+    const { error } = await supabase.from("articles").insert(row)
+    if (error) {
+      if (error.code === "23505") {
+        return res.status(409).json({
+          articleErrors: [`An exercise with id "${article.id}" already exists`],
+          quizErrors: [],
+        })
+      }
+      throw new Error(error.message)
+    }
+
+    if (finalQuiz) await upsertQuestions(article.id, finalQuiz)
+    await createVersionSnapshot(article.id, { article, quiz: finalQuiz })
+
+    res.json({ success: true, id: article.id })
   } catch (e) {
     res.status(500).json({ error: e.message })
   }
 })
 
-app.put("/api/exercises/:id", (req, res) => {
+app.get("/api/exercises/:id", async (req, res) => {
   try {
+    if (!requireSupabase(res)) return
     const { id } = req.params
-    const { article, quiz, isChallenge, level, status, expectedMinutes, exerciseTemplate } = req.body || {}
+    const { data, error } = await supabase
+      .from("articles")
+      .select("*")
+      .eq("id", id)
+      .single()
+    if (error || !data) return res.status(404).json({ error: "Exercise not found" })
+    res.json(rowToExercise(data))
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
 
-    const index = readIndex()
-    const entryIdx = index.findIndex((e) => e.id === id)
-    if (entryIdx === -1) return res.status(404).json({ error: "Exercise not found" })
-    const prev = index[entryIdx]
+app.put("/api/exercises/:id", async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return
+    const { id } = req.params
+    const { article, quiz, isChallenge, level, status, expectedMinutes, exerciseTemplate } =
+      req.body || {}
 
-    const articleErrors = validateArticle(article)
-    if (articleErrors.length) {
-      return res.status(400).json({ articleErrors, quizErrors: [] })
+    const { data: existing, error: fetchErr } = await supabase
+      .from("articles")
+      .select("id, level, status, created_at")
+      .eq("id", id)
+      .single()
+    if (fetchErr || !existing) return res.status(404).json({ error: "Exercise not found" })
+
+    const articleResult = ArticleSchema.safeParse(article)
+    if (!articleResult.success) {
+      return res
+        .status(400)
+        .json({ articleErrors: formatZodErrors(articleResult.error), quizErrors: [] })
     }
     if (article.id !== id) {
       return res.status(400).json({
@@ -274,57 +334,44 @@ app.put("/api/exercises/:id", (req, res) => {
       })
     }
 
-    const hasQuizPayload = quiz != null
+    const hasQuizPayload = quiz != null && quizHasQuestions(quiz)
     if (hasQuizPayload) {
-      const quizErrors = validateQuiz(quiz)
-      if (quizErrors.length) {
-        return res.status(400).json({ articleErrors: [], quizErrors })
-      }
-      if (quiz.articleId !== id) {
-        return res.status(400).json({
-          articleErrors: [],
-          quizErrors: [`quiz.articleId "${quiz.articleId}" must match exercise id "${id}"`],
-        })
+      const quizResult = QuizSchema.safeParse(quiz)
+      if (!quizResult.success) {
+        return res
+          .status(400)
+          .json({ articleErrors: [], quizErrors: formatZodErrors(quizResult.error) })
       }
     }
 
-    const finalQuiz = hasQuizPayload ? quiz : { articleId: id, totalPoints: 0, parts: [] }
+    const finalQuiz = hasQuizPayload ? quiz : null
 
-    fs.writeFileSync(path.join(DATA_DIR, "articles", `${id}.json`), JSON.stringify(article, null, 2))
-    fs.writeFileSync(path.join(DATA_DIR, "quizzes",  `${id}.json`), JSON.stringify(finalQuiz, null, 2))
+    // Preserve level for legacy F1–F3 articles; admin UI restricts new picks to 4–7.
+    const incomingLevel = typeof level === "number" ? level : existing.level
+    const nextStatus =
+      status === "draft"
+        ? "draft"
+        : status === "published"
+        ? "published"
+        : existing.status || "published"
 
-    const totalQuestions = finalQuiz.parts.reduce((s, p) => s + (p.questions?.length || 0), 0)
-    const hasQuizzes = quizHasQuestions(finalQuiz)
-    const nextStatus = status === "draft" ? "draft" : status === "published" ? "published" : (prev.status || "published")
-
-    const entry = {
-      id,
-      title: article.title,
-      source: article.source || "",
-      totalPoints: finalQuiz.totalPoints,
-      totalQuestions,
-      createdAt: prev.createdAt || nowIso(),
+    const row = articleToRow(article, {
+      isChallenge,
+      level: incomingLevel,
       status: nextStatus,
-      hasQuizzes,
-    }
-    if (isChallenge) entry.type = "challenge"
-    // PUT preserves existing level (1-7) so legacy F1-F3 articles don't lose their tag.
-    // The admin UI still restricts new selections to 4-7.
-    const incomingLevel = typeof level === "number" ? level : prev.level
-    if (incomingLevel >= 1 && incomingLevel <= 7) entry.level = incomingLevel
-    const incomingExpected = typeof expectedMinutes === "number" ? expectedMinutes : prev.expectedMinutes
-    if (typeof incomingExpected === "number" && incomingExpected > 0) entry.expectedMinutes = incomingExpected
-    const incomingTemplate = Array.isArray(exerciseTemplate) ? exerciseTemplate : prev.exerciseTemplate
-    if (Array.isArray(incomingTemplate)) entry.exerciseTemplate = incomingTemplate
+      expectedMinutes,
+      exerciseTemplate,
+      quizJson: finalQuiz,
+    })
 
-    index[entryIdx] = entry
-    writeIndex(index)
+    const { error: updateErr } = await supabase
+      .from("articles")
+      .update({ ...row, updated_at: nowIso() })
+      .eq("id", id)
+    if (updateErr) throw new Error(updateErr.message)
 
-    // Register / unregister in lib/data.ts based on (hasQuizzes && status === "published")
-    const shouldBeRegistered = hasQuizzes && entry.status === "published"
-    const isRegistered = isRegisteredInDataTs(id)
-    if (shouldBeRegistered && !isRegistered) updateDataTs(id)
-    else if (!shouldBeRegistered && isRegistered) removeFromDataTs(id)
+    await upsertQuestions(id, finalQuiz)
+    await createVersionSnapshot(id, { article, quiz: finalQuiz })
 
     res.json({ success: true })
   } catch (e) {
@@ -332,69 +379,88 @@ app.put("/api/exercises/:id", (req, res) => {
   }
 })
 
-app.delete("/api/exercises/:id", (req, res) => {
+app.delete("/api/exercises/:id", async (req, res) => {
   try {
+    if (!requireSupabase(res)) return
     const { id } = req.params
-    const index = readIndex()
-    const next = index.filter((e) => e.id !== id)
-    if (next.length === index.length) return res.status(404).json({ error: "Exercise not found" })
-
-    writeIndex(next)
-
-    const aPath = path.join(DATA_DIR, "articles", `${id}.json`)
-    const qPath = path.join(DATA_DIR, "quizzes",  `${id}.json`)
-    if (fs.existsSync(aPath)) fs.unlinkSync(aPath)
-    if (fs.existsSync(qPath)) fs.unlinkSync(qPath)
-
-    removeFromDataTs(id)
-
+    const { data, error } = await supabase
+      .from("articles")
+      .delete()
+      .eq("id", id)
+      .select("id")
+    if (error) return res.status(500).json({ error: error.message })
+    if (!data || data.length === 0) return res.status(404).json({ error: "Exercise not found" })
     res.json({ success: true })
   } catch (e) {
     res.status(500).json({ error: e.message })
   }
 })
 
-// Generate a quiz JSON for an existing article using a managed prompt.
-// Async; returns runId. Client polls /api/exercises/:id/generate-quiz/status/:runId.
-// Does NOT save automatically — the client reviews then calls PUT /api/exercises/:id.
+// Generate quiz for an existing article via LLM.
+// Async; returns runId. Client polls /status/:runId then PUTs the result.
 app.post("/api/exercises/:id/generate-quiz", (req, res) => {
   const { id } = req.params
   const { promptId, model, apiKey } = req.body || {}
   if (!apiKey) return res.status(400).json({ error: "apiKey is required" })
   if (!promptId) return res.status(400).json({ error: "promptId is required" })
 
-  const articlePath = path.join(DATA_DIR, "articles", `${id}.json`)
-  if (!fs.existsSync(articlePath)) return res.status(404).json({ error: "Article not found" })
-  const article = JSON.parse(fs.readFileSync(articlePath, "utf8"))
-
   const prompts = readQuizPrompts()
   const prompt = prompts.find((p) => p.id === promptId)
   if (!prompt) return res.status(404).json({ error: "Prompt not found" })
 
   const usedModel = model || prompt.defaultModel || "qwen/qwen3.6-flash"
-
   const runId = "qz_" + Date.now().toString(36)
-  generateRuns[runId] = { kind: "quiz", status: "running", step: "生成測驗題目…", done: 0, total: 1, quizJson: null, error: null }
+  generateRuns[runId] = {
+    kind: "quiz",
+    status: "running",
+    step: "生成測驗題目…",
+    done: 0,
+    total: 1,
+    quizJson: null,
+    error: null,
+  }
   res.json({ runId })
 
   ;(async () => {
     try {
+      let article
+      if (supabase) {
+        const { data, error } = await supabase
+          .from("articles")
+          .select("id, title, source, segments, footnotes")
+          .eq("id", id)
+          .single()
+        if (error || !data) throw new Error("Article not found")
+        article = data
+      } else {
+        const articlePath = path.join(DATA_DIR, "articles", `${id}.json`)
+        if (!fs.existsSync(articlePath)) throw new Error("Article not found")
+        article = JSON.parse(fs.readFileSync(articlePath, "utf8"))
+      }
+
       const rawText = (article.segments || []).map((s) => s.text || "").join("")
       const fnLines = (article.footnotes || []).length
         ? article.footnotes.map((f) => `${f.marker} ${f.term}：${f.explanation}`).join("\n")
         : "（無注釋）"
       const context = `標題：${article.title}\n來源：${article.source || "—"}\n\n原文：\n${rawText}\n\n注釋：\n${fnLines}`
 
-      const qRes = await callOpenRouter(usedModel, [
-        { role: "system", content: prompt.promptTemplate },
-        { role: "user", content: `請為以下文言文出題：\n\n${context}` },
-      ], apiKey)
+      const qRes = await callOpenRouter(
+        usedModel,
+        [
+          { role: "system", content: prompt.promptTemplate },
+          { role: "user", content: `請為以下文言文出題：\n\n${context}` },
+        ],
+        apiKey
+      )
       const qParsed = JSON.parse(qRes.content)
       if (!Array.isArray(qParsed.parts)) throw new Error("Quiz response missing parts[]")
 
       const parts = qParsed.parts.map((p) => ({
         ...p,
-        questions: (p.questions || []).map((q) => ({ ...q, options: normalizeOptions(q.options) })),
+        questions: (p.questions || []).map((q) => ({
+          ...q,
+          options: normalizeOptions(q.options),
+        })),
       }))
       const totalPoints = parts.reduce(
         (s, p) => s + (p.questions?.length || 0) * (p.pointsPerQuestion || 1),
@@ -414,7 +480,14 @@ app.post("/api/exercises/:id/generate-quiz", (req, res) => {
 app.get("/api/exercises/:id/generate-quiz/status/:runId", (req, res) => {
   const run = generateRuns[req.params.runId]
   if (!run) return res.status(404).json({ error: "Run not found" })
-  res.json({ status: run.status, step: run.step, done: run.done, total: run.total, quizJson: run.quizJson, error: run.error })
+  res.json({
+    status: run.status,
+    step: run.step,
+    done: run.done,
+    total: run.total,
+    quizJson: run.quizJson,
+    error: run.error,
+  })
 })
 
 // ── LLM Assessment ───────────────────────────────────────────────────────────
@@ -446,11 +519,6 @@ function readAssessmentConfig() {
 }
 
 // ── Quiz Prompt MGT (Phase 3) ────────────────────────────────────────────────
-//
-// Storage: assessment-config.json gains a `quizPrompts` array. The legacy
-// singular `quizPrompt` field at the top level is preserved for back-compat
-// with the existing LLM Assessment tab; on first load we seed `quizPrompts`
-// with one entry derived from it.
 
 const PROMPT_DEFAULT_ID = "default"
 
@@ -466,7 +534,8 @@ function readQuizPrompts() {
       {
         id: PROMPT_DEFAULT_ID,
         name: "Default Quiz Prompt",
-        description: "Original 4-part quiz: word meaning, sentence translation, comprehension, rhetoric",
+        description:
+          "Original 4-part quiz: word meaning, sentence translation, comprehension, rhetoric",
         promptTemplate: cfg.quizPrompt || DEFAULT_ASSESSMENT_CONFIG.quizPrompt,
         defaultModel: (Array.isArray(cfg.models) && cfg.models[0]) || "qwen/qwen3.6-flash",
         createdAt: nowIso(),
@@ -503,7 +572,8 @@ function validatePromptPayload(p) {
   const errs = []
   if (!p || typeof p !== "object") return ["Prompt must be a JSON object"]
   if (!p.name || typeof p.name !== "string" || !p.name.trim()) errs.push("Missing: name")
-  if (!p.promptTemplate || typeof p.promptTemplate !== "string" || !p.promptTemplate.trim()) errs.push("Missing: promptTemplate")
+  if (!p.promptTemplate || typeof p.promptTemplate !== "string" || !p.promptTemplate.trim())
+    errs.push("Missing: promptTemplate")
   return errs
 }
 
@@ -574,7 +644,8 @@ app.delete("/api/quiz-prompts/:id", (req, res) => {
   try {
     const { id } = req.params
     const prompts = readQuizPrompts()
-    if (prompts.length <= 1) return res.status(400).json({ error: "Cannot delete the last quiz prompt" })
+    if (prompts.length <= 1)
+      return res.status(400).json({ error: "Cannot delete the last quiz prompt" })
     const next = prompts.filter((p) => p.id !== id)
     if (next.length === prompts.length) return res.status(404).json({ error: "Prompt not found" })
     writeQuizPrompts(next)
@@ -624,7 +695,9 @@ async function callOpenRouter(model, messages, apiKey, retries = 4) {
   if (res.status === 429 && retries > 0) {
     const retryAfter = res.headers.get("Retry-After")
     const attempt = 4 - retries
-    const delay = retryAfter ? parseInt(retryAfter, 10) * 1000 : Math.min(10_000 * Math.pow(2, attempt), 80_000)
+    const delay = retryAfter
+      ? parseInt(retryAfter, 10) * 1000
+      : Math.min(10_000 * Math.pow(2, attempt), 80_000)
     await new Promise((r) => setTimeout(r, delay))
     return callOpenRouter(model, messages, apiKey, retries - 1)
   }
@@ -670,19 +743,24 @@ function generateCSVs(runId, results, filePrefix) {
   const translationsFile = `translations_${filePrefix}.csv`
   const quizFile         = `quiz_${filePrefix}.csv`
 
-  // summary.csv — one row per API call
-  const summaryLines = [csvRow(["article_id", "article_title", "model", "call_type", "latency_ms", "prompt_tokens", "completion_tokens", "est_cost_usd", "parse_ok", "error"])]
+  const summaryLines = [
+    csvRow([
+      "article_id", "article_title", "model", "call_type", "latency_ms",
+      "prompt_tokens", "completion_tokens", "est_cost_usd", "parse_ok", "error",
+    ]),
+  ]
   for (const r of results) {
-    summaryLines.push(csvRow([
-      r.articleId, r.articleTitle || "", r.model, r.callType,
-      r.latencyMs, r.promptTokens, r.completionTokens,
-      r.estCostUsd !== null && r.estCostUsd !== undefined ? r.estCostUsd.toFixed(6) : "",
-      r.parseOk ? "true" : "false", r.error || "",
-    ]))
+    summaryLines.push(
+      csvRow([
+        r.articleId, r.articleTitle || "", r.model, r.callType,
+        r.latencyMs, r.promptTokens, r.completionTokens,
+        r.estCostUsd !== null && r.estCostUsd !== undefined ? r.estCostUsd.toFixed(6) : "",
+        r.parseOk ? "true" : "false", r.error || "",
+      ])
+    )
   }
   fs.writeFileSync(path.join(dir, summaryFile), summaryLines.join("\n"))
 
-  // translations.csv — wide format, one row per paragraph
   const transResults = results.filter((r) => r.callType === "translation" && r.parseOk)
   const articleIds = [...new Set(results.map((r) => r.articleId))]
   const models = [...new Set(results.map((r) => r.model))]
@@ -693,20 +771,32 @@ function generateCSVs(runId, results, filePrefix) {
     const maxLen = Math.max(refLen, ...artTrans.map((r) => r.parsed?.modernTranslation?.length || 0))
     for (let i = 0; i < maxLen; i++) {
       const ref = artTrans[0]?.reference?.[i] || ""
-      const modelCells = models.map((m) => artTrans.find((x) => x.model === m)?.parsed?.modernTranslation?.[i] || "")
+      const modelCells = models.map(
+        (m) => artTrans.find((x) => x.model === m)?.parsed?.modernTranslation?.[i] || ""
+      )
       transLines.push(csvRow([artId, String(i + 1), ref, ...modelCells]))
     }
   }
   fs.writeFileSync(path.join(dir, translationsFile), transLines.join("\n"))
 
-  // quiz.csv — long format, one row per question
-  const quizLines = [csvRow(["article_id", "model", "part", "part_title", "q_index", "stem", "opt_A", "opt_B", "opt_C", "opt_D", "correct_answer", "explanation"])]
+  const quizLines = [
+    csvRow([
+      "article_id", "model", "part", "part_title", "q_index",
+      "stem", "opt_A", "opt_B", "opt_C", "opt_D", "correct_answer", "explanation",
+    ]),
+  ]
   for (const r of results.filter((r) => r.callType === "quiz" && r.parseOk)) {
     for (const part of r.parsed?.parts || []) {
       for (const q of part.questions || []) {
         const opts = {}
         for (const o of q.options || []) opts[o.key] = o.text
-        quizLines.push(csvRow([r.articleId, r.model, part.part, part.title, q.id, q.stem, opts.A || "", opts.B || "", opts.C || "", opts.D || "", q.correctAnswer, q.explanation]))
+        quizLines.push(
+          csvRow([
+            r.articleId, r.model, part.part, part.title, q.id,
+            q.stem, opts.A || "", opts.B || "", opts.C || "", opts.D || "",
+            q.correctAnswer, q.explanation,
+          ])
+        )
       }
     }
   }
@@ -768,7 +858,6 @@ function escapeRegex(s) {
 function segmentTextWithFootnotes(text, footnotes) {
   if (!footnotes.length) return segmentText(text)
 
-  // If normalized markers (1)(2)… are already embedded in the text, use marker-based splitting
   const hasEmbeddedMarkers = footnotes.some((f) => text.includes(f.marker))
   if (hasEmbeddedMarkers) {
     const sorted = [...footnotes].sort((a, b) => b.marker.length - a.marker.length)
@@ -794,8 +883,6 @@ function segmentTextWithFootnotes(text, footnotes) {
     return segments.length ? segments : [{ text: text.trim() }]
   }
 
-  // Arabic numeral markers: in classical Chinese, Arabic numerals are footnote references.
-  // e.g., "弈秋1，通國2之善弈者也" where 1, 2 reference footnotes 1, 2.
   const footnoteById = Object.fromEntries(footnotes.map((f) => [f.id, f]))
   const sortedIds = footnotes.map((f) => f.id).sort((a, b) => b.length - a.length)
   const numeralRe = new RegExp(`(?<!\\d)(${sortedIds.map(escapeRegex).join("|")})(?!\\d)`, "g")
@@ -823,7 +910,6 @@ function segmentTextWithFootnotes(text, footnotes) {
     return segments.length ? segments : segmentText(text)
   }
 
-  // Term-based: insert marker immediately after each term's first occurrence in the text
   const insertions = []
   for (const fn of footnotes) {
     const idx = text.indexOf(fn.term)
@@ -844,36 +930,44 @@ function segmentTextWithFootnotes(text, footnotes) {
     pos = insertPos
   }
   if (pos < text.length) {
-    text.slice(pos).split(/\n+/).forEach((line) => { if (line.trim()) segments.push({ text: line.trim() }) })
+    text.slice(pos).split(/\n+/).forEach((line) => {
+      if (line.trim()) segments.push({ text: line.trim() })
+    })
   }
   return segments.length ? segments : segmentText(text)
 }
 
 function parseFootnotesText(raw) {
   if (!raw || !raw.trim()) return []
-  // Normalize circled CJK dialect markers: ○粵 → [粵], ○漢 → [漢], etc.
   raw = raw.replace(/○([一-鿿])/g, "[$1]")
-  // Normalize inline multi-footnote strings: "1. termA︰exp 2. termB︰exp …" → one entry per line
   raw = raw.replace(/\s+(?=\d+[.。]\s)/g, "\n")
   const footnotes = []
   let idNum = 1
   for (const line of raw.split("\n").map((l) => l.trim()).filter(Boolean)) {
-    // ︰ (U+FE30), ︓ (U+FE13), ：(U+FF1A fullwidth colon) and : (ASCII) are all accepted
-    // Marker prefix formats: (1) term  ① term  1. / 1  / 1、 term
-    const withMarker = line.match(/^([①-⑳]|[（(]\d+[)）]|\[\d+\]|\d+[.。、）)\s])\s*([^：:︓︰]+)[：:︓︰]\s*(.+)$/)
+    const withMarker = line.match(
+      /^([①-⑳]|[（(]\d+[)）]|\[\d+\]|\d+[.。、）)\s])\s*([^：:︓︰]+)[：:︓︰]\s*(.+)$/
+    )
     if (withMarker) {
-      footnotes.push({ id: String(idNum), marker: `(${idNum})`, term: withMarker[2].trim(), explanation: withMarker[3].trim() })
+      footnotes.push({
+        id: String(idNum),
+        marker: `(${idNum})`,
+        term: withMarker[2].trim(),
+        explanation: withMarker[3].trim(),
+      })
       idNum++
       continue
     }
-    // No marker: term︰explanation
     const noMarker = line.match(/^([^：:︓︰]+)[：:︓︰]\s*(.+)$/)
     if (noMarker) {
-      footnotes.push({ id: String(idNum), marker: `(${idNum})`, term: noMarker[1].trim(), explanation: noMarker[2].trim() })
+      footnotes.push({
+        id: String(idNum),
+        marker: `(${idNum})`,
+        term: noMarker[1].trim(),
+        explanation: noMarker[2].trim(),
+      })
       idNum++
       continue
     }
-    // Continuation line: append to the previous footnote's explanation
     if (footnotes.length) {
       footnotes[footnotes.length - 1].explanation += line
     }
@@ -896,7 +990,10 @@ app.get("/api/assessment/config", (_req, res) => {
 app.post("/api/assessment/config", (req, res) => {
   try {
     const { models, translationPrompt, quizPrompt } = req.body || {}
-    fs.writeFileSync(ASSESSMENT_CONFIG_FILE, JSON.stringify({ models, translationPrompt, quizPrompt }, null, 2))
+    fs.writeFileSync(
+      ASSESSMENT_CONFIG_FILE,
+      JSON.stringify({ models, translationPrompt, quizPrompt }, null, 2)
+    )
     res.json({ success: true })
   } catch (e) {
     res.status(500).json({ error: e.message })
@@ -908,59 +1005,133 @@ app.post("/api/assessment/run", (req, res) => {
   if (!apiKey) return res.status(400).json({ error: "apiKey is required" })
   const hasIds = Array.isArray(articleIds) && articleIds.length
   const hasRaw = Array.isArray(rawArticles) && rawArticles.length
-  if (!hasIds && !hasRaw) return res.status(400).json({ error: "articleIds or rawArticles required" })
-  if (!Array.isArray(models) || !models.length) return res.status(400).json({ error: "models required" })
+  if (!hasIds && !hasRaw)
+    return res.status(400).json({ error: "articleIds or rawArticles required" })
+  if (!Array.isArray(models) || !models.length)
+    return res.status(400).json({ error: "models required" })
 
   const runId = Date.now().toString()
   const now = new Date()
   const pad = (n) => String(n).padStart(2, "0")
   const filePrefix = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`
-  const total = ((articleIds?.length || 0) + (rawArticles?.length || 0)) * models.length * 2
-  runs[runId] = { status: "running", done: 0, total, currentTask: "", error: null, csvDir: null, files: null }
+  const total =
+    ((articleIds?.length || 0) + (rawArticles?.length || 0)) * models.length * 2
+  runs[runId] = {
+    status: "running",
+    done: 0,
+    total,
+    currentTask: "",
+    error: null,
+    csvDir: null,
+    files: null,
+  }
   res.json({ runId })
 
   ;(async () => {
     const results = []
     try {
-      // Build unified article list from file-based and raw sources
       const articles = []
-      for (const articleId of (articleIds || [])) {
-        const article = JSON.parse(fs.readFileSync(path.join(DATA_DIR, "articles", `${articleId}.json`), "utf8"))
-        articles.push({ id: articleId, title: article.title, context: buildArticleContext(article), reference: article.modernTranslation || [] })
+      for (const articleId of articleIds || []) {
+        let article
+        if (supabase) {
+          const { data, error } = await supabase
+            .from("articles")
+            .select("id, title, source, segments, footnotes, modern_translation")
+            .eq("id", articleId)
+            .single()
+          if (error || !data) throw new Error(`Article not found: ${articleId}`)
+          article = {
+            id: data.id,
+            title: data.title,
+            source: data.source,
+            segments: data.segments,
+            footnotes: data.footnotes,
+            modernTranslation: data.modern_translation,
+          }
+        } else {
+          article = JSON.parse(
+            fs.readFileSync(path.join(DATA_DIR, "articles", `${articleId}.json`), "utf8")
+          )
+        }
+        articles.push({
+          id: articleId,
+          title: article.title,
+          context: buildArticleContext(article),
+          reference: article.modernTranslation || [],
+        })
       }
-      for (const raw of (rawArticles || [])) {
+      for (const raw of rawArticles || []) {
         const context = `標題：${raw.title}\n來源：（自訂）\n\n原文：\n${raw.text}\n\n注釋：（無注釋）`
-        articles.push({ id: raw.id || "raw-article", title: raw.title || "自訂文章", context, reference: [] })
+        articles.push({
+          id: raw.id || "raw-article",
+          title: raw.title || "自訂文章",
+          context,
+          reference: [],
+        })
       }
 
       for (const art of articles) {
         for (const model of models) {
           const shortModel = model.split("/").pop()
 
-          // Translation call
           runs[runId].currentTask = `翻譯 · ${shortModel} · ${art.title}`
-          const tResult = { articleId: art.id, articleTitle: art.title, model, callType: "translation", latencyMs: 0, promptTokens: 0, completionTokens: 0, estCostUsd: null, parseOk: false, error: null, parsed: null, reference: art.reference }
+          const tResult = {
+            articleId: art.id, articleTitle: art.title, model, callType: "translation",
+            latencyMs: 0, promptTokens: 0, completionTokens: 0, estCostUsd: null,
+            parseOk: false, error: null, parsed: null, reference: art.reference,
+          }
           try {
-            const r = await callOpenRouter(model, [{ role: "system", content: translationPrompt }, { role: "user", content: `請翻譯以下文言文：\n\n${art.context}` }], apiKey)
-            Object.assign(tResult, { latencyMs: r.latencyMs, promptTokens: r.promptTokens, completionTokens: r.completionTokens, estCostUsd: estimateCost(model, r.promptTokens, r.completionTokens) })
+            const r = await callOpenRouter(
+              model,
+              [
+                { role: "system", content: translationPrompt },
+                { role: "user", content: `請翻譯以下文言文：\n\n${art.context}` },
+              ],
+              apiKey
+            )
+            Object.assign(tResult, {
+              latencyMs: r.latencyMs,
+              promptTokens: r.promptTokens,
+              completionTokens: r.completionTokens,
+              estCostUsd: estimateCost(model, r.promptTokens, r.completionTokens),
+            })
             const parsed = JSON.parse(r.content)
             tResult.parsed = parsed
             tResult.parseOk = Array.isArray(parsed.modernTranslation)
-          } catch (e) { tResult.error = e.message }
+          } catch (e) {
+            tResult.error = e.message
+          }
           results.push(tResult)
           runs[runId].done++
           await new Promise((r) => setTimeout(r, 2_000))
 
-          // Quiz call
           runs[runId].currentTask = `出題 · ${shortModel} · ${art.title}`
-          const qResult = { articleId: art.id, articleTitle: art.title, model, callType: "quiz", latencyMs: 0, promptTokens: 0, completionTokens: 0, estCostUsd: null, parseOk: false, error: null, parsed: null }
+          const qResult = {
+            articleId: art.id, articleTitle: art.title, model, callType: "quiz",
+            latencyMs: 0, promptTokens: 0, completionTokens: 0, estCostUsd: null,
+            parseOk: false, error: null, parsed: null,
+          }
           try {
-            const r = await callOpenRouter(model, [{ role: "system", content: quizPrompt }, { role: "user", content: `請為以下文言文出題：\n\n${art.context}` }], apiKey)
-            Object.assign(qResult, { latencyMs: r.latencyMs, promptTokens: r.promptTokens, completionTokens: r.completionTokens, estCostUsd: estimateCost(model, r.promptTokens, r.completionTokens) })
+            const r = await callOpenRouter(
+              model,
+              [
+                { role: "system", content: quizPrompt },
+                { role: "user", content: `請為以下文言文出題：\n\n${art.context}` },
+              ],
+              apiKey
+            )
+            Object.assign(qResult, {
+              latencyMs: r.latencyMs,
+              promptTokens: r.promptTokens,
+              completionTokens: r.completionTokens,
+              estCostUsd: estimateCost(model, r.promptTokens, r.completionTokens),
+            })
             const parsed = JSON.parse(r.content)
             qResult.parsed = parsed
             qResult.parseOk = Array.isArray(parsed.parts)
-          } catch (e) { qResult.error = e.message }
+          } catch (e) {
+            qResult.error = e.message
+          }
           results.push(qResult)
           runs[runId].done++
           await new Promise((r) => setTimeout(r, 2_000))
@@ -982,7 +1153,13 @@ app.post("/api/assessment/run", (req, res) => {
 app.get("/api/assessment/status/:runId", (req, res) => {
   const run = runs[req.params.runId]
   if (!run) return res.status(404).json({ error: "Run not found" })
-  res.json({ status: run.status, done: run.done, total: run.total, currentTask: run.currentTask || "", error: run.error })
+  res.json({
+    status: run.status,
+    done: run.done,
+    total: run.total,
+    currentTask: run.currentTask || "",
+    error: run.error,
+  })
 })
 
 app.get("/api/assessment/download/:runId/:type", (req, res) => {
@@ -997,19 +1174,17 @@ app.get("/api/assessment/download/:runId/:type", (req, res) => {
     res.send(Buffer.concat([BOM, fs.readFileSync(filePath)]))
   }
 
-  // In-memory run (current session)
   const run = runs[runId]
   if (run?.files?.[type]) {
     const filePath = path.join(run.csvDir, run.files[type])
     if (fs.existsSync(filePath)) return sendFile(filePath, run.files[type])
   }
 
-  // Fallback: scan disk (runs from previous server sessions)
   const dir = path.join(ASSESSMENT_RESULTS_DIR, runId)
   if (!fs.existsSync(dir)) return res.status(404).json({ error: "Run not found" })
-  const match = fs.readdirSync(dir).find((f) =>
-    f.endsWith(".csv") && (f === `${type}.csv` || f.startsWith(`${type}_`))
-  )
+  const match = fs
+    .readdirSync(dir)
+    .find((f) => f.endsWith(".csv") && (f === `${type}.csv` || f.startsWith(`${type}_`)))
   if (!match) return res.status(404).json({ error: "File not found" })
   sendFile(path.join(dir, match), match)
 })
@@ -1017,9 +1192,9 @@ app.get("/api/assessment/download/:runId/:type", (req, res) => {
 app.get("/api/assessment/history", (_req, res) => {
   try {
     if (!fs.existsSync(ASSESSMENT_RESULTS_DIR)) return res.json([])
-    const entries = fs.readdirSync(ASSESSMENT_RESULTS_DIR).filter((d) =>
-      fs.statSync(path.join(ASSESSMENT_RESULTS_DIR, d)).isDirectory()
-    )
+    const entries = fs
+      .readdirSync(ASSESSMENT_RESULTS_DIR)
+      .filter((d) => fs.statSync(path.join(ASSESSMENT_RESULTS_DIR, d)).isDirectory())
     const history = entries.map((runId) => {
       const dir = path.join(ASSESSMENT_RESULTS_DIR, runId)
       const csvFiles = fs.readdirSync(dir).filter((f) => f.endsWith(".csv"))
@@ -1029,10 +1204,11 @@ app.get("/api/assessment/history", (_req, res) => {
         else if (f === "translations.csv" || f.startsWith("translations_")) files.translations = f
         else if (f === "quiz.csv" || f.startsWith("quiz_")) files.quiz = f
       }
-      // Derive datetime from filename: summary_2026-04-29_14-30-00.csv
       let datetime = null
       const summaryName = files.summary || ""
-      const m = summaryName.match(/summary_(\d{4}-\d{2}-\d{2})_(\d{2})-(\d{2})-(\d{2})\.csv/)
+      const m = summaryName.match(
+        /summary_(\d{4}-\d{2}-\d{2})_(\d{2})-(\d{2})-(\d{2})\.csv/
+      )
       if (m) datetime = `${m[1]}  ${m[2]}:${m[3]}:${m[4]}`
       if (!datetime) {
         const d = new Date(parseInt(runId))
@@ -1061,9 +1237,9 @@ app.get("/api/assessment/data/:runId/:type", (req, res) => {
   if (!filePath) {
     const dir = path.join(ASSESSMENT_RESULTS_DIR, runId)
     if (!fs.existsSync(dir)) return res.status(404).json({ error: "Run not found" })
-    const match = fs.readdirSync(dir).find((f) =>
-      f.endsWith(".csv") && (f === `${type}.csv` || f.startsWith(`${type}_`))
-    )
+    const match = fs
+      .readdirSync(dir)
+      .find((f) => f.endsWith(".csv") && (f === `${type}.csv` || f.startsWith(`${type}_`)))
     if (!match) return res.status(404).json({ error: "File not found" })
     filePath = path.join(dir, match)
   }
@@ -1081,29 +1257,35 @@ app.get("/api/assessment/data/:runId/:type", (req, res) => {
 // ── Generate Article ─────────────────────────────────────────────────────────
 
 app.post("/api/generate-article", (req, res) => {
-  const { title, source, text, footnotesText, model, translationPrompt, quizPrompt, apiKey, skipQuiz } = req.body || {}
+  const {
+    title, source, text, footnotesText, model, translationPrompt,
+    quizPrompt, apiKey, skipQuiz,
+  } = req.body || {}
   if (!apiKey) return res.status(400).json({ error: "apiKey is required" })
   if (!title) return res.status(400).json({ error: "title is required" })
   if (!text) return res.status(400).json({ error: "text is required" })
   if (!model) return res.status(400).json({ error: "model is required" })
-  if (!skipQuiz && !quizPrompt) return res.status(400).json({ error: "quizPrompt is required (or pass skipQuiz: true)" })
+  if (!skipQuiz && !quizPrompt)
+    return res.status(400).json({ error: "quizPrompt is required (or pass skipQuiz: true)" })
 
   const runId = "gen_" + Date.now().toString()
   const total = skipQuiz ? 1 : 2
-  generateRuns[runId] = { status: "running", step: "", done: 0, total, articleJson: null, quizJson: null, skipQuiz: !!skipQuiz, error: null }
+  generateRuns[runId] = {
+    status: "running", step: "", done: 0, total,
+    articleJson: null, quizJson: null, skipQuiz: !!skipQuiz, error: null,
+  }
   res.json({ runId })
 
   ;(async () => {
     try {
       let parsedFootnotes = parseFootnotesText(footnotesText || "")
 
-      // If no footnotes were provided but the text contains Arabic numerals,
-      // auto-create stub entries so the numerals get linked into segments.
-      // The user can fill in term/explanation by editing the generated JSON before saving.
       if (!parsedFootnotes.length) {
-        const found = [...new Set(
-          [...(title + " " + text).matchAll(/(?<!\d)(\d+)(?!\d)/g)].map((m) => m[1])
-        )].sort((a, b) => Number(a) - Number(b))
+        const found = [
+          ...new Set(
+            [...(title + " " + text).matchAll(/(?<!\d)(\d+)(?!\d)/g)].map((m) => m[1])
+          ),
+        ].sort((a, b) => Number(a) - Number(b))
         if (found.length) {
           parsedFootnotes = found.map((n) => ({ id: n, marker: `(${n})`, term: "", explanation: "" }))
         }
@@ -1113,34 +1295,48 @@ app.post("/api/generate-article", (req, res) => {
         : "（無注釋）"
       const context = `標題：${title}\n來源：${source || "—"}\n\n原文：\n${text}\n\n注釋：\n${fnLines}`
 
-      // Translation — also ask model to suggest a pinyin slug for the article ID
       generateRuns[runId].step = "生成現代文翻譯…"
-      const tRes = await callOpenRouter(model, [
-        { role: "system", content: translationPrompt },
-        { role: "user", content: `請翻譯以下文言文。在 JSON 回覆中額外加入 "suggestedId" 欄位，值為標題的漢語拼音（全小寫、以連字號分隔，例如 "chun-ye-xi-yu"）。\n\n${context}` },
-      ], apiKey)
+      const tRes = await callOpenRouter(
+        model,
+        [
+          { role: "system", content: translationPrompt },
+          {
+            role: "user",
+            content: `請翻譯以下文言文。在 JSON 回覆中額外加入 "suggestedId" 欄位，值為標題的漢語拼音（全小寫、以連字號分隔，例如 "chun-ye-xi-yu"）。\n\n${context}`,
+          },
+        ],
+        apiKey
+      )
       const tParsed = JSON.parse(tRes.content)
-      if (!Array.isArray(tParsed.modernTranslation)) throw new Error("Translation response missing modernTranslation[]")
-      const articleId = (typeof tParsed.suggestedId === "string" && /^[a-z0-9-]+$/.test(tParsed.suggestedId))
-        ? tParsed.suggestedId
-        : "art-" + Date.now().toString(36)
+      if (!Array.isArray(tParsed.modernTranslation))
+        throw new Error("Translation response missing modernTranslation[]")
+      const articleId =
+        typeof tParsed.suggestedId === "string" && /^[a-z0-9-]+$/.test(tParsed.suggestedId)
+          ? tParsed.suggestedId
+          : "art-" + Date.now().toString(36)
       generateRuns[runId].done++
 
-      // Quiz (skipped when skipQuiz: true — user generates later from Article Detail)
       let parts = []
       if (!skipQuiz) {
         generateRuns[runId].step = "生成測驗題目…"
-        const qRes = await callOpenRouter(model, [
-          { role: "system", content: quizPrompt },
-          { role: "user", content: `請為以下文言文出題：\n\n${context}` },
-        ], apiKey)
+        const qRes = await callOpenRouter(
+          model,
+          [
+            { role: "system", content: quizPrompt },
+            { role: "user", content: `請為以下文言文出題：\n\n${context}` },
+          ],
+          apiKey
+        )
         const qParsed = JSON.parse(qRes.content)
         if (!Array.isArray(qParsed.parts)) throw new Error("Quiz response missing parts[]")
         generateRuns[runId].done++
 
         parts = qParsed.parts.map((p) => ({
           ...p,
-          questions: (p.questions || []).map((q) => ({ ...q, options: normalizeOptions(q.options) })),
+          questions: (p.questions || []).map((q) => ({
+            ...q,
+            options: normalizeOptions(q.options),
+          })),
         }))
       }
 
@@ -1175,11 +1371,21 @@ app.post("/api/generate-article", (req, res) => {
 app.get("/api/generate-article/status/:runId", (req, res) => {
   const run = generateRuns[req.params.runId]
   if (!run) return res.status(404).json({ error: "Run not found" })
-  res.json({ status: run.status, step: run.step, done: run.done, total: run.total, articleJson: run.articleJson, quizJson: run.quizJson, error: run.error })
+  res.json({
+    status: run.status,
+    step: run.step,
+    done: run.done,
+    total: run.total,
+    articleJson: run.articleJson,
+    quizJson: run.quizJson,
+    error: run.error,
+  })
 })
 
 app.listen(PORT, () => {
   console.log(`\n  ✦ 文言教室 Admin Portal\n  → http://localhost:${PORT}\n`)
-  backfillIndex()
-  readQuizPrompts() // triggers migration if needed
+  if (!supabase) {
+    console.log("  ⚠ Running without Supabase — add SUPABASE_SERVICE_ROLE_KEY to .env then restart\n")
+  }
+  readQuizPrompts() // seeds quizPrompts[] in assessment-config.json if missing
 })
