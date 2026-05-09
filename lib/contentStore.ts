@@ -126,6 +126,7 @@ async function loadFromSQLite(): Promise<boolean> {
       _articles.set(row.id, JSON.parse(row.article_json))
       if (row.quiz_json) _quizzes.set(row.id, JSON.parse(row.quiz_json))
       if (row.meta_json) _meta.set(row.id, JSON.parse(row.meta_json))
+      if (!ARTICLE_ORDER.includes(row.id)) ARTICLE_ORDER.push(row.id)
     } catch {
       // skip malformed rows; seed data remains in memory
     }

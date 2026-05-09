@@ -5,6 +5,7 @@ import { checkAnswer, calculateScore } from "@/lib/quiz"
 import { getArticle } from "@/lib/data"
 import { useAuth } from "@/hooks/useAuth"
 import { saveQuizAttempt } from "@/lib/quizHistory"
+import type { Article } from "@/lib/types"
 import QuizProgressBar from "./QuizProgressBar"
 import QuizQuestion from "./QuizQuestion"
 import ScoreScreen from "./ScoreScreen"
@@ -13,8 +14,9 @@ import ArticlePopup from "./ArticlePopup"
 interface Props {
   questions: Question[]
   partTitles: Record<number, string>
-  articleId: string
+  articleId?: string
   expectedMinutes?: number
+  onSave?: (score: number, total: number, totalSeconds: number) => void
 }
 
 function formatTimer(seconds: number): string {
@@ -23,7 +25,7 @@ function formatTimer(seconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`
 }
 
-export default function QuizShell({ questions, partTitles, articleId, expectedMinutes }: Props) {
+export default function QuizShell({ questions, partTitles, articleId, expectedMinutes, onSave }: Props) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<number, QuizAnswer>>({})
   const [selectedOption, setSelectedOption] = useState<OptionKey | null>(null)
@@ -36,7 +38,7 @@ export default function QuizShell({ questions, partTitles, articleId, expectedMi
 
   const startedAtRef = useRef(Date.now())
   const { user } = useAuth()
-  const article = getArticle(articleId)
+  const article: Article | null = articleId ? getArticle(articleId) : null
 
   useEffect(() => {
     if (isFinished) return
@@ -50,11 +52,15 @@ export default function QuizShell({ questions, partTitles, articleId, expectedMi
     if (!isFinished || !user) return
     const totalSecs = Math.floor((Date.now() - startedAtRef.current) / 1000)
     const { earned, total } = calculateScore(questions, answers)
-    saveQuizAttempt(
-      user.id, articleId, questions, answers, earned, total,
-      totalSecs,
-      expectedMinutes != null ? expectedMinutes * 60 : undefined,
-    ).catch(() => {})
+    if (onSave) {
+      onSave(earned, total, totalSecs)
+    } else if (articleId) {
+      saveQuizAttempt(
+        user.id, articleId, questions, answers, earned, total,
+        totalSecs,
+        expectedMinutes != null ? expectedMinutes * 60 : undefined,
+      ).catch(() => {})
+    }
   }, [isFinished])
 
   const currentQuestion = questions[currentIndex]
@@ -108,7 +114,7 @@ export default function QuizShell({ questions, partTitles, articleId, expectedMi
         questions={questions}
         answers={answers}
         partTitles={partTitles}
-        articleId={articleId}
+        articleId={articleId ?? ""}
         onRestart={handleRestart}
       />
     )
@@ -126,13 +132,15 @@ export default function QuizShell({ questions, partTitles, articleId, expectedMi
         <Text className={`text-sm font-semibold tabular-nums ${timerColor}`}>
           {formatTimer(elapsedSeconds)}
         </Text>
-        <Pressable
-          onPress={() => setShowArticle(true)}
-          hitSlop={8}
-          className="bg-amber-100 border border-amber-300 rounded-lg px-3 py-1.5 active:opacity-70"
-        >
-          <Text className="text-amber-700 font-semibold text-xs">📖 文章</Text>
-        </Pressable>
+        {article && (
+          <Pressable
+            onPress={() => setShowArticle(true)}
+            hitSlop={8}
+            className="bg-amber-100 border border-amber-300 rounded-lg px-3 py-1.5 active:opacity-70"
+          >
+            <Text className="text-amber-700 font-semibold text-xs">📖 文章</Text>
+          </Pressable>
+        )}
       </View>
 
       <QuizQuestion

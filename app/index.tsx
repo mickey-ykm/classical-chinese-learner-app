@@ -2,20 +2,23 @@ import { ScrollView, View, Text, Pressable, Image } from "react-native"
 import { useRouter, useFocusEffect } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useCallback, useState } from "react"
-import { getArticleIndex } from "@/lib/data"
+import { getArticleIndex, isArticleFree } from "@/lib/data"
+import { getReadArticles } from "@/lib/readProgress"
 import { Logo } from "@/components/Logo"
 import { useAuth } from "@/hooks/useAuth"
+import UpgradeModal from "@/components/UpgradeModal"
 import type { ArticleEntry } from "@/lib/types"
 
 const TOTAL_LESSONS = 50
 
-type NodeState = "read" | "available" | "challenge" | "locked"
+type NodeState = "read" | "available" | "challenge" | "pro" | "locked"
 
 function NodeCircle({ num, state }: { num: number; state: NodeState }) {
   const bg =
     state === "read"      ? "bg-amber-600" :
     state === "available" ? "bg-amber-500" :
     state === "challenge" ? "bg-slate-800" :
+    state === "pro"       ? "bg-slate-300" :
                             "bg-slate-200"
 
   return (
@@ -24,6 +27,8 @@ function NodeCircle({ num, state }: { num: number; state: NodeState }) {
         <Text className="font-bold text-base text-white">✓</Text>
       ) : state === "locked" ? (
         <Text className="text-slate-400 text-xs">🔒</Text>
+      ) : state === "pro" ? (
+        <Text className="text-slate-500 text-xs">🔒</Text>
       ) : state === "challenge" ? (
         <Text className="text-amber-400 text-base">★</Text>
       ) : (
@@ -84,6 +89,35 @@ function ChallengeCard({ article, onStart }: { article: ArticleEntry; onStart: (
   )
 }
 
+function ProLockedCard({ article, onUpgrade }: { article: ArticleEntry; onUpgrade: () => void }) {
+  return (
+    <View className="bg-white rounded-2xl border border-slate-100 px-4 pt-4 pb-3 opacity-75">
+      <View className="flex-row items-center gap-2 mb-1">
+        <Text
+          className="text-base font-bold text-slate-600 leading-snug flex-1"
+          style={{ fontFamily: "Georgia" }}
+        >
+          {article.title}
+        </Text>
+        <View className="bg-amber-100 rounded px-2 py-0.5">
+          <Text className="text-amber-700 text-[10px] font-bold tracking-widest">PRO</Text>
+        </View>
+      </View>
+      <Text className="text-xs text-slate-400 mb-1">{article.source}</Text>
+      <Text className="text-xs text-slate-400 mb-3">
+        共 {article.totalQuestions} 題 · {article.totalPoints} 分
+      </Text>
+      <Pressable
+        onPress={onUpgrade}
+        className="py-2.5 rounded-xl bg-slate-100 items-center active:opacity-80 flex-row justify-center gap-1.5"
+      >
+        <Text className="text-slate-500 text-sm">🔒</Text>
+        <Text className="text-slate-500 font-semibold text-sm">升級解鎖</Text>
+      </Pressable>
+    </View>
+  )
+}
+
 function PlaceholderCard({ num }: { num: number }) {
   return (
     <View className="bg-slate-100 rounded-2xl border border-slate-100 px-4 py-3">
@@ -96,19 +130,34 @@ function PlaceholderCard({ num }: { num: number }) {
 export default function HomeScreen() {
   const router = useRouter()
   const [articles, setArticles] = useState(() => getArticleIndex())
+  const [readIds, setReadIds] = useState<Set<string>>(new Set())
+  const [upgradeVisible, setUpgradeVisible] = useState(false)
   const { user, profile, isAnonymous } = useAuth()
+
+  const isPro = profile?.is_pro ?? false
 
   useFocusEffect(
     useCallback(() => {
       setArticles(getArticleIndex())
-    }, [])
+      const userId = !isAnonymous && user ? user.id : undefined
+      getReadArticles(userId).then(setReadIds)
+    }, [user, isAnonymous])
   )
 
   const lessons = Array.from({ length: TOTAL_LESSONS }, (_, i) => {
     const article = i < articles.length ? articles[i] : null
-    const state: NodeState = article
-      ? article.type === "challenge" ? "challenge" : "available"
-      : "locked"
+    let state: NodeState
+    if (!article) {
+      state = "locked"
+    } else if (readIds.has(article.id)) {
+      state = "read"
+    } else if (!isPro && !isArticleFree(article.id)) {
+      state = "pro"
+    } else if (article.type === "challenge") {
+      state = "challenge"
+    } else {
+      state = "available"
+    }
     return { num: i + 1, article, state }
   })
 
@@ -171,7 +220,12 @@ export default function HomeScreen() {
               {/* Right: card */}
               <View className="flex-1 ml-3 pb-3">
                 {article ? (
-                  article.type === "challenge" ? (
+                  state === "pro" ? (
+                    <ProLockedCard
+                      article={article}
+                      onUpgrade={() => setUpgradeVisible(true)}
+                    />
+                  ) : article.type === "challenge" ? (
                     <ChallengeCard
                       article={article}
                       onStart={() => router.push({ pathname: "/read", params: { id: article.id } })}
@@ -190,6 +244,8 @@ export default function HomeScreen() {
           )
         })}
       </ScrollView>
+
+      <UpgradeModal visible={upgradeVisible} onClose={() => setUpgradeVisible(false)} />
     </SafeAreaView>
   )
 }

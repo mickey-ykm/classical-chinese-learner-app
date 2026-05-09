@@ -1,12 +1,27 @@
 import { View, Text, Pressable, ScrollView } from "react-native"
 import { useRouter, useLocalSearchParams } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
-import { getAllQuestions, getPartTitles, getArticleIndex } from "@/lib/data"
+import { getAllQuestions, getPartTitles, getArticleIndex, isArticleFree } from "@/lib/data"
+import { useAuth } from "@/hooks/useAuth"
+import UpgradeModal from "@/components/UpgradeModal"
 import QuizShell from "@/components/quiz/QuizShell"
 
 export default function QuizScreen() {
   const router = useRouter()
   const { id } = useLocalSearchParams<{ id: string }>()
+  const { profile } = useAuth()
+
+  const isPro = profile?.is_pro ?? false
+  const gated = !isArticleFree(id) && !isPro
+
+  if (gated) {
+    return (
+      <SafeAreaView className="flex-1 bg-slate-50">
+        <UpgradeModal visible={true} onClose={() => router.back()} />
+      </SafeAreaView>
+    )
+  }
+
   const questions = getAllQuestions(id)
   const partTitles = getPartTitles(id)
   const expectedMinutes = getArticleIndex().find((a) => a.id === id)?.expectedMinutes

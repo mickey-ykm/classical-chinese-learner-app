@@ -21,6 +21,16 @@ export function getPartTitles(id: string): Record<number, string> {
   return Object.fromEntries(getQuiz(id).parts.map((p) => [p.part, p.title]))
 }
 
+export const FREE_ARTICLE_IDS: readonly string[] = [
+  "wang-rong-he-jiao",
+  "zeng-zi-sha-zhu",
+  "mai-you-weng",
+]
+
+export function isArticleFree(id: string): boolean {
+  return FREE_ARTICLE_IDS.includes(id)
+}
+
 export const QUIZ_SEQUENCE = [
   "wang-rong-he-jiao",
   "zeng-zi-sha-zhu",

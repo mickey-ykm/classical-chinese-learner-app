@@ -2,8 +2,10 @@ import { useState, useRef } from "react"
 import { ScrollView, View, Text, Pressable, NativeSyntheticEvent, NativeScrollEvent } from "react-native"
 import { useRouter, useLocalSearchParams } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
-import { getArticle } from "@/lib/data"
+import { getArticle, isArticleFree } from "@/lib/data"
 import { markAsRead } from "@/lib/readProgress"
+import { useAuth } from "@/hooks/useAuth"
+import UpgradeModal from "@/components/UpgradeModal"
 import type { Footnote } from "@/lib/types"
 import ArticleText from "@/components/reading/ArticleText"
 import FootnotePanel from "@/components/reading/FootnotePanel"
@@ -13,8 +15,12 @@ export default function ReadScreen() {
   const router = useRouter()
   const { id } = useLocalSearchParams<{ id: string }>()
   const article = getArticle(id)
+  const { user, profile, isAnonymous } = useAuth()
   const [activeFootnote, setActiveFootnote] = useState<Footnote | null>(null)
   const markedRead = useRef(false)
+
+  const isPro = profile?.is_pro ?? false
+  const gated = !isArticleFree(id) && !isPro
 
   function handleFootnoteTap(footnoteId: string) {
     const fn = article.footnotes.find((f) => f.id === footnoteId) ?? null
@@ -27,8 +33,16 @@ export default function ReadScreen() {
     const nearBottom = contentOffset.y + layoutMeasurement.height >= contentSize.height - 80
     if (nearBottom) {
       markedRead.current = true
-      markAsRead(id)
+      markAsRead(id, !isAnonymous && user ? user.id : undefined)
     }
+  }
+
+  if (gated) {
+    return (
+      <SafeAreaView className="flex-1 bg-slate-50">
+        <UpgradeModal visible={true} onClose={() => router.back()} />
+      </SafeAreaView>
+    )
   }
 
   return (

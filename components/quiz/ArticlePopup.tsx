@@ -5,12 +5,14 @@ import ArticleText from "@/components/reading/ArticleText"
 
 interface Props {
   visible: boolean
-  article: Article
+  article: Article | null
   onClose: () => void
 }
 
 export default function ArticlePopup({ visible, article, onClose }: Props) {
   const insets = useSafeAreaInsets()
+
+  if (!article) return null
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>

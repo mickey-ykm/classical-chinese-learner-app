@@ -1,6 +1,6 @@
 # Plan: Auth + Membership + Admin GO LIVE + Content Platform + LLM
 
-_Last revised 2026-05-09 — Phase 7 and all modules dependent on question types/formats delayed pending team sign-off on the final type list and format set._
+_Last revised 2026-05-09 — Phase 7 and all modules dependent on question types/formats delayed pending team sign-off on the final type list and format set. Phase 8 complete (timer + time tracking in quiz_attempts; exercise_sessions deferred to Phase 9). Draft eviction tombstone added to Phase 6 content delivery._
 
 ## Context
 
@@ -466,6 +466,12 @@ Goal: app fetches from Supabase; bundled JSON becomes offline fallback; "Update"
 - Add **更新內容** button calling `contentStore.refresh()`
 - Toast result: "已更新 N 篇" / "已是最新" / "X 篇有問題，已使用上次內容"
 
+### Draft eviction + tombstone mechanism (bug fix, 2026-05-09)
+- Incremental syncs (`updated_at > last_sync_at`) now fetch **all** statuses (not just published) so draft/archived articles are detected
+- Non-published rows: deleted from SQLite cache, evicted from in-memory maps, added to a `removed_ids` tombstone in `content_meta`
+- Re-published rows: upserted as normal and removed from tombstone
+- `loadFromSQLite()` applies tombstones after `loadSeedIntoMemory()` runs, preventing bundled seed articles from resurrecting after being drafted
+
 ### Sentry / error surfacing
 - Add `sentry-expo` (or similar) so production validation failures are visible to maintainers
 
@@ -526,10 +532,55 @@ Goal: per-article question pools with diverse types and formats; exercises sampl
 
 ---
 
-## Phase 9 — Revision Chapter & Weight Training ⏸ PARTIALLY DELAYED
+## Phase 9 — Revision Chapter & Weight Training ⏸ PARTIALLY COMPLETE
 
-> **Weight Training is delayed** — it is built around question types and cannot be designed or implemented until Phase 7 is unblocked.
-> Revision Chapter does not depend on question types and can proceed once Phase 7's pool infrastructure (question IDs, `source_excerpt`) is ready — but that infrastructure is also blocked.
+> **Weight Training is delayed** — built around question types; cannot be designed until Phase 7 is unblocked. Locked placeholder added to account screen.
+> **Revision Chapter is complete** — uses numeric question IDs from bundled data; `source_excerpt` and UUID linkage deferred until Phase 7.
+> **exercise_sessions + exercise_answer_times tables created in Supabase** ✅ (2026-05-09)
+
+### SQL — run once in Supabase (exercise_sessions)
+
+```sql
+create table exercise_sessions (
+  id               uuid primary key default gen_random_uuid(),
+  user_id          uuid references auth.users(id) on delete cascade,
+  article_id       text references articles(id),
+  kind             text not null check (kind in ('regular','revision','weight-training')),
+  question_type    text,
+  question_ids     uuid[],
+  started_at       timestamptz default now(),
+  finished_at      timestamptz,
+  total_seconds    int,
+  expected_seconds int,
+  score            int,
+  total_points     int
+);
+
+create table exercise_answer_times (
+  session_id    uuid references exercise_sessions(id) on delete cascade,
+  question_id   uuid references questions(id),
+  question_type text not null,
+  seconds       int not null,
+  primary key (session_id, question_id)
+);
+
+alter table exercise_sessions     enable row level security;
+alter table exercise_answer_times enable row level security;
+
+create policy "own exercise sessions" on exercise_sessions for all using (auth.uid() = user_id);
+create policy "own answer times"      on exercise_answer_times for all
+  using (session_id in (select id from exercise_sessions where user_id = auth.uid()));
+```
+
+### Revision chapter ✅ COMPLETE (with limitations)
+
+- Entry point on account screen: "複習章節 (X 題可複習)" — count fetched on load
+- `lib/revisionSession.ts` — queries wrong answers from `quiz_answers`, resolves Question objects from contentStore by matching numeric question_id, samples up to 20 most-frequently-wrong
+- `app/revision.tsx` — full multi-article quiz screen; article title shown per question; part headers suppressed; saves completed session to `exercise_sessions`
+- `components/quiz/QuizShell.tsx` — `articleId` is now optional; article popup hidden when no articleId; new `onSave` callback prop for custom save logic
+- **Limitations**: `source_excerpt` not shown (not in bundled JSON); `question_ids` stored as null in exercise_sessions (UUID linkage needs Phase 7)
+
+### Weight training ⬜ DELAYED
 
 
 ### Revision chapter
@@ -553,7 +604,7 @@ Goal: per-article question pools with diverse types and formats; exercises sampl
 
 ---
 
-## Phase 10 — Cloud Progress Sync
+## Phase 10 — Cloud Progress Sync ✅ COMPLETE
 
 [Substantively unchanged from the original plan's Phase 5; renumbered.]
 
@@ -570,7 +621,7 @@ Goal: per-article question pools with diverse types and formats; exercises sampl
 
 ---
 
-## Phase 11 — Content Gating + Free/Pro Model
+## Phase 11 — Content Gating + Free/Pro Model ✅ COMPLETE
 
 Locked model (per Decision 2): **Limited articles + ads on free; Pro = all articles + no ads + premium features.**
 
@@ -714,7 +765,7 @@ components/AdInterstitial.tsx                       (Phase 14)
 4. **Bundled seed**: fresh install offline → app launches with bundled articles; no crash; no blank screen
 5. **Diff sync**: publish a new article in admin → tap "更新內容" on mobile → new article appears within seconds
 6. **Throttle**: launch app, then launch again 5 minutes later → no second background fetch (once-per-session policy)
-7. **Draft/Publish**: save article as draft → mobile does NOT see it; flip to published → next refresh, mobile sees it
+7. **Draft/Publish** ✅: save article as draft → on next "更新內容" sync, mobile evicts it (deleted from SQLite + memory + tombstoned); flip to published → next refresh, mobile sees it; bundled seed articles that are drafted do not resurrect on relaunch
 8. **Version revert**: edit an article 3 times in admin → revert to v1 → mobile sees v1 content after refresh
 
 ### Question pool + types/formats ⏸ delayed
