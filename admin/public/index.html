@@ -106,6 +106,10 @@
           <input type="checkbox" id="ad-is-challenge" disabled class="w-4 h-4 accent-amber-600 cursor-pointer" />
           <label for="ad-is-challenge" class="text-sm text-slate-600 cursor-pointer select-none">章節挑戰</label>
         </div>
+        <div class="flex items-center gap-2">
+          <input type="checkbox" id="ad-is-free" disabled class="w-4 h-4 accent-green-600 cursor-pointer" />
+          <label for="ad-is-free" class="text-sm text-slate-600 cursor-pointer select-none">免費</label>
+        </div>
         <div class="flex items-center gap-1.5">
           <label for="ad-level" class="text-sm text-slate-600 select-none">程度</label>
           <select id="ad-level" disabled
@@ -545,11 +549,19 @@
 
           <!-- Save controls -->
           <div class="flex items-center justify-between pt-3 border-t border-stone-100">
-            <div class="flex items-center gap-3">
-              <input type="checkbox" id="na-is-challenge" class="w-4 h-4 accent-amber-600 cursor-pointer" />
-              <label for="na-is-challenge" class="text-sm font-medium cursor-pointer select-none">
-                章節挑戰 <span class="text-slate-400 font-normal">(mark as chapter challenge)</span>
-              </label>
+            <div class="flex items-center gap-4">
+              <div class="flex items-center gap-3">
+                <input type="checkbox" id="na-is-challenge" class="w-4 h-4 accent-amber-600 cursor-pointer" />
+                <label for="na-is-challenge" class="text-sm font-medium cursor-pointer select-none">
+                  章節挑戰 <span class="text-slate-400 font-normal">(mark as chapter challenge)</span>
+                </label>
+              </div>
+              <div class="flex items-center gap-3">
+                <input type="checkbox" id="na-is-free" class="w-4 h-4 accent-green-600 cursor-pointer" />
+                <label for="na-is-free" class="text-sm font-medium cursor-pointer select-none">
+                  免費 <span class="text-slate-400 font-normal">(free for all users)</span>
+                </label>
+              </div>
             </div>
             <button id="na-save-btn" onclick="saveGeneratedArticle()" disabled
               class="px-5 py-2.5 rounded-lg text-sm font-semibold bg-green-600 text-white
@@ -1066,6 +1078,7 @@ async function openArticleDetail(id) {
     document.getElementById('ad-quiz-json').value = data.hasQuizzes && data.quiz
       ? JSON.stringify(data.quiz, null, 2) : ''
     document.getElementById('ad-is-challenge').checked = !!data.isChallenge
+    document.getElementById('ad-is-free').checked = !!data.isFree
     document.getElementById('ad-level').value = data.level ?? ''
     document.getElementById('ad-status').value = data.status || 'published'
     document.getElementById('ad-expected-minutes').value = data.expectedMinutes ?? ''
@@ -1093,6 +1106,7 @@ function setAdReadOnly(readOnly) {
   document.getElementById('ad-article-json').readOnly = readOnly
   document.getElementById('ad-quiz-json').readOnly = readOnly
   document.getElementById('ad-is-challenge').disabled = readOnly
+  document.getElementById('ad-is-free').disabled = readOnly
   document.getElementById('ad-level').disabled = readOnly
   document.getElementById('ad-status').disabled = readOnly
   document.getElementById('ad-expected-minutes').disabled = readOnly
@@ -1130,6 +1144,7 @@ async function saveArticleDetail() {
         article,
         quiz,
         isChallenge: document.getElementById('ad-is-challenge').checked,
+        isFree: document.getElementById('ad-is-free').checked,
         level: parseInt(document.getElementById('ad-level').value) || null,
         status: document.getElementById('ad-status').value,
         expectedMinutes: Number.isFinite(expectedMinutes) ? expectedMinutes : null,
@@ -1169,6 +1184,7 @@ function cancelArticleDetail() {
     document.getElementById('ad-quiz-json').value = adOriginal.hasQuizzes && adOriginal.quiz
       ? JSON.stringify(adOriginal.quiz, null, 2) : ''
     document.getElementById('ad-is-challenge').checked = !!adOriginal.isChallenge
+    document.getElementById('ad-is-free').checked = !!adOriginal.isFree
     document.getElementById('ad-level').value = adOriginal.level ?? ''
     document.getElementById('ad-status').value = adOriginal.status || 'published'
     document.getElementById('ad-expected-minutes').value = adOriginal.expectedMinutes ?? ''
@@ -1610,6 +1626,7 @@ async function saveRawToLibrary() {
         article,
         quiz,
         isChallenge: document.getElementById('raw-modal-is-challenge').checked,
+        isFree: document.getElementById('raw-modal-is-free').checked,
         level: parseInt(document.getElementById('raw-modal-level').value) || null,
       }),
     })
@@ -1935,6 +1952,7 @@ async function saveGeneratedArticle() {
         article,
         quiz: null, // skipQuiz path: article saved with no quiz; admin generates later via Library Detail
         isChallenge: document.getElementById('na-is-challenge').checked,
+        isFree: document.getElementById('na-is-free').checked,
         level: parseInt(document.getElementById('na-level').value) || null,
         status: 'draft', // articles without quizzes start as drafts
       }),
@@ -1947,6 +1965,7 @@ async function saveGeneratedArticle() {
       document.getElementById('na-result').classList.add('hidden')
       document.getElementById('na-article-json').value = ''
       document.getElementById('na-is-challenge').checked = false
+      document.getElementById('na-is-free').checked = false
       document.getElementById('na-level').value = ''
       naArticleValid = false
     }
@@ -2075,6 +2094,12 @@ loadAssessmentConfig()
             <input type="checkbox" id="raw-modal-is-challenge" class="w-4 h-4 accent-amber-600 cursor-pointer" />
             <label for="raw-modal-is-challenge" class="text-sm cursor-pointer select-none">
               章節挑戰 <span class="text-slate-400 font-normal">(mark as chapter challenge)</span>
+            </label>
+          </div>
+          <div class="flex items-center gap-3">
+            <input type="checkbox" id="raw-modal-is-free" class="w-4 h-4 accent-green-600 cursor-pointer" />
+            <label for="raw-modal-is-free" class="text-sm cursor-pointer select-none">
+              免費 <span class="text-slate-400 font-normal">(free for all users)</span>
             </label>
           </div>
           <div class="flex items-center gap-1.5">

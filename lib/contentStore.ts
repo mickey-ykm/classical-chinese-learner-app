@@ -51,7 +51,7 @@ const ARTICLE_ORDER = Object.keys(SEED_ARTICLES)
 
 // ── In-memory cache ───────────────────────────────────────────────────────────
 
-type ArticleMeta = { level?: number; isChallenge?: boolean; expectedMinutes?: number }
+type ArticleMeta = { level?: number; isChallenge?: boolean; expectedMinutes?: number; isFree?: boolean }
 
 const _articles = new Map<string, Article>()
 const _quizzes = new Map<string, Quiz>()
@@ -100,6 +100,7 @@ function buildIndexEntry(id: string): ArticleEntry | null {
     level: meta.level,
     type: meta.isChallenge ? "challenge" : undefined,
     expectedMinutes: meta.expectedMinutes,
+    isFree: meta.isFree,
   }
 }
 
@@ -187,6 +188,7 @@ function mapSupabaseRow(row: Record<string, unknown>): { article: Article; quiz:
       level: (row.level as number) ?? undefined,
       isChallenge: (row.is_challenge as boolean) ?? false,
       expectedMinutes: (row.expected_minutes as number) ?? undefined,
+      isFree: (row.is_free as boolean) ?? false,
     }
     return { article, quiz, meta }
   } catch {
@@ -198,7 +200,7 @@ async function fetchAndStore(lastSyncAt: string | null): Promise<{ updated: numb
   let query = supabase
     .from("articles")
     .select(
-      "id, title, source, title_footnote_id, segments, footnotes, modern_translation, level, is_challenge, quiz_json, expected_minutes, updated_at, status"
+      "id, title, source, title_footnote_id, segments, footnotes, modern_translation, level, is_challenge, is_free, quiz_json, expected_minutes, updated_at, status"
     )
     .order("updated_at", { ascending: true })
 

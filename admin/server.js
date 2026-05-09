@@ -13,21 +13,6 @@ const PORT = process.env.PORT || 3001
 const ROOT = path.join(__dirname, "..")
 const DATA_DIR = path.join(ROOT, "data")
 
-app.set("trust proxy", 1)
-app.use(express.json({ limit: "10mb" }))
-app.use(session({
-  secret: process.env.ADMIN_SESSION_SECRET || "dev-secret-change-in-prod",
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    secure: "auto",
-    sameSite: "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  },
-}))
-app.use(express.static(path.join(__dirname, "public")))
-
 // ── Supabase client (service-role key for admin writes) ───────────────────────
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL
@@ -41,6 +26,61 @@ if (SUPABASE_URL && SUPABASE_SERVICE_KEY) {
 } else {
   console.warn("  ⚠ Supabase not configured — set SUPABASE_SERVICE_ROLE_KEY in .env")
 }
+
+// ── Session store (Supabase-backed, survives Railway restarts) ────────────────
+
+class SupabaseStore extends session.Store {
+  get(sid, cb) {
+    if (!supabase) return cb(null, null)
+    supabase
+      .from("admin_sessions")
+      .select("sess, expire")
+      .eq("sid", sid)
+      .gt("expire", new Date().toISOString())
+      .maybeSingle()
+      .then(({ data }) => cb(null, data ? data.sess : null))
+      .catch(() => cb(null, null))
+  }
+
+  set(sid, session, cb) {
+    if (!supabase) return cb()
+    const maxAge = session.cookie?.maxAge ?? 7 * 24 * 60 * 60 * 1000
+    const expire = new Date(Date.now() + maxAge).toISOString()
+    supabase
+      .from("admin_sessions")
+      .upsert({ sid, sess: session, expire }, { onConflict: "sid" })
+      .then(() => cb())
+      .catch(() => cb())
+  }
+
+  destroy(sid, cb) {
+    if (!supabase) return cb()
+    supabase.from("admin_sessions").delete().eq("sid", sid)
+      .then(() => cb())
+      .catch(() => cb())
+  }
+
+  touch(sid, session, cb) {
+    this.set(sid, session, cb)
+  }
+}
+
+app.set("trust proxy", 1)
+app.use(express.json({ limit: "10mb" }))
+app.use(session({
+  secret: process.env.ADMIN_SESSION_SECRET || "dev-secret-change-in-prod",
+  resave: false,
+  rolling: true,
+  saveUninitialized: false,
+  store: new SupabaseStore(),
+  cookie: {
+    httpOnly: true,
+    secure: "auto",
+    sameSite: "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  },
+}))
+app.use(express.static(path.join(__dirname, "public")))
 
 function requireSupabase(res) {
   if (!supabase) {
@@ -138,6 +178,7 @@ function articleToRow(article, meta) {
     modern_translation: article.modernTranslation,
     level,
     is_challenge: meta.isChallenge || false,
+    is_free: meta.isFree || false,
     status: meta.status === "draft" ? "draft" : "published",
     expected_minutes:
       typeof meta.expectedMinutes === "number" && meta.expectedMinutes > 0
@@ -163,6 +204,7 @@ function rowToExercise(row) {
     },
     quiz: row.quiz_json || null,
     isChallenge: row.is_challenge || false,
+    isFree: row.is_free || false,
     level: row.level ?? null,
     status: row.status || "published",
     hasQuizzes: quizHasQuestions(row.quiz_json),
@@ -289,7 +331,7 @@ app.get("/api/exercises", async (_req, res) => {
 app.post("/api/exercises", async (req, res) => {
   try {
     if (!requireSupabase(res)) return
-    const { article, quiz, isChallenge, level, status, expectedMinutes, exerciseTemplate } =
+    const { article, quiz, isChallenge, isFree, level, status, expectedMinutes, exerciseTemplate } =
       req.body || {}
 
     const articleResult = ArticleSchema.safeParse(article)
@@ -320,6 +362,7 @@ app.post("/api/exercises", async (req, res) => {
     const finalQuiz = hasQuizPayload ? quiz : null
     const row = articleToRow(article, {
       isChallenge,
+      isFree,
       level,
       status,
       expectedMinutes,
@@ -367,7 +410,7 @@ app.put("/api/exercises/:id", async (req, res) => {
   try {
     if (!requireSupabase(res)) return
     const { id } = req.params
-    const { article, quiz, isChallenge, level, status, expectedMinutes, exerciseTemplate } =
+    const { article, quiz, isChallenge, isFree, level, status, expectedMinutes, exerciseTemplate } =
       req.body || {}
 
     const { data: existing, error: fetchErr } = await supabase
@@ -413,6 +456,7 @@ app.put("/api/exercises/:id", async (req, res) => {
 
     const row = articleToRow(article, {
       isChallenge,
+      isFree,
       level: incomingLevel,
       status: nextStatus,
       expectedMinutes,

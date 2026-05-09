@@ -28,6 +28,9 @@ export const FREE_ARTICLE_IDS: readonly string[] = [
 ]
 
 export function isArticleFree(id: string): boolean {
+  const index = getArticleIndex()
+  const entry = index.find((a) => a.id === id)
+  if (entry && entry.isFree !== undefined) return entry.isFree
   return FREE_ARTICLE_IDS.includes(id)
 }
 
