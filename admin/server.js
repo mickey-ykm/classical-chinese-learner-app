@@ -13,6 +13,7 @@ const PORT = process.env.PORT || 3001
 const ROOT = path.join(__dirname, "..")
 const DATA_DIR = path.join(ROOT, "data")
 
+app.set("trust proxy", 1)
 app.use(express.json({ limit: "10mb" }))
 app.use(session({
   secret: process.env.ADMIN_SESSION_SECRET || "dev-secret-change-in-prod",
@@ -20,7 +21,8 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: "auto",
+    sameSite: "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   },
 }))
