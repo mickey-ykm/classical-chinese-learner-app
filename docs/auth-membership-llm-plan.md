@@ -66,7 +66,7 @@ The app started 100% local (no backend, no auth, no payments). Two waves of scop
 | 4 | RevenueCat dashboard: app + "Pro Monthly" + "pro" entitlement + App Store shared secret | Mickey | ⬜ Phase 12 |
 | 5 | App Store Connect subscription product | Mickey | ⬜ Phase 12 |
 | 6 | `app.json` real reverse-domain bundle ID (currently `com.anonymous.classical-chinese-learner-app`) | Mickey | ⬜ before Phase 12 |
-| 7 | **Admin hosting** — pick host (Railway / Render / Fly), buy/route domain | Mickey | ⬜ Phase 5 |
+| 7 | **Admin hosting** — Railway; custom domain `ccladmin.mickey-calligraphy.art` | Mickey | ✅ Phase 5 |
 | 8 | **Ad network** — register AdMob app, get unit IDs, privacy policy update | Mickey | ⬜ Phase 14 |
 
 ---
@@ -408,25 +408,27 @@ Goal: move articles + questions + prompts from JSON files into Supabase tables. 
 
 ---
 
-## Phase 5 — Admin Portal GO LIVE
+## Phase 5 — Admin Portal GO LIVE ✅ COMPLETE
 
 Goal: public deployment with basic auth. Admins can create content from anywhere.
 
 ### Hosting
-- **Recommended**: Railway or Render (minimal config for Express; free tier sufficient initially)
-- Subdomain on existing or new domain (e.g. `admin.classicalchinese.app`)
-- HTTPS enforced
+- **Railway** — deployed from GitHub; root directory `admin`; build command `cd admin && npm install`; start command `cd admin && node server.js`
+- Live at `https://ccladmin.mickey-calligraphy.art` (CNAME → Railway; TXT record for SSL)
+- HTTPS enforced via Railway-provisioned cert
 
 ### Auth
 - Session-based login backed by `admin_users` table (bcrypt password)
-- `POST /api/admin/login` → sets HTTP-only signed cookie
-- All `/api/*` routes (except login) require valid session
-- Bootstrap: `scripts/create-admin.ts` to seed first `admin_users` row
+- `POST /api/admin/login` → sets HTTP-only signed cookie (`express-session` + `bcryptjs`)
+- `app.set('trust proxy', 1)` + `cookie.secure: 'auto'` required for Railway reverse proxy
+- All `/api/*` routes (except login/logout) require valid session
+- Bootstrap: `scripts/create-admin.ts` — run `npm run create-admin -- email password`
 
-### Env vars (set on host)
-- `SUPABASE_URL`
+### Env vars (set on Railway)
+- `EXPO_PUBLIC_SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY` (admin writes)
 - `ADMIN_SESSION_SECRET` (cookie signing)
+- `PORT` injected automatically by Railway
 
 ### Public reads stay direct
 - Mobile reads Supabase directly with anon key + RLS — does NOT go through admin server
@@ -434,7 +436,7 @@ Goal: public deployment with basic auth. Admins can create content from anywhere
 
 ---
 
-## Phase 6 — Mobile Content Delivery (server-backed + bundled seed)
+## Phase 6 — Mobile Content Delivery (server-backed + bundled seed) ✅ COMPLETE
 
 Goal: app fetches from Supabase; bundled JSON becomes offline fallback; "Update" button surfaces refresh.
 
