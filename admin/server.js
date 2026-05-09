@@ -34,9 +34,9 @@ class SupabaseStore extends session.Store {
     if (!supabase) return cb(null, null)
     supabase
       .from("admin_sessions")
-      .select("sess, expire")
+      .select("sess, expires_at")
       .eq("sid", sid)
-      .gt("expire", new Date().toISOString())
+      .gt("expires_at", new Date().toISOString())
       .maybeSingle()
       .then(({ data }) => cb(null, data ? data.sess : null))
       .catch(() => cb(null, null))
@@ -45,10 +45,10 @@ class SupabaseStore extends session.Store {
   set(sid, session, cb) {
     if (!supabase) return cb()
     const maxAge = session.cookie?.maxAge ?? 7 * 24 * 60 * 60 * 1000
-    const expire = new Date(Date.now() + maxAge).toISOString()
+    const expires_at = new Date(Date.now() + maxAge).toISOString()
     supabase
       .from("admin_sessions")
-      .upsert({ sid, sess: session, expire }, { onConflict: "sid" })
+      .upsert({ sid, sess: session, expires_at }, { onConflict: "sid" })
       .then(() => cb())
       .catch(() => cb())
   }
