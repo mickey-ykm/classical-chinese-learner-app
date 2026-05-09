@@ -1,6 +1,6 @@
 # Plan: Auth + Membership + Admin GO LIVE + Content Platform + LLM
 
-_Last revised 2026-05-09 — Phase 7 and all modules dependent on question types/formats delayed pending team sign-off on the final type list and format set. Phase 8 complete (timer + time tracking in quiz_attempts; exercise_sessions deferred to Phase 9). Draft eviction tombstone added to Phase 6 content delivery._
+_Last revised 2026-05-09 — Phase 7 and all modules dependent on question types/formats delayed pending team sign-off on the final type list and format set. Phase 8 complete (timer + time tracking in quiz_attempts; exercise_sessions deferred to Phase 9). Draft eviction tombstone added to Phase 6 content delivery. Phases 9, 10, 11 complete. Admin is_free toggle + persistent Supabase-backed sessions added to Phase 5._
 
 ## Context
 
@@ -424,6 +424,33 @@ Goal: public deployment with basic auth. Admins can create content from anywhere
 - All `/api/*` routes (except login/logout) require valid session
 - Bootstrap: `scripts/create-admin.ts` — run `npm run create-admin -- email password`
 
+### Persistent sessions (added 2026-05-09)
+- In-memory `express-session` store wiped on every Railway restart → sessions lost
+- Replaced with `SupabaseStore` (custom `session.Store` subclass) backed by `admin_sessions` table
+- `rolling: true` — cookie maxAge resets on each request so active admins are never logged out
+- Column name: `expires_at` (TIMESTAMPTZ) — **not** `expire`
+
+```sql
+CREATE TABLE IF NOT EXISTS admin_sessions (
+  sid TEXT PRIMARY KEY,
+  sess JSONB NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL
+);
+CREATE INDEX IF NOT EXISTS admin_sessions_expires_idx ON admin_sessions (expires_at);
+```
+
+### is_free admin control (added 2026-05-09)
+- `articles` table: `is_free boolean NOT NULL DEFAULT false` column
+- Admin portal: 免費 checkbox in article detail, new article form, and raw JSON modal
+- PUT/POST `/api/exercises` endpoints read `isFree` and pass to `articleToRow()` → stored as `is_free`
+- Mobile: `contentStore` selects `is_free`, maps to `ArticleMeta.isFree` → `ArticleEntry.isFree`
+- `isArticleFree(id)` in `lib/data.ts` checks contentStore first, falls back to `FREE_ARTICLE_IDS`
+
+```sql
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS is_free boolean NOT NULL DEFAULT false;
+UPDATE articles SET is_free = true WHERE id IN ('wang-rong-he-jiao', 'zeng-zi-sha-zhu', 'mai-you-weng');
+```
+
 ### Env vars (set on Railway)
 - `EXPO_PUBLIC_SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY` (admin writes)
@@ -608,10 +635,11 @@ create policy "own answer times"      on exercise_answer_times for all
 
 [Substantively unchanged from the original plan's Phase 5; renumbered.]
 
-### `lib/readProgress.ts` ⬜ pending
-- `markAsRead(id)`: always write AsyncStorage (offline fallback); if signed in, also upsert `read_progress` in Supabase
-- `getReadArticles()`: if signed in, fetch from Supabase; merge with AsyncStorage
-- On first login (migration): read existing AsyncStorage set → bulk-upsert to Supabase
+### `lib/readProgress.ts` ✅ COMPLETE (2026-05-09)
+- `markAsRead(id, userId?)`: always write AsyncStorage; if userId present (non-anonymous), also upsert `read_progress` in Supabase
+- `getReadArticles(userId?)`: merge AsyncStorage + Supabase; run one-time migration on first call with real userId
+- `migrateLocalToCloud(userId)`: bulk-pushes existing AsyncStorage articles to Supabase once; flag stored as `read_articles_migrated_${userId}`
+- Backfill: any local-only articles found during merge are silently pushed to Supabase
 
 ### `lib/quizHistory.ts` ✅ DONE
 - `saveQuizAttempt(...)` already inserts into `quiz_attempts` + `quiz_answers` for any signed-in user
@@ -625,8 +653,9 @@ create policy "own answer times"      on exercise_answer_times for all
 
 Locked model (per Decision 2): **Limited articles + ads on free; Pro = all articles + no ads + premium features.**
 
-### Article-level gating
-- `FREE_ARTICLE_IDS` constant in `lib/data.ts` lists the free article slugs (initial: `mai-you-weng`, `zeng-zi-sha-zhu`, `wang-rong-he-jiao`)
+### Article-level gating ✅ COMPLETE
+- `FREE_ARTICLE_IDS` constant in `lib/data.ts` as hardcoded fallback (initial: `mai-you-weng`, `zeng-zi-sha-zhu`, `wang-rong-he-jiao`)
+- Admin portal controls `is_free` per article via 免費 checkbox — this is the live source of truth; mobile reads it from Supabase via contentStore; `isArticleFree()` checks contentStore first, falls back to `FREE_ARTICLE_IDS`
 - `app/index.tsx`: article cards on the journey map show a lock icon + "Pro" badge for non-free articles when user is not Pro
 - `app/read.tsx`: when free user opens a Pro article (e.g. via deep link), show `UpgradeModal` instead of rendering content
 - `app/quiz.tsx`: same gate (so Pro quizzes can't be reached by direct URL)
