@@ -38,7 +38,7 @@ function timeDelta(totalSeconds: number, expectedSeconds: number): { label: stri
   return { label: `快 ${diffMin} 分`, color: "text-amber-600" }
 }
 
-function AttemptRow({ attempt, title }: { attempt: QuizAttempt; title: string }) {
+function AttemptRow({ attempt, title, onPress }: { attempt: QuizAttempt; title: string; onPress: () => void }) {
   const pct = Math.round((attempt.score / attempt.total_points) * 100)
   const barColor = pct >= 80 ? "bg-amber-500" : pct >= 50 ? "bg-amber-300" : "bg-slate-300"
   const delta = attempt.total_seconds != null && attempt.expected_seconds != null
@@ -46,7 +46,10 @@ function AttemptRow({ attempt, title }: { attempt: QuizAttempt; title: string })
     : null
 
   return (
-    <View className="bg-white rounded-2xl border border-slate-100 px-4 py-3 gap-2">
+    <Pressable
+      onPress={onPress}
+      className="bg-white rounded-2xl border border-slate-100 px-4 py-3 gap-2 active:opacity-70"
+    >
       <View className="flex-row justify-between items-start">
         <Text
           className="text-sm font-bold text-slate-800 flex-1 mr-2"
@@ -75,7 +78,8 @@ function AttemptRow({ attempt, title }: { attempt: QuizAttempt; title: string })
           )}
         </View>
       )}
-    </View>
+      <Text className="text-xs text-slate-300 text-right">查看詳情 →</Text>
+    </Pressable>
   )
 }
 
@@ -198,6 +202,7 @@ export default function AccountScreen() {
                 key={attempt.id}
                 attempt={attempt}
                 title={titleById[attempt.article_id] ?? attempt.article_id}
+                onPress={() => router.push({ pathname: "/attempt", params: { id: attempt.id } })}
               />
             ))}
           </View>
