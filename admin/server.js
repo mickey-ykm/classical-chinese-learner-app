@@ -731,6 +731,11 @@ function estimateCost(model, promptTokens, completionTokens) {
 }
 
 async function callOpenRouter(model, messages, apiKey, retries = 4) {
+  if ([...apiKey].some((c) => c.charCodeAt(0) > 127)) {
+    throw new Error(
+      "API key contains non-ASCII characters — please re-paste it from your OpenRouter dashboard"
+    )
+  }
   const t0 = Date.now()
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
