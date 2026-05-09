@@ -130,6 +130,23 @@ async function loadFromSQLite(): Promise<boolean> {
       // skip malformed rows; seed data remains in memory
     }
   }
+
+  // Apply tombstones so seed articles that were later drafted don't resurrect
+  const tombstoneRow = await db.getFirstAsync<{ value: string }>(
+    "SELECT value FROM content_meta WHERE key = ?",
+    ["removed_ids"]
+  )
+  if (tombstoneRow) {
+    const removedIds: string[] = JSON.parse(tombstoneRow.value)
+    for (const id of removedIds) {
+      _articles.delete(id)
+      _quizzes.delete(id)
+      _meta.delete(id)
+      const idx = ARTICLE_ORDER.indexOf(id)
+      if (idx !== -1) ARTICLE_ORDER.splice(idx, 1)
+    }
+  }
+
   return true
 }
 
@@ -180,12 +197,17 @@ async function fetchAndStore(lastSyncAt: string | null): Promise<{ updated: numb
   let query = supabase
     .from("articles")
     .select(
-      "id, title, source, title_footnote_id, segments, footnotes, modern_translation, level, is_challenge, quiz_json, expected_minutes, updated_at"
+      "id, title, source, title_footnote_id, segments, footnotes, modern_translation, level, is_challenge, quiz_json, expected_minutes, updated_at, status"
     )
-    .eq("status", "published")
     .order("updated_at", { ascending: true })
 
-  if (lastSyncAt) query = query.gt("updated_at", lastSyncAt)
+  if (lastSyncAt) {
+    // Incremental: fetch all changed articles regardless of status so we can evict drafts
+    query = query.gt("updated_at", lastSyncAt)
+  } else {
+    // Full sync: only fetch published articles
+    query = query.eq("status", "published")
+  }
 
   const { data, error } = await query
   if (error) throw new Error(error.message)
@@ -196,7 +218,35 @@ async function fetchAndStore(lastSyncAt: string | null): Promise<{ updated: numb
   let errors = 0
   let newSyncAt = lastSyncAt
 
+  // Load current tombstone set
+  const tombstoneRow = await db.getFirstAsync<{ value: string }>(
+    "SELECT value FROM content_meta WHERE key = ?",
+    ["removed_ids"]
+  )
+  const removedIds = new Set<string>(tombstoneRow ? JSON.parse(tombstoneRow.value) : [])
+
   for (const row of data) {
+    const status = (row as Record<string, unknown>).status as string
+
+    if (status !== "published") {
+      // Evict unpublished article from cache and memory
+      try {
+        await db.runAsync("DELETE FROM content_cache WHERE id = ?", [row.id])
+        _articles.delete(row.id)
+        _quizzes.delete(row.id)
+        _meta.delete(row.id)
+        const idx = ARTICLE_ORDER.indexOf(row.id)
+        if (idx !== -1) ARTICLE_ORDER.splice(idx, 1)
+        removedIds.add(row.id)
+        updated++
+        if (!newSyncAt || row.updated_at > newSyncAt) newSyncAt = row.updated_at
+      } catch {
+        errors++
+      }
+      continue
+    }
+
+    // Published: upsert
     const mapped = mapSupabaseRow(row as Record<string, unknown>)
     if (!mapped) { errors++; continue }
     try {
@@ -214,6 +264,7 @@ async function fetchAndStore(lastSyncAt: string | null): Promise<{ updated: numb
       if (mapped.quiz) _quizzes.set(row.id, mapped.quiz)
       _meta.set(row.id, mapped.meta)
       if (!ARTICLE_ORDER.includes(row.id)) ARTICLE_ORDER.push(row.id)
+      removedIds.delete(row.id) // un-tombstone if re-published
       updated++
       if (!newSyncAt || row.updated_at > newSyncAt) newSyncAt = row.updated_at
     } catch {
@@ -221,7 +272,13 @@ async function fetchAndStore(lastSyncAt: string | null): Promise<{ updated: numb
     }
   }
 
-  if (updated > 0 && newSyncAt) {
+  // Always persist tombstones so seed articles don't resurrect on next launch
+  await db.runAsync(
+    "INSERT OR REPLACE INTO content_meta (key, value) VALUES (?, ?)",
+    ["removed_ids", JSON.stringify([...removedIds])]
+  )
+
+  if (updated > 0 && newSyncAt && newSyncAt !== lastSyncAt) {
     await db.runAsync(
       "INSERT OR REPLACE INTO content_meta (key, value) VALUES (?, ?)",
       ["last_sync_at", newSyncAt]
