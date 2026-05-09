@@ -5,12 +5,14 @@ import { useEffect, useRef } from "react"
 import { Animated, ActivityIndicator } from "react-native"
 import { Logo } from "@/components/Logo"
 import { AuthProvider } from "@/contexts/AuthContext"
+import { init, backgroundFetch } from "@/lib/contentStore"
 import "../global.css"
 
 function SplashOverlay() {
   const opacity = useRef(new Animated.Value(1)).current
 
   useEffect(() => {
+    init().then(() => backgroundFetch())
     const timer = setTimeout(() => {
       Animated.timing(opacity, {
         toValue: 0,

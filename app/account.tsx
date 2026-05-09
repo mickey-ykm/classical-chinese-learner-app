@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context"
 import { useAuth } from "@/hooks/useAuth"
 import { supabase } from "@/lib/supabase"
 import { getArticleIndex } from "@/lib/data"
+import { refresh as refreshContent } from "@/lib/contentStore"
 
 interface QuizAttempt {
   id: string
@@ -55,6 +56,8 @@ export default function AccountScreen() {
   const [attempts, setAttempts] = useState<QuizAttempt[]>([])
   const [loadingAttempts, setLoadingAttempts] = useState(true)
   const [settled, setSettled] = useState(false)
+  const [syncing, setSyncing] = useState(false)
+  const [syncMsg, setSyncMsg] = useState<string | null>(null)
 
   const articleIndex = getArticleIndex()
   const titleById = Object.fromEntries(articleIndex.map((a) => [a.id, a.title]))
@@ -95,6 +98,22 @@ export default function AccountScreen() {
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "登出失敗，請再試一次"
       Alert.alert("錯誤", message)
+    }
+  }
+
+  async function handleRefreshContent() {
+    setSyncing(true)
+    setSyncMsg(null)
+    try {
+      const { updated, errors } = await refreshContent()
+      if (updated === 0) setSyncMsg("已是最新")
+      else if (errors > 0) setSyncMsg(`已更新 ${updated} 篇，${errors} 篇有問題`)
+      else setSyncMsg(`已更新 ${updated} 篇`)
+    } catch {
+      setSyncMsg("更新失敗，請稍後再試")
+    } finally {
+      setSyncing(false)
+      setTimeout(() => setSyncMsg(null), 3000)
     }
   }
 
@@ -155,10 +174,25 @@ export default function AccountScreen() {
           </View>
         )}
 
+        {/* Refresh content */}
+        <Pressable
+          onPress={handleRefreshContent}
+          disabled={syncing}
+          className="border border-slate-200 rounded-2xl py-4 items-center active:opacity-70 bg-white mt-8"
+        >
+          {syncing ? (
+            <ActivityIndicator size="small" color="#d97706" />
+          ) : (
+            <Text className="text-amber-600 font-semibold text-sm">
+              {syncMsg ?? "更新內容"}
+            </Text>
+          )}
+        </Pressable>
+
         {/* Sign out */}
         <Pressable
           onPress={handleSignOut}
-          className="border border-slate-200 rounded-2xl py-4 items-center active:opacity-70 bg-white mt-8"
+          className="border border-slate-200 rounded-2xl py-4 items-center active:opacity-70 bg-white mt-3"
         >
           <Text className="text-slate-500 font-semibold text-sm">登出</Text>
         </Pressable>
