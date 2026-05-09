@@ -13,6 +13,8 @@ interface QuizAttempt {
   score: number
   total_points: number
   completed_at: string
+  total_seconds: number | null
+  expected_seconds: number | null
 }
 
 function formatDate(iso: string): string {
@@ -20,9 +22,28 @@ function formatDate(iso: string): string {
   return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`
 }
 
+function formatSeconds(s: number): string {
+  const m = Math.floor(s / 60)
+  const sec = s % 60
+  if (m === 0) return `${sec} 秒`
+  if (sec === 0) return `${m} 分`
+  return `${m} 分 ${sec} 秒`
+}
+
+function timeDelta(totalSeconds: number, expectedSeconds: number): { label: string; color: string } {
+  const diff = totalSeconds - expectedSeconds
+  const diffMin = Math.round(Math.abs(diff) / 60)
+  if (diffMin === 0) return { label: "準時完成", color: "text-slate-400" }
+  if (diff > 0) return { label: `超時 ${diffMin} 分`, color: "text-red-500" }
+  return { label: `快 ${diffMin} 分`, color: "text-amber-600" }
+}
+
 function AttemptRow({ attempt, title }: { attempt: QuizAttempt; title: string }) {
   const pct = Math.round((attempt.score / attempt.total_points) * 100)
   const barColor = pct >= 80 ? "bg-amber-500" : pct >= 50 ? "bg-amber-300" : "bg-slate-300"
+  const delta = attempt.total_seconds != null && attempt.expected_seconds != null
+    ? timeDelta(attempt.total_seconds, attempt.expected_seconds)
+    : null
 
   return (
     <View className="bg-white rounded-2xl border border-slate-100 px-4 py-3 gap-2">
@@ -46,6 +67,14 @@ function AttemptRow({ attempt, title }: { attempt: QuizAttempt; title: string })
           {attempt.score}/{attempt.total_points}
         </Text>
       </View>
+      {attempt.total_seconds != null && (
+        <View className="flex-row items-center gap-2">
+          <Text className="text-xs text-slate-400">{formatSeconds(attempt.total_seconds)}</Text>
+          {delta && (
+            <Text className={`text-xs font-medium ${delta.color}`}>{delta.label}</Text>
+          )}
+        </View>
+      )}
     </View>
   )
 }
@@ -76,7 +105,7 @@ export default function AccountScreen() {
     if (!user) return
     supabase
       .from("quiz_attempts")
-      .select("id, article_id, score, total_points, completed_at")
+      .select("id, article_id, score, total_points, completed_at, total_seconds, expected_seconds")
       .eq("user_id", user.id)
       .order("completed_at", { ascending: false })
       .then(({ data }) => {

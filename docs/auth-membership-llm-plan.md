@@ -1,6 +1,6 @@
 # Plan: Auth + Membership + Admin GO LIVE + Content Platform + LLM
 
-_Last revised 2026-05-08 to incorporate the team review (`docs/comments-20260508.md`)._
+_Last revised 2026-05-09 — Phase 7 and all modules dependent on question types/formats delayed pending team sign-off on the final type list and format set._
 
 ## Context
 
@@ -471,7 +471,11 @@ Goal: app fetches from Supabase; bundled JSON becomes offline fallback; "Update"
 
 ---
 
-## Phase 7 — Question Pool, Types, Formats
+## Phase 7 — Question Pool, Types, Formats ⏸ DELAYED
+
+> **Blocked — team has not yet confirmed the final question type list or format set.**
+> No implementation work should begin until the team signs off on both.
+> All sub-items below remain as the working draft to be confirmed or revised.
 
 Goal: per-article question pools with diverse types and formats; exercises sample N from the pool.
 
@@ -507,7 +511,10 @@ Goal: per-article question pools with diverse types and formats; exercises sampl
 
 ---
 
-## Phase 8 — Expected Finishing Time + Live Timer
+## Phase 8 — Expected Finishing Time + Live Timer ✅ COMPLETE
+
+> Per-question-type time breakdown remains delayed (Phase 7 not yet confirmed).
+> `exercise_sessions` table deferred to Phase 9 — timing data stored in `quiz_attempts` (`total_seconds`, `expected_seconds` columns) instead, preserving all existing history.
 
 - **Admin**: `expected_minutes` field per article (set in Article Library Detail)
 - **Mobile**:
@@ -519,9 +526,11 @@ Goal: per-article question pools with diverse types and formats; exercises sampl
 
 ---
 
-## Phase 9 — Revision Chapter & Weight Training
+## Phase 9 — Revision Chapter & Weight Training ⏸ PARTIALLY DELAYED
 
-Goal: two new exercise modes that draw from real user data.
+> **Weight Training is delayed** — it is built around question types and cannot be designed or implemented until Phase 7 is unblocked.
+> Revision Chapter does not depend on question types and can proceed once Phase 7's pool infrastructure (question IDs, `source_excerpt`) is ready — but that infrastructure is also blocked.
+
 
 ### Revision chapter
 - Entry point on dashboard: "Revision Chapter (X mistakes available)"
@@ -657,8 +666,8 @@ Goal: free-tier monetisation via ad network.
 | `app/account.tsx` | 12 | Pro status, subscribe, restore |
 | `app/read.tsx` | 11 | Article-level Pro gate |
 | `app/read.tsx` | 14 | Banner ad slot for free users |
-| `app/quiz.tsx` | 7 | Pool sampling + multi-format support |
-| `components/quiz/QuizShell.tsx` | 8 | Live timer; per-question time tracking |
+| `app/quiz.tsx` | 7 ⏸ | Pool sampling + multi-format support |
+| `components/quiz/QuizShell.tsx` | 8 ⏸ (timer ok; per-type breakdown delayed) | Live timer; per-question time tracking |
 | `components/quiz/ScoreScreen.tsx` | 13 | LLM analysis card |
 | `components/quiz/ScoreScreen.tsx` | 14 | Interstitial ad pre-render (free only) |
 | `lib/data.ts` | 6 | Replace static maps with `contentStore` wrappers |
@@ -678,12 +687,12 @@ shared/schema.ts                                    (Phase 4)
 scripts/migrate-content.ts                          (Phase 4)
 scripts/create-admin.ts                             (Phase 5)
 lib/contentStore.ts                                 (Phase 6)
-components/quiz/MCQuestion.tsx                      (Phase 7 — extracted from existing QuizQuestion)
-components/quiz/FillBlankQuestion.tsx               (Phase 7)
-components/quiz/ShortAnswerQuestion.tsx             (Phase 7)
-components/quiz/LongAnswerQuestion.tsx              (Phase 7)
-app/revision.tsx                                    (Phase 9)
-app/weight-training.tsx                             (Phase 9)
+components/quiz/MCQuestion.tsx                      (Phase 7 ⏸ delayed)
+components/quiz/FillBlankQuestion.tsx               (Phase 7 ⏸ delayed)
+components/quiz/ShortAnswerQuestion.tsx             (Phase 7 ⏸ delayed)
+components/quiz/LongAnswerQuestion.tsx              (Phase 7 ⏸ delayed)
+app/revision.tsx                                    (Phase 9 ⏸ delayed)
+app/weight-training.tsx                             (Phase 9 ⏸ delayed)
 components/UpgradeModal.tsx                         (Phase 11)
 components/ProGate.tsx                              (Phase 11)
 supabase/functions/revenuecat-webhook/index.ts      (Phase 12)
@@ -708,14 +717,15 @@ components/AdInterstitial.tsx                       (Phase 14)
 7. **Draft/Publish**: save article as draft → mobile does NOT see it; flip to published → next refresh, mobile sees it
 8. **Version revert**: edit an article 3 times in admin → revert to v1 → mobile sees v1 content after refresh
 
-### Question pool + types/formats
+### Question pool + types/formats ⏸ delayed
 9. **Pool sampling**: regenerate exercise on the same article twice → different question subsets sampled
 10. **Multi-format**: complete an exercise mixing MC + fill-blank + short answer → scoring works for each
 
-### Timer + dashboard
-11. **Timer**: start an exercise → timer ticks; finish → dashboard shows total time + delta vs expected; per-type breakdown matches sum
+### Timer + dashboard ⏸ partially delayed
+11. **Timer (basic)**: start an exercise → timer ticks; finish → dashboard shows total time + delta vs expected
+11a. **Per-type breakdown** ⏸: per-question-type time breakdown — delayed until Phase 7 type list is confirmed
 
-### Revision + Weight training
+### Revision + Weight training ⏸ delayed
 12. **Revision chapter**: get 25 questions wrong across 3 articles → revision chapter offers 15–20, all from your wrong list; `source_excerpt` shown
 13. **Weight training**: pick "word-meaning" → 15–20 word-meaning questions, drawn across articles user has access to
 

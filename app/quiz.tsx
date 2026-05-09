@@ -1,7 +1,7 @@
 import { View, Text, Pressable, ScrollView } from "react-native"
 import { useRouter, useLocalSearchParams } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
-import { getAllQuestions, getPartTitles } from "@/lib/data"
+import { getAllQuestions, getPartTitles, getArticleIndex } from "@/lib/data"
 import QuizShell from "@/components/quiz/QuizShell"
 
 export default function QuizScreen() {
@@ -9,6 +9,7 @@ export default function QuizScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const questions = getAllQuestions(id)
   const partTitles = getPartTitles(id)
+  const expectedMinutes = getArticleIndex().find((a) => a.id === id)?.expectedMinutes
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50">
@@ -19,7 +20,7 @@ export default function QuizScreen() {
 
         <Text className="text-lg font-bold text-slate-800 mb-6">閱讀理解測驗</Text>
 
-        <QuizShell questions={questions} partTitles={partTitles} articleId={id} />
+        <QuizShell questions={questions} partTitles={partTitles} articleId={id} expectedMinutes={expectedMinutes} />
       </ScrollView>
     </SafeAreaView>
   )

@@ -64,4 +64,5 @@ export interface ArticleEntry {
   totalQuestions: number
   type?: "challenge"
   level?: 1 | 2 | 3 | 4 | 5 | 6 | 7
+  expectedMinutes?: number
 }

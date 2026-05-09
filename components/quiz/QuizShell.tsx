@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { View, Pressable, Text } from "react-native"
 import type { Question, QuizAnswer, OptionKey } from "@/lib/types"
 import { checkAnswer, calculateScore } from "@/lib/quiz"
@@ -14,9 +14,16 @@ interface Props {
   questions: Question[]
   partTitles: Record<number, string>
   articleId: string
+  expectedMinutes?: number
 }
 
-export default function QuizShell({ questions, partTitles, articleId }: Props) {
+function formatTimer(seconds: number): string {
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  return `${m}:${s.toString().padStart(2, "0")}`
+}
+
+export default function QuizShell({ questions, partTitles, articleId, expectedMinutes }: Props) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<number, QuizAnswer>>({})
   const [selectedOption, setSelectedOption] = useState<OptionKey | null>(null)
@@ -25,18 +32,40 @@ export default function QuizShell({ questions, partTitles, articleId }: Props) {
   const [lastAnswerCorrect, setLastAnswerCorrect] = useState(false)
   const [isFinished, setIsFinished] = useState(false)
   const [showArticle, setShowArticle] = useState(false)
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
 
+  const startedAtRef = useRef(Date.now())
   const { user } = useAuth()
   const article = getArticle(articleId)
 
   useEffect(() => {
+    if (isFinished) return
+    const interval = setInterval(() => {
+      setElapsedSeconds(Math.floor((Date.now() - startedAtRef.current) / 1000))
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [isFinished])
+
+  useEffect(() => {
     if (!isFinished || !user) return
+    const totalSecs = Math.floor((Date.now() - startedAtRef.current) / 1000)
     const { earned, total } = calculateScore(questions, answers)
-    saveQuizAttempt(user.id, articleId, questions, answers, earned, total).catch(() => {})
+    saveQuizAttempt(
+      user.id, articleId, questions, answers, earned, total,
+      totalSecs,
+      expectedMinutes != null ? expectedMinutes * 60 : undefined,
+    ).catch(() => {})
   }, [isFinished])
 
   const currentQuestion = questions[currentIndex]
   const isLastQuestion = currentIndex + 1 >= questions.length
+
+  const timerColor =
+    expectedMinutes == null
+      ? "text-slate-400"
+      : elapsedSeconds <= expectedMinutes * 60
+      ? "text-amber-600"
+      : "text-red-500"
 
   const handleSelect = useCallback(
     (key: OptionKey) => {
@@ -69,6 +98,8 @@ export default function QuizShell({ questions, partTitles, articleId }: Props) {
     setRevealAnswer(false)
     setWaitingForNext(false)
     setIsFinished(false)
+    startedAtRef.current = Date.now()
+    setElapsedSeconds(0)
   }
 
   if (isFinished) {
@@ -92,6 +123,9 @@ export default function QuizShell({ questions, partTitles, articleId }: Props) {
         <View className="flex-1">
           <QuizProgressBar current={currentIndex + 1} total={questions.length} />
         </View>
+        <Text className={`text-sm font-semibold tabular-nums ${timerColor}`}>
+          {formatTimer(elapsedSeconds)}
+        </Text>
         <Pressable
           onPress={() => setShowArticle(true)}
           hitSlop={8}

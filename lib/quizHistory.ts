@@ -9,11 +9,20 @@ export async function saveQuizAttempt(
   questions: Question[],
   answers: Record<number, QuizAnswer>,
   score: number,
-  totalPoints: number
+  totalPoints: number,
+  totalSeconds?: number,
+  expectedSeconds?: number,
 ): Promise<void> {
   const { data: attempt, error } = await supabase
     .from("quiz_attempts")
-    .insert({ user_id: userId, article_id: articleId, score, total_points: totalPoints })
+    .insert({
+      user_id: userId,
+      article_id: articleId,
+      score,
+      total_points: totalPoints,
+      ...(totalSeconds != null ? { total_seconds: totalSeconds } : {}),
+      ...(expectedSeconds != null ? { expected_seconds: expectedSeconds } : {}),
+    })
     .select("id")
     .single()
 
