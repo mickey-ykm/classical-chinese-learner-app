@@ -17,13 +17,15 @@ const supabase = createClient(
   { auth: { persistSession: false } }
 )
 
-const hash = await bcrypt.hash(password, 12)
-const { error } = await supabase
-  .from("admin_users")
-  .upsert({ email, password_hash: hash }, { onConflict: "email" })
+;(async () => {
+  const hash = await bcrypt.hash(password, 12)
+  const { error } = await supabase
+    .from("admin_users")
+    .upsert({ email, password_hash: hash }, { onConflict: "email" })
 
-if (error) {
-  console.error("Failed:", error.message)
-  process.exit(1)
-}
-console.log(`✓ Admin user created: ${email}`)
+  if (error) {
+    console.error("Failed:", error.message)
+    process.exit(1)
+  }
+  console.log(`✓ Admin user created: ${email}`)
+})()
