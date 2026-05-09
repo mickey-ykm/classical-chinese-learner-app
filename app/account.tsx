@@ -81,7 +81,7 @@ function AttemptRow({ attempt, title }: { attempt: QuizAttempt; title: string })
 
 export default function AccountScreen() {
   const router = useRouter()
-  const { user, profile, signOut, loading } = useAuth()
+  const { user, profile, signOut, loading, isAnonymous } = useAuth()
   const [attempts, setAttempts] = useState<QuizAttempt[]>([])
   const [loadingAttempts, setLoadingAttempts] = useState(true)
   const [settled, setSettled] = useState(false)
@@ -98,8 +98,8 @@ export default function AccountScreen() {
   }, [])
 
   useEffect(() => {
-    if (settled && !loading && !user) router.replace("/login")
-  }, [settled, loading, user])
+    if (settled && !loading && (!user || isAnonymous)) router.replace("/login")
+  }, [settled, loading, user, isAnonymous])
 
   useEffect(() => {
     if (!user) return
@@ -114,7 +114,7 @@ export default function AccountScreen() {
       })
   }, [user])
 
-  if (!settled || loading || !user) return (
+  if (!settled || loading || !user || isAnonymous) return (
     <SafeAreaView className="flex-1 bg-slate-50 items-center justify-center">
       <ActivityIndicator size="small" color="#d97706" />
     </SafeAreaView>

@@ -13,6 +13,7 @@ interface AuthContextValue {
   user: User | null
   profile: Profile | null
   loading: boolean
+  isAnonymous: boolean
   signInWithGoogle: () => Promise<void>
   signOut: () => Promise<void>
 }
@@ -21,6 +22,7 @@ const AuthContext = createContext<AuthContextValue>({
   user: null,
   profile: null,
   loading: true,
+  isAnonymous: false,
   signInWithGoogle: async () => {},
   signOut: async () => {},
 })
@@ -31,9 +33,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user.id)
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        setUser(session.user)
+        fetchProfile(session.user.id)
+      } else {
+        // Give every guest a real UUID so quiz attempts are always persisted
+        const { data } = await supabase.auth.signInAnonymously()
+        if (data.user) {
+          setUser(data.user)
+          fetchProfile(data.user.id)
+        }
+      }
       setLoading(false)
     })
 
@@ -96,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ user, profile, loading, isAnonymous: user?.is_anonymous ?? false, signInWithGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   )

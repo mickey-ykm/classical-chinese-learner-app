@@ -96,7 +96,7 @@ function PlaceholderCard({ num }: { num: number }) {
 export default function HomeScreen() {
   const router = useRouter()
   const [articles, setArticles] = useState(() => getArticleIndex())
-  const { user, profile } = useAuth()
+  const { user, profile, isAnonymous } = useAuth()
 
   useFocusEffect(
     useCallback(() => {
@@ -123,7 +123,7 @@ export default function HomeScreen() {
         <View className="mb-10">
           <View className="items-end">
             <Pressable
-              onPress={() => router.push(user ? "/account" : "/login")}
+              onPress={() => router.push(!user || isAnonymous ? "/login" : "/account")}
               hitSlop={12}
               className="p-1"
             >
