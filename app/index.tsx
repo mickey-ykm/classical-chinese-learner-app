@@ -1,6 +1,7 @@
 import { ScrollView, View, Text, Pressable, Image } from "react-native"
-import { useRouter } from "expo-router"
+import { useRouter, useFocusEffect } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
+import { useCallback, useState } from "react"
 import { getArticleIndex } from "@/lib/data"
 import { Logo } from "@/components/Logo"
 import { useAuth } from "@/hooks/useAuth"
@@ -94,8 +95,14 @@ function PlaceholderCard({ num }: { num: number }) {
 
 export default function HomeScreen() {
   const router = useRouter()
-  const articles = getArticleIndex()
+  const [articles, setArticles] = useState(() => getArticleIndex())
   const { user, profile } = useAuth()
+
+  useFocusEffect(
+    useCallback(() => {
+      setArticles(getArticleIndex())
+    }, [])
+  )
 
   const lessons = Array.from({ length: TOTAL_LESSONS }, (_, i) => {
     const article = i < articles.length ? articles[i] : null

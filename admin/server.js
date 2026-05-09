@@ -145,6 +145,7 @@ function articleToRow(article, meta) {
         : null,
     exercise_template: Array.isArray(meta.exerciseTemplate) ? meta.exerciseTemplate : null,
     quiz_json: meta.quizJson || null,
+    updated_at: nowIso(),
   }
 }
 
