@@ -1,50 +1,137 @@
-# Welcome to your Expo app 👋
+# Classical Chinese Learner
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A mobile-first app for reading and mastering Classical Chinese texts. Students read annotated passages, answer structured quizzes, and track their progress — with a revision chapter that replays their own mistakes.
 
-## Get started
+## Product vision
 
-1. Install dependencies
+Classical Chinese (文言文) is taught in Hong Kong secondary schools but is notoriously difficult to self-study. Existing tools treat it as a dictionary lookup problem. This app treats it as a reading comprehension problem: every article is a curated passage from a canonical text, paired with footnotes, a modern-Chinese translation, and a quiz that tests vocabulary, grammar, and comprehension in the same way the HKDSE exam does.
 
-   ```bash
-   npm install
-   ```
+**Core loop:** Read → Quiz → Revision chapter (replay wrong answers) → track improvement over time.
 
-2. Start the app
+**Content is managed through a separate admin portal** (`admin/`) hosted on Railway, where editors can draft, publish, and gate articles without a code deploy.
 
-   ```bash
-   npx expo start
-   ```
+---
 
-In the output, you'll find options to open the app in a
+文言文在香港中學課程中列為必修科目，但自學難度向來極高。現有的學習工具多以查字典為主要功能，未能切中要害。本應用程式以閱讀理解為核心：每篇文章均為經典文本的精選段落，配備注釋、現代中文翻譯，以及仿照香港文憑試（HKDSE）形式設計的測驗，全面考核詞彙、語法及理解能力。
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+**學習循環：** 閱讀 → 測驗 → 複習章節（重溫錯誤答案）→ 追蹤進步
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+**內容管理透過獨立的後台管理系統**（`admin/`）進行，部署於 Railway，編輯人員可在不需要重新部署程式碼的情況下草擬、發佈及管控文章。
 
-## Get a fresh project
+## Tech stack
 
-When you're ready, run:
+| Layer | Choice |
+|---|---|
+| Framework | Expo (React Native) + Expo Router |
+| Styling | NativeWind v4 (Tailwind classes on RN primitives) |
+| Backend | Supabase (Postgres, Auth, RLS) |
+| Local cache | SQLite via `expo-sqlite`; bundled JSON seed for offline/first launch |
+| Admin portal | Express + `express-session` + `bcryptjs`, deployed on Railway |
+| Payments (planned) | RevenueCat |
+| Language | TypeScript throughout |
+
+## Project setup
+
+### Prerequisites
+
+- Node.js 18+
+- Xcode (for iOS Simulator) or Android Studio (for Android Emulator)
+- A Supabase project with the schema applied (see `docs/auth-membership-llm-plan.md`)
+
+### 1. Install dependencies
 
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 2. Set environment variables
 
-## Learn more
+Create a `.env.local` file at the project root:
 
-To learn more about developing your project with Expo, look at the following resources:
+```env
+EXPO_PUBLIC_SUPABASE_URL=https://<your-project>.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### 3. Run the app
 
-## Join the community
+```bash
+npx expo start --web        # Quickest — opens in a browser (NativeWind works here)
+npx expo run:ios            # iOS Simulator (requires Xcode)
+npx expo run:android        # Android Emulator
+npx expo start              # Expo Go / general Metro (NativeWind does not work in Expo Go)
+npx expo start --clear      # Clear Metro cache (required after config changes)
+```
 
-Join our community of developers creating universal apps.
+> **Note:** NativeWind v4 does not work in Expo Go. Use `--web` or a native build for styling to render correctly.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### 4. Run tests and lint
+
+```bash
+npm test                        # All Jest tests
+npm test -- quiz.test.ts        # Single test file
+expo lint                       # ESLint
+```
+
+## Admin portal
+
+The admin portal lives in `admin/` and is a standalone Express app. It is deployed separately on Railway.
+
+```bash
+cd admin
+npm install
+npm run dev         # Local development server (port 3001)
+```
+
+To create an admin user:
+
+```bash
+npm run create-admin -- email@example.com password
+```
+
+Required environment variables for the admin portal:
+
+```env
+EXPO_PUBLIC_SUPABASE_URL=...
+SUPABASE_SERVICE_ROLE_KEY=...
+ADMIN_SESSION_SECRET=...
+```
+
+## Project structure
+
+```
+app/                    # Expo Router screens
+  index.tsx             # Article list / journey map (home)
+  read.tsx              # Article reader with footnotes + translation toggle
+  quiz.tsx              # Multi-part quiz
+  revision.tsx          # Revision chapter (replay wrong answers)
+  account.tsx           # User account + quiz history
+  attempt.tsx           # Quiz attempt detail
+admin/                  # Express admin portal (separate deployment)
+components/             # Shared UI components
+  quiz/QuizShell.tsx    # Quiz state machine (all quiz state lives here)
+  UpgradeModal.tsx      # Pro upgrade prompt
+contexts/               # React contexts (AuthContext)
+data/                   # Bundled JSON seed (offline fallback)
+  index.json            # Article registry
+  articles/{id}.json    # Article content
+  quizzes/{id}.json     # Quiz content
+docs/                   # Project planning docs
+lib/                    # Core logic
+  contentStore.ts       # SQLite cache + Supabase sync
+  data.ts               # Data access (thin wrappers over contentStore)
+  quiz.ts               # Pure scoring logic
+  readProgress.ts       # Read-progress sync (local + cloud)
+  revisionSession.ts    # Revision chapter question sampling
+  types.ts              # Shared TypeScript interfaces
+shared/
+  schema.ts             # Zod schemas (used by both admin portal and mobile)
+```
+
+## Key conventions
+
+- Path alias `@/` maps to the project root (e.g. `import { getArticle } from "@/lib/data"`).
+- Classical Chinese text uses `style={{ fontFamily: "Georgia" }}`.
+- Amber is the primary accent colour (`amber-500` / `amber-600`); slate-50 is the background.
+- `hitSlop={12}` on small touch targets.
+- Adding a new article requires JSON files in `data/articles/` and `data/quizzes/`, an entry in `data/index.json`, and registration in the static maps in `lib/data.ts` — or use the admin portal to publish directly to Supabase.
