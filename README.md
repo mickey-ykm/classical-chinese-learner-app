@@ -18,6 +18,20 @@ Classical Chinese (文言文) is taught in Hong Kong secondary schools but is no
 
 **內容管理透過獨立的後台管理系統**（`admin/`）進行，部署於 Railway，編輯人員可在不需要重新部署程式碼的情況下草擬、發佈及管控文章。
 
+## Product features
+
+1. **Batch LLM assessment** — bulk-generates modern Chinese translations and quiz exercises from raw Classical Chinese passages using an LLM pipeline, reducing content production time from hours to minutes.
+2. **Teacher-friendly CMS** — a prompt management interface in the admin portal lets educators tune LLM prompts, review generated content, and publish articles without writing code.
+3. **Student performance analysis** — tracks per-article and per-question accuracy over time, surfacing each student's weakest comprehension areas in Classical Chinese.
+4. **Exam timing training** — a live countdown timer benchmarked against HKDSE expected completion times trains students to pace themselves under exam conditions.
+
+---
+
+1. **批量 LLM 評估工具** — 透過大型語言模型流程，對文言文段落批量生成現代文翻譯及練習題，將內容製作時間由數小時縮短至數分鐘。
+2. **教師友好的內容管理系統** — 後台管理系統內建提示詞管理介面，讓教育工作者無需編寫程式碼，即可調整 LLM 提示詞、審閱生成內容並發布文章。
+3. **學生表現分析** — 追蹤每篇文章及每道題目的長期答題準確率，清晰呈現學生在文言文理解上的薄弱環節。
+4. **考試限時訓練** — 即時倒數計時器以文憑試（HKDSE）預期完成時間為基準，訓練學生在考試情境下掌握答題節奏。
+
 ## Tech stack
 
 | Layer | Choice |
