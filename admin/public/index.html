@@ -67,13 +67,14 @@
               <th class="px-4 py-2.5 text-left font-medium">Title</th>
               <th class="px-4 py-2.5 text-left font-medium">Generated</th>
               <th class="px-4 py-2.5 text-center font-medium">Quizzes</th>
-              <th class="px-4 py-2.5 text-left font-medium">Level</th>
+              <th class="px-4 py-2.5 text-left font-medium">Type</th>
+              <th class="px-4 py-2.5 text-center font-medium">Free</th>
               <th class="px-4 py-2.5 text-left font-medium">Status</th>
               <th class="px-4 py-2.5 text-right font-medium"></th>
             </tr>
           </thead>
           <tbody id="exercise-list" class="divide-y divide-stone-100">
-            <tr><td colspan="6" class="px-4 py-8 text-center text-sm text-slate-400">Loading…</td></tr>
+            <tr><td colspan="7" class="px-4 py-8 text-center text-sm text-slate-400">Loading…</td></tr>
           </tbody>
         </table>
       </div>
@@ -110,19 +111,13 @@
           <input type="checkbox" id="ad-is-free" disabled class="w-4 h-4 accent-green-600 cursor-pointer" />
           <label for="ad-is-free" class="text-sm text-slate-600 cursor-pointer select-none">免費</label>
         </div>
-        <div class="flex items-center gap-2">
-          <input type="checkbox" id="ad-is-dse-core" disabled class="w-4 h-4 accent-blue-600 cursor-pointer" />
-          <label for="ad-is-dse-core" class="text-sm text-slate-600 cursor-pointer select-none">DSE Core</label>
-        </div>
         <div class="flex items-center gap-1.5">
-          <label for="ad-level" class="text-sm text-slate-600 select-none">程度</label>
-          <select id="ad-level" disabled
+          <label for="ad-article-type" class="text-sm text-slate-600 select-none">文章類型</label>
+          <select id="ad-article-type" disabled
             class="text-sm border border-stone-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-white disabled:bg-stone-50 disabled:text-slate-400">
-            <option value="">—</option>
-            <option value="4">中四</option>
-            <option value="5">中五</option>
-            <option value="6">中六</option>
-            <option value="7">高中DSE</option>
+            <option value="other">其他</option>
+            <option value="dse-exam">DSE考試</option>
+            <option value="dse-non-exam">DSE非考試</option>
           </select>
         </div>
         <div class="flex items-center gap-1.5">
@@ -191,16 +186,6 @@
         <div id="ad-generate-status" class="hidden text-xs text-slate-500 mb-3"></div>
       </div>
 
-      <!-- Quiz JSON -->
-      <div>
-        <div class="flex items-center justify-between mb-1.5">
-          <label class="text-sm font-medium">Quiz JSON</label>
-          <span id="ad-quiz-status" class="text-xs text-slate-400"></span>
-        </div>
-        <textarea id="ad-quiz-json" rows="14" readonly oninput="onAdQuizInput()"
-          class="w-full font-mono text-xs border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-stone-50"></textarea>
-        <div id="ad-quiz-errors" class="mt-1.5 space-y-1 hidden"></div>
-      </div>
 
       <!-- Questions CRUD -->
       <div class="border-t border-stone-100 pt-5">
@@ -209,8 +194,8 @@
             <h3 class="text-sm font-semibold">Questions</h3>
             <p class="text-xs text-slate-400 mt-0.5">Structured question management (Supabase-backed)</p>
           </div>
-          <button onclick="openQuestionModal(null)"
-            class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-600 text-white hover:bg-amber-700 transition-colors">
+          <button id="ad-add-question-btn" onclick="openQuestionModal(null)" disabled
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-600 text-white hover:bg-amber-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
             + Add Question
           </button>
         </div>
@@ -465,15 +450,18 @@
                 class="w-full text-sm border border-stone-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400" />
             </div>
             <div>
-              <label class="text-xs font-medium text-slate-600 block mb-1">Level 程度</label>
-              <select id="na-level"
+              <label class="text-xs font-medium text-slate-600 block mb-1">Article Type 文章類型</label>
+              <select id="na-article-type"
                 class="w-full text-sm border border-stone-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-white">
-                <option value="">— unset —</option>
-                <option value="4">中四</option>
-                <option value="5">中五</option>
-                <option value="6">中六</option>
-                <option value="7">高中DSE</option>
+                <option value="other">其他 (Other)</option>
+                <option value="dse-exam">DSE考試 (DSE Exam)</option>
+                <option value="dse-non-exam">DSE非考試 (DSE Non-Exam)</option>
               </select>
+            </div>
+            <div>
+              <label class="text-xs font-medium text-slate-600 block mb-1">Expected Minutes 預期時間（分鐘）</label>
+              <input type="number" id="na-expected-minutes" min="1" max="240" placeholder="e.g. 30"
+                class="w-full text-sm border border-stone-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400" />
             </div>
             <div>
               <label class="text-xs font-medium text-slate-600 block mb-1">Classical Chinese Text <span class="text-red-400">*</span></label>
@@ -570,7 +558,7 @@
 
           <!-- Save controls -->
           <div class="flex items-center justify-between pt-3 border-t border-stone-100">
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-4 flex-wrap">
               <div class="flex items-center gap-3">
                 <input type="checkbox" id="na-is-challenge" class="w-4 h-4 accent-amber-600 cursor-pointer" />
                 <label for="na-is-challenge" class="text-sm font-medium cursor-pointer select-none">
@@ -582,6 +570,20 @@
                 <label for="na-is-free" class="text-sm font-medium cursor-pointer select-none">
                   免費 <span class="text-slate-400 font-normal">(free for all users)</span>
                 </label>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <label for="na-article-type" class="text-sm text-slate-600 select-none">文章類型</label>
+                <select id="na-article-type"
+                  class="text-sm border border-stone-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-white">
+                  <option value="other">其他</option>
+                  <option value="dse-exam">DSE考試</option>
+                  <option value="dse-non-exam">DSE非考試</option>
+                </select>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <label for="na-expected-minutes" class="text-sm text-slate-600 select-none">預期(分)</label>
+                <input type="number" id="na-expected-minutes" min="1" max="240" placeholder="—"
+                  class="w-16 text-sm border border-stone-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-400" />
               </div>
             </div>
             <button id="na-save-btn" onclick="saveGeneratedArticle()" disabled
@@ -784,7 +786,8 @@ async function loadExercises() {
           </td>
           <td class="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">${fmtDate(ex.createdAt)}</td>
           <td class="px-4 py-3 text-center">${hasQuiz}${ex.hasQuizzes ? `<span class="text-xs text-slate-400 ml-1">(${ex.totalQuestions}Q)</span>` : ''}</td>
-          <td class="px-4 py-3 text-xs text-slate-600 whitespace-nowrap">${levelLabel(ex.level)}</td>
+          <td class="px-4 py-3 text-xs text-slate-600 whitespace-nowrap">${({'dse-exam':'DSE考試','dse-non-exam':'DSE非考試','other':'其他'})[ex.articleType] || '—'}</td>
+          <td class="px-4 py-3 text-xs text-slate-600 whitespace-nowrap">${ex.isFree ? '<span class="inline-flex px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">免費</span>' : '—'}</td>
           <td class="px-4 py-3">${statusBadge}</td>
           <td class="px-4 py-3 text-right whitespace-nowrap">
             <button onclick="openArticleDetail('${escHtml(ex.id)}')"
@@ -1017,7 +1020,7 @@ function setAdStatus(prefix, valid, errors) {
   const statusEl = document.getElementById(`ad-${prefix}-status`)
   const errorBox = document.getElementById(`ad-${prefix}-errors`)
   if (valid) {
-    statusEl.textContent = errors.length ? '' : (prefix === 'quiz' && !document.getElementById('ad-quiz-json').value.trim() ? '' : 'Valid')
+    statusEl.textContent = errors.length ? '' : 'Valid'
     statusEl.className = 'text-xs text-green-600'
     errorBox.classList.add('hidden')
     errorBox.innerHTML = ''
@@ -1047,30 +1050,15 @@ function onAdArticleInput() {
 }
 
 function onAdQuizInput() {
-  const val = document.getElementById('ad-quiz-json').value.trim()
-  // Empty quiz is valid (article without a quiz yet)
-  if (!val || val === 'null') {
-    adQuizValid = true
-    setAdStatus('quiz', true, [])
-    updateAdSaveBtn()
-    return
-  }
-  let parsed = null
-  try { parsed = JSON.parse(val) } catch (_) {}
-  const errs = parsed ? validateQuiz(parsed) : ['Invalid JSON']
-  adQuizValid = !!parsed && errs.length === 0
-  setAdStatus('quiz', adQuizValid, errs)
+  // Quiz JSON editor removed; quiz is managed via Questions CRUD
+  adQuizValid = true
   updateAdSaveBtn()
 }
 
 function updateAdSaveBtn() {
-  let art = null, quiz = null
+  let art = null
   try { art = JSON.parse(document.getElementById('ad-article-json').value) } catch (_) {}
-  const quizVal = document.getElementById('ad-quiz-json').value.trim()
-  const hasQuiz = quizVal && quizVal !== 'null'
-  if (hasQuiz) try { quiz = JSON.parse(quizVal) } catch (_) {}
-  const idsOk = !!(art && (!hasQuiz || (quiz && quiz.articleId === art.id)))
-  document.getElementById('ad-save-btn').disabled = !(adArticleValid && adQuizValid && idsOk)
+  document.getElementById('ad-save-btn').disabled = !(adArticleValid && art)
 }
 
 async function openArticleDetail(id) {
@@ -1083,11 +1071,8 @@ async function openArticleDetail(id) {
   document.getElementById('ad-title').textContent = '…'
   document.getElementById('ad-id').textContent = id
   document.getElementById('ad-article-json').value = 'Loading…'
-  document.getElementById('ad-quiz-json').value = ''
   document.getElementById('ad-article-status').textContent = ''
-  document.getElementById('ad-quiz-status').textContent = ''
   document.getElementById('ad-article-errors').classList.add('hidden')
-  document.getElementById('ad-quiz-errors').classList.add('hidden')
   document.getElementById('ad-generate-status').classList.add('hidden')
   document.getElementById('ad-legacy-warning').classList.add('hidden')
 
@@ -1103,17 +1088,23 @@ async function openArticleDetail(id) {
 
     document.getElementById('ad-title').textContent = data.article.title || id
     document.getElementById('ad-article-json').value = JSON.stringify(data.article, null, 2)
-    document.getElementById('ad-quiz-json').value = data.hasQuizzes && data.quiz
-      ? JSON.stringify(data.quiz, null, 2) : ''
     document.getElementById('ad-is-challenge').checked = !!data.isChallenge
     document.getElementById('ad-is-free').checked = !!data.isFree
-    document.getElementById('ad-is-dse-core').checked = !!data.isDseCore
-    document.getElementById('ad-level').value = data.level ?? ''
-    document.getElementById('ad-status').value = data.status || 'published'
+    document.getElementById('ad-article-type').value = data.articleType || 'other'
+document.getElementById('ad-status').value = data.status || 'published'
     document.getElementById('ad-expected-minutes').value = data.expectedMinutes ?? ''
 
     if (data.level && data.level <= 3) {
       document.getElementById('ad-legacy-warning').classList.remove('hidden')
+    }
+
+    const genBtn = document.getElementById('ad-generate-quiz-btn')
+    if (data.hasQuizzes) {
+      genBtn.textContent = 'Re-generate Quiz'
+      genBtn.dataset.hasQuiz = 'true'
+    } else {
+      genBtn.textContent = 'Generate Quiz'
+      genBtn.dataset.hasQuiz = 'false'
     }
 
     setAdReadOnly(true)
@@ -1134,33 +1125,29 @@ function closeArticleDetail() {
 
 function setAdReadOnly(readOnly) {
   document.getElementById('ad-article-json').readOnly = readOnly
-  document.getElementById('ad-quiz-json').readOnly = readOnly
   document.getElementById('ad-is-challenge').disabled = readOnly
   document.getElementById('ad-is-free').disabled = readOnly
-  document.getElementById('ad-is-dse-core').disabled = readOnly
-  document.getElementById('ad-level').disabled = readOnly
+  document.getElementById('ad-article-type').disabled = readOnly
   document.getElementById('ad-status').disabled = readOnly
   document.getElementById('ad-expected-minutes').disabled = readOnly
   document.getElementById('ad-edit-btn').classList.toggle('hidden', !readOnly)
   document.getElementById('ad-save-btn').classList.toggle('hidden', readOnly)
   document.getElementById('ad-cancel-btn').classList.toggle('hidden', readOnly)
+  document.getElementById('ad-generate-quiz-btn').disabled = readOnly
+  const addQBtn = document.getElementById('ad-add-question-btn')
+  if (addQBtn) addQBtn.disabled = readOnly
 }
 
 function editArticleDetail() {
   setAdReadOnly(false)
   onAdArticleInput()
-  onAdQuizInput()
   document.getElementById('ad-article-json').focus()
 }
 
 async function saveArticleDetail() {
-  let article, quiz = null
+  let article
   try { article = JSON.parse(document.getElementById('ad-article-json').value) }
   catch (_) { showToast('Article JSON is invalid', 'error'); return }
-  const quizVal = document.getElementById('ad-quiz-json').value.trim()
-  if (quizVal && quizVal !== 'null') {
-    try { quiz = JSON.parse(quizVal) } catch (_) { showToast('Quiz JSON is invalid', 'error'); return }
-  }
 
   const btn = document.getElementById('ad-save-btn')
   btn.disabled = true
@@ -1173,30 +1160,25 @@ async function saveArticleDetail() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         article,
-        quiz,
         isChallenge: document.getElementById('ad-is-challenge').checked,
         isFree: document.getElementById('ad-is-free').checked,
-        isDseCore: document.getElementById('ad-is-dse-core').checked,
-        level: parseInt(document.getElementById('ad-level').value) || null,
         status: document.getElementById('ad-status').value,
         expectedMinutes: Number.isFinite(expectedMinutes) ? expectedMinutes : null,
       }),
     })
     const data = await res.json()
     if (!res.ok) {
-      const msg = (data.articleErrors || []).concat(data.quizErrors || []).join('; ') || data.error
+      const msg = (data.articleErrors || []).join('; ') || data.error
       showToast('Save failed: ' + msg, 'error')
     } else {
       showToast('Saved successfully!', 'success')
       adOriginal = {
         ...adOriginal,
         article,
-        quiz,
-        hasQuizzes: !!quiz && Array.isArray(quiz.parts) && quiz.parts.some((p) => Array.isArray(p.questions) && p.questions.length > 0),
         status: document.getElementById('ad-status').value,
-        level: parseInt(document.getElementById('ad-level').value) || null,
         isChallenge: document.getElementById('ad-is-challenge').checked,
-        isDseCore: document.getElementById('ad-is-dse-core').checked,
+        isFree: document.getElementById('ad-is-free').checked,
+        articleType: document.getElementById('ad-article-type').value || 'other',
         expectedMinutes: Number.isFinite(expectedMinutes) ? expectedMinutes : null,
       }
       document.getElementById('ad-title').textContent = article.title || currentArticleId
@@ -1214,18 +1196,13 @@ function cancelArticleDetail() {
   setAdReadOnly(true)
   if (adOriginal) {
     document.getElementById('ad-article-json').value = JSON.stringify(adOriginal.article, null, 2)
-    document.getElementById('ad-quiz-json').value = adOriginal.hasQuizzes && adOriginal.quiz
-      ? JSON.stringify(adOriginal.quiz, null, 2) : ''
     document.getElementById('ad-is-challenge').checked = !!adOriginal.isChallenge
     document.getElementById('ad-is-free').checked = !!adOriginal.isFree
-    document.getElementById('ad-is-dse-core').checked = !!adOriginal.isDseCore
-    document.getElementById('ad-level').value = adOriginal.level ?? ''
+    document.getElementById('ad-article-type').value = adOriginal.articleType || 'other'
     document.getElementById('ad-status').value = adOriginal.status || 'published'
     document.getElementById('ad-expected-minutes').value = adOriginal.expectedMinutes ?? ''
     document.getElementById('ad-article-status').textContent = ''
-    document.getElementById('ad-quiz-status').textContent = ''
     document.getElementById('ad-article-errors').classList.add('hidden')
-    document.getElementById('ad-quiz-errors').classList.add('hidden')
     document.getElementById('ad-generate-status').classList.add('hidden')
   }
 }
@@ -1260,6 +1237,9 @@ async function generateQuizForArticle() {
   if (!promptId) { showToast('Select a prompt first', 'error'); return }
 
   const btn = document.getElementById('ad-generate-quiz-btn')
+  if (btn.dataset.hasQuiz === 'true') {
+    if (!confirm('警告：重新生成測驗將覆蓋所有現有題目及答案，此操作無法復原。確定要繼續嗎？')) return
+  }
   const statusEl = document.getElementById('ad-generate-status')
   btn.disabled = true
   btn.textContent = 'Generating…'
@@ -1283,12 +1263,11 @@ async function generateQuizForArticle() {
       const s = await sRes.json()
       statusEl.textContent = s.step || `Status: ${s.status}`
       if (s.status === 'done') {
-        setAdReadOnly(false)
-        document.getElementById('ad-quiz-json').value = JSON.stringify(s.quizJson, null, 2)
-        onAdArticleInput()
-        onAdQuizInput()
-        showToast('Quiz generated — review then click Save', 'success')
-        statusEl.textContent = '✓ Generated. Review the JSON above and click Save to persist.'
+        showToast('Quiz generated — draft questions saved! Review in the Questions section below.', 'success')
+        statusEl.textContent = '✓ Generated. Draft questions saved below — review and publish.'
+        loadQuestions(currentArticleId)
+        btn.dataset.hasQuiz = 'true'
+        btn.textContent = 'Re-generate Quiz'
         done = true
       } else if (s.status === 'error') {
         showToast('Generation failed: ' + s.error, 'error')
@@ -1987,7 +1966,8 @@ async function saveGeneratedArticle() {
         quiz: null, // skipQuiz path: article saved with no quiz; admin generates later via Library Detail
         isChallenge: document.getElementById('na-is-challenge').checked,
         isFree: document.getElementById('na-is-free').checked,
-        level: parseInt(document.getElementById('na-level').value) || null,
+        articleType: document.getElementById('na-article-type').value || 'other',
+        expectedMinutes: parseInt(document.getElementById('na-expected-minutes').value) || null,
         status: 'draft', // articles without quizzes start as drafts
       }),
     })
@@ -2329,27 +2309,88 @@ async function loadQuestions() {
       emptyEl.classList.remove('hidden')
       return
     }
-    listEl.innerHTML = questionsList.map((q) => renderQuestionCard(q)).join('')
+    const published = questionsList.filter(q => q.status === 'published')
+    const drafts = questionsList.filter(q => q.status !== 'published')
+    let html = ''
+    if (published.length) {
+      html += `<div class="mb-4">
+        <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">已發布題目 (Published)</h4>
+        <div class="flex flex-col gap-2">${published.map(q => renderQuestionCard(q)).join('')}</div>
+      </div>`
+    }
+    if (drafts.length) {
+      html += `<div>
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wide">草稿題目 (Draft)</h4>
+          <button onclick="bulkDeleteDraftQuestions()"
+            class="text-xs px-2.5 py-1 rounded border border-red-200 text-red-600 hover:bg-red-50 transition-colors">Delete Selected</button>
+        </div>
+        <div class="flex flex-col gap-2">${drafts.map(q => renderQuestionCard(q)).join('')}</div>
+      </div>`
+    }
+    listEl.innerHTML = html
     listEl.classList.remove('hidden')
   } catch (e) {
     loadingEl.textContent = 'Failed to load questions: ' + e.message
   }
 }
 
+async function publishQuestion(id) {
+  try {
+    const res = await fetch(`/api/questions/${encodeURIComponent(id)}/publish`, { method: 'PATCH' })
+    if (!res.ok) throw new Error('Failed to publish')
+    showToast('Question published', 'success')
+    loadQuestions(currentArticleId)
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error')
+  }
+}
+
+async function bulkDeleteDraftQuestions() {
+  const checkboxes = document.querySelectorAll('.draft-q-checkbox:checked')
+  const ids = Array.from(checkboxes).map(cb => cb.dataset.id)
+  if (!ids.length) { showToast('No draft questions selected', 'error'); return }
+  if (!confirm(`Delete ${ids.length} selected draft question(s)? This cannot be undone.`)) return
+  try {
+    const res = await fetch('/api/questions/bulk-delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids })
+    })
+    if (!res.ok) throw new Error('Failed to delete')
+    showToast(`Deleted ${ids.length} question(s)`, 'success')
+    loadQuestions(currentArticleId)
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error')
+  }
+}
+
 function renderQuestionCard(q) {
-  const typeLabel = {
-    'mc-single': '單選', 'mc-multi': '多選', 'true-false': '是非',
-    'fill-blank': '填充', 'sentence-order': '排序'
-  }[q.type] || q.type
+  const typeInfo = {
+    'mc-single':     { label: '單選', cls: 'bg-blue-100 text-blue-700' },
+    'mc-multi':      { label: '多選', cls: 'bg-purple-100 text-purple-700' },
+    'true-false':    { label: '是非', cls: 'bg-green-100 text-green-700' },
+    'fill-blank':    { label: '填充', cls: 'bg-orange-100 text-orange-700' },
+    'sentence-order':{ label: '語序', cls: 'bg-red-100 text-red-700' },
+  }[q.type] || { label: q.type, cls: 'bg-stone-100 text-stone-600' }
+  const typeBadge = `<span class="text-xs font-bold px-1.5 py-0.5 rounded ${typeInfo.cls}">${escHtml(typeInfo.label)}</span>`
   const statusBadge = q.status === 'published'
     ? '<span class="text-xs px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-medium">Published</span>'
     : '<span class="text-xs px-1.5 py-0.5 rounded bg-stone-100 text-stone-500 font-medium">Draft</span>'
+  const publishBtn = q.status !== 'published'
+    ? `<button onclick="publishQuestion('${q.id}')"
+        class="text-xs px-2.5 py-1 rounded border border-green-300 text-green-700 hover:bg-green-50 transition-colors">Publish</button>`
+    : ''
+  const draftCheckbox = q.status !== 'published'
+    ? `<input type="checkbox" class="draft-q-checkbox w-3.5 h-3.5 accent-red-500 cursor-pointer shrink-0 mt-0.5" data-id="${q.id}" />`
+    : '<span class="w-3.5 shrink-0"></span>'
   return `
     <div class="border border-stone-200 rounded-xl px-4 py-3 bg-stone-50">
       <div class="flex items-start gap-3">
+        ${draftCheckbox}
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 mb-1 flex-wrap">
-            <span class="text-xs font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">${escHtml(typeLabel)}</span>
+            ${typeBadge}
             <span class="text-xs text-slate-400">Part ${escHtml(String(q.part ?? 1))}</span>
             <span class="text-xs text-slate-400">${escHtml(String(q.points ?? 1))}pt</span>
             ${statusBadge}
@@ -2358,6 +2399,7 @@ function renderQuestionCard(q) {
           ${q.explanation ? `<p class="text-xs text-slate-400 mt-1">💡 ${escHtml(q.explanation)}</p>` : ''}
         </div>
         <div class="flex gap-1.5 shrink-0">
+          ${publishBtn}
           <button onclick="openQuestionModal('${q.id}')"
             class="text-xs px-2.5 py-1 rounded border border-stone-200 hover:bg-white transition-colors">Edit</button>
           <button onclick="deleteQuestion('${q.id}')"

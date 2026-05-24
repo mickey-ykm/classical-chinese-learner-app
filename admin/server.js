@@ -188,7 +188,7 @@ function articleToRow(article, meta) {
     level,
     is_challenge: meta.isChallenge || false,
     is_free: meta.isFree || false,
-    is_dse_core: meta.isDseCore || false,
+    is_dse_core: meta.articleType === 'dse-exam',
     status: meta.status === "draft" ? "draft" : "published",
     expected_minutes:
       typeof meta.expectedMinutes === "number" && meta.expectedMinutes > 0
@@ -235,6 +235,9 @@ function rowToIndexEntry(row) {
     createdAt: row.created_at,
     status: row.status,
     hasQuizzes: quizHasQuestions(row.quiz_json),
+    articleType: row.article_type || "other",
+    isFree: row.is_free || false,
+    isDseCore: row.is_dse_core || false,
   }
   if (row.is_challenge) entry.type = "challenge"
   if (row.level != null) entry.level = row.level
@@ -269,6 +272,35 @@ async function upsertQuestions(articleId, quiz) {
   if (rows.length > 0) {
     const { error } = await supabase.from("questions").insert(rows)
     if (error) throw new Error("Failed to save questions: " + error.message)
+  }
+}
+
+async function insertQuestionsAsDrafts(articleId, quiz) {
+  if (!quiz || !Array.isArray(quiz.parts)) return
+  const rows = []
+  for (const part of quiz.parts) {
+    for (const q of part.questions ?? []) {
+      const optMap = {}
+      for (const o of q.options ?? []) optMap[o.key] = o.text
+      rows.push({
+        article_id: articleId,
+        type: q.type || "mc-single",
+        format: q.format || "mc",
+        part: part.part,
+        points: q.points ?? part.pointsPerQuestion ?? 1,
+        stem: q.stem,
+        options: optMap,
+        correct_answer: q.correctAnswer || q.correct_answer || "",
+        explanation: q.explanation || null,
+        select_count: q.selectCount ?? q.select_count ?? 1,
+        sequence_tokens: q.sequenceTokens ?? q.sequence_tokens ?? null,
+        status: "draft",
+      })
+    }
+  }
+  if (rows.length > 0) {
+    const { error } = await supabase.from("questions").insert(rows)
+    if (error) throw new Error("Failed to save draft questions: " + error.message)
   }
 }
 
@@ -329,7 +361,7 @@ app.get("/api/exercises", async (_req, res) => {
     const { data, error } = await supabase
       .from("articles")
       .select(
-        "id, title, source, level, is_challenge, status, created_at, expected_minutes, exercise_template, quiz_json"
+        "id, title, source, level, is_challenge, is_free, is_dse_core, article_type, status, created_at, expected_minutes, exercise_template, quiz_json"
       )
       .order("created_at", { ascending: true })
     if (error) throw new Error(error.message)
@@ -578,8 +610,11 @@ app.post("/api/exercises/:id/generate-quiz", (req, res) => {
         (s, p) => s + (p.questions?.length || 0) * (p.pointsPerQuestion || 1),
         0
       )
-      generateRuns[runId].quizJson = { articleId: id, totalPoints, parts }
+      const generatedQuiz = { articleId: id, totalPoints, parts }
+      generateRuns[runId].quizJson = generatedQuiz
       generateRuns[runId].done++
+      generateRuns[runId].step = "儲存草稿題目…"
+      await insertQuestionsAsDrafts(id, generatedQuiz)
       generateRuns[runId].step = ""
       generateRuns[runId].status = "done"
     } catch (e) {
@@ -669,6 +704,67 @@ function writeQuizPrompts(prompts) {
   }
   cfg.quizPrompts = prompts
   fs.writeFileSync(ASSESSMENT_CONFIG_FILE, JSON.stringify(cfg, null, 2))
+}
+
+// Async Supabase-backed quiz prompts (with local file fallback)
+// Requires quiz_prompts table: id text PK, name text, description text,
+//   prompt_template text, default_model text, created_at timestamptz, updated_at timestamptz
+async function readQuizPromptsAsync() {
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("quiz_prompts")
+        .select("*")
+        .order("created_at", { ascending: true })
+      if (!error && data && data.length > 0) {
+        return data.map((r) => ({
+          id: r.id,
+          name: r.name,
+          description: r.description || "",
+          promptTemplate: r.prompt_template,
+          defaultModel: r.default_model || null,
+          createdAt: r.created_at,
+          updatedAt: r.updated_at,
+        }))
+      }
+    } catch (_) {
+      // fall through to local file
+    }
+  }
+  return readQuizPrompts()
+}
+
+async function writeQuizPromptsAsync(prompts) {
+  // Always write to local file as backup
+  writeQuizPrompts(prompts)
+  if (supabase) {
+    try {
+      // Upsert all prompts to Supabase
+      const rows = prompts.map((p) => ({
+        id: p.id,
+        name: p.name,
+        description: p.description || "",
+        prompt_template: p.promptTemplate,
+        default_model: p.defaultModel || null,
+        created_at: p.createdAt || nowIso(),
+        updated_at: p.updatedAt || nowIso(),
+      }))
+      await supabase.from("quiz_prompts").upsert(rows, { onConflict: "id" })
+    } catch (e) {
+      console.warn("  ⚠ Failed to sync quiz prompts to Supabase:", e.message)
+    }
+  }
+}
+
+async function deleteQuizPromptAsync(id) {
+  writeQuizPrompts(readQuizPrompts().filter((p) => p.id !== id))
+  if (supabase) {
+    try {
+      await supabase.from("quiz_prompts").delete().eq("id", id)
+    } catch (e) {
+      console.warn("  ⚠ Failed to delete quiz prompt from Supabase:", e.message)
+    }
+  }
 }
 
 function slugifyPromptId(name) {
@@ -1576,6 +1672,25 @@ app.delete("/api/questions/:id", async (req, res) => {
     const { data, error } = await supabase
       .from("questions")
       .delete()
+      .eq("id", id)
+      .select("id")
+    if (error) throw new Error(error.message)
+    if (!data || data.length === 0) return res.status(404).json({ error: "Question not found" })
+    res.json({ success: true })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
+// ── Publish a single question ─────────────────────────────────────────────────
+
+app.patch("/api/questions/:id/publish", async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return
+    const { id } = req.params
+    const { data, error } = await supabase
+      .from("questions")
+      .update({ status: "published" })
       .eq("id", id)
       .select("id")
     if (error) throw new Error(error.message)
