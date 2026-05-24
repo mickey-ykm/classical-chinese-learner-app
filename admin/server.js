@@ -611,13 +611,13 @@ app.delete("/api/exercises/:id", async (req, res) => {
 
 // Generate quiz for an existing article via LLM.
 // Async; returns runId. Client polls /status/:runId then PUTs the result.
-app.post("/api/exercises/:id/generate-quiz", (req, res) => {
+app.post("/api/exercises/:id/generate-quiz", async (req, res) => {
   const { id } = req.params
   const { promptId, model, apiKey } = req.body || {}
   if (!apiKey) return res.status(400).json({ error: "apiKey is required" })
   if (!promptId) return res.status(400).json({ error: "promptId is required" })
 
-  const prompts = readQuizPrompts()
+  const prompts = await readQuizPromptsAsync()
   const prompt = prompts.find((p) => p.id === promptId)
   if (!prompt) return res.status(404).json({ error: "Prompt not found" })
 
@@ -854,21 +854,21 @@ function validatePromptPayload(p) {
   return errs
 }
 
-app.get("/api/quiz-prompts", (_req, res) => {
+app.get("/api/quiz-prompts", async (_req, res) => {
   try {
-    res.json(readQuizPrompts())
+    res.json(await readQuizPromptsAsync())
   } catch (e) {
     res.status(500).json({ error: e.message })
   }
 })
 
-app.post("/api/quiz-prompts", (req, res) => {
+app.post("/api/quiz-prompts", async (req, res) => {
   try {
     const { name, description, promptTemplate, defaultModel } = req.body || {}
     const errs = validatePromptPayload({ name, promptTemplate })
     if (errs.length) return res.status(400).json({ errors: errs })
 
-    const prompts = readQuizPrompts()
+    const prompts = await readQuizPromptsAsync()
     let id = slugifyPromptId(name)
     let n = 2
     while (prompts.find((p) => p.id === id)) id = slugifyPromptId(name) + "-" + n++
@@ -884,21 +884,21 @@ app.post("/api/quiz-prompts", (req, res) => {
       updatedAt: ts,
     }
     prompts.push(next)
-    writeQuizPrompts(prompts)
+    await writeQuizPromptsAsync(prompts)
     res.json({ success: true, prompt: next })
   } catch (e) {
     res.status(500).json({ error: e.message })
   }
 })
 
-app.put("/api/quiz-prompts/:id", (req, res) => {
+app.put("/api/quiz-prompts/:id", async (req, res) => {
   try {
     const { id } = req.params
     const { name, description, promptTemplate, defaultModel } = req.body || {}
     const errs = validatePromptPayload({ name, promptTemplate })
     if (errs.length) return res.status(400).json({ errors: errs })
 
-    const prompts = readQuizPrompts()
+    const prompts = await readQuizPromptsAsync()
     const idx = prompts.findIndex((p) => p.id === id)
     if (idx === -1) return res.status(404).json({ error: "Prompt not found" })
 
@@ -910,22 +910,22 @@ app.put("/api/quiz-prompts/:id", (req, res) => {
       defaultModel: defaultModel || prompts[idx].defaultModel || null,
       updatedAt: nowIso(),
     }
-    writeQuizPrompts(prompts)
+    await writeQuizPromptsAsync(prompts)
     res.json({ success: true, prompt: prompts[idx] })
   } catch (e) {
     res.status(500).json({ error: e.message })
   }
 })
 
-app.delete("/api/quiz-prompts/:id", (req, res) => {
+app.delete("/api/quiz-prompts/:id", async (req, res) => {
   try {
     const { id } = req.params
-    const prompts = readQuizPrompts()
+    const prompts = await readQuizPromptsAsync()
     if (prompts.length <= 1)
       return res.status(400).json({ error: "Cannot delete the last quiz prompt" })
     const next = prompts.filter((p) => p.id !== id)
     if (next.length === prompts.length) return res.status(404).json({ error: "Prompt not found" })
-    writeQuizPrompts(next)
+    await deleteQuizPromptAsync(id)
     res.json({ success: true })
   } catch (e) {
     res.status(500).json({ error: e.message })
