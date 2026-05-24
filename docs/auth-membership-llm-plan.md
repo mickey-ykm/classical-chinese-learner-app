@@ -736,15 +736,26 @@ admin/
 
 ### Target structure — `index.html`
 
-`index.html` stays as a single file for now — splitting it requires introducing a frontend bundler (Vite/esbuild) which adds build complexity for no immediate debugging benefit. Instead, the inline `<script>` block should be extracted to `admin/public/app.js` and loaded via `<script src="app.js">`. This allows the JS to be read independently without scrolling through HTML, and makes it easier to grep across functions.
+No bundler needed — browsers support native ES modules natively via `<script type="module">`.
 
 ```
 admin/public/
-  index.html       # HTML structure only; <script src="app.js"></script> at bottom
-  app.js           # all inline JS extracted here (~2200 lines)
+  index.html             # HTML structure only; <script type="module" src="js/main.js"></script>
+  js/
+    main.js              # imports all modules, initialises page on DOMContentLoaded
+    api.js               # all fetch() wrappers (fetchExercises, saveArticle, saveQuestion, etc.)
+    exercises.js         # article library list, renderExerciseRow, deleteExercise
+    article-detail.js    # openArticleDetail, saveArticleDetail, generateQuiz, setAdReadOnly, cancelArticleDetail
+    questions.js         # loadQuestions, saveQuestion, publishQuestion, bulkDeleteDraftQuestions, renderQuestionCard
+    prompts.js           # quiz prompt management UI (loadPrompts, savePrompt, deletePrompt)
+    assessment.js        # LLM assessment UI
+    generate-article.js  # generate new article UI
+    ui.js                # showToast, escHtml, fmtDate, shared DOM utilities
 ```
 
-Further splitting `app.js` into modules (e.g. `questions.js`, `prompts.js`) can follow once the extraction is done, using native ES module `<script type="module">` — no bundler needed.
+`article-detail.js` + `questions.js` together are the highest priority — bugs like "field missing from PUT body" and "questions not loading" were in these two areas and were missed because they were buried in a 2600-line file. Co-locating `saveArticleDetail` with the fields it must send makes omissions immediately visible.
+
+`api.js` centralising all `fetch()` calls is particularly valuable: currently API calls are scattered inline across functions, making it easy to miss a missing field or wrong HTTP method. A single `api.js` means every server contract is visible in one place.
 
 ### Approach
 
