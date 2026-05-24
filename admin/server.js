@@ -177,7 +177,7 @@ function countQuestions(quiz) {
 function articleToRow(article, meta) {
   const level =
     typeof meta.level === "number" && meta.level >= 1 && meta.level <= 7 ? meta.level : null
-  return {
+  const row = {
     id: article.id,
     title: article.title,
     title_footnote_id: article.titleFootnoteId || null,
@@ -196,9 +196,10 @@ function articleToRow(article, meta) {
         ? meta.expectedMinutes
         : null,
     exercise_template: Array.isArray(meta.exerciseTemplate) ? meta.exerciseTemplate : null,
-    quiz_json: meta.quizJson || null,
     updated_at: nowIso(),
   }
+  if (meta.quizJson !== undefined) row.quiz_json = meta.quizJson || null
+  return row
 }
 
 // Converts a Supabase article row back to the API response shape the HTML expects.
@@ -576,7 +577,7 @@ app.put("/api/exercises/:id", async (req, res) => {
       status: nextStatus,
       expectedMinutes,
       exerciseTemplate,
-      quizJson: finalQuiz,
+      ...(hasQuizPayload ? { quizJson: finalQuiz } : {}),
     })
 
     const { error: updateErr } = await supabase
