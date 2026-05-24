@@ -1,6 +1,6 @@
 # Plan: Auth + Membership + Admin GO LIVE + Content Platform + LLM
 
-_Last revised 2026-05-25 — Phase 7 complete (question types/formats confirmed + implemented; DSE Training + Weight Training placeholder; admin portal question CRUD + draft/publish workflow; article_type replaces is_dse_core). All SQL migrations run. Phase 8 complete. Phases 9, 10, 11 complete. Pre-Phase 12 refactor plan added. Next: refactor server.js → then Phase 12 (RevenueCat)._
+_Last revised 2026-05-25 — Phase 7 complete (question types/formats confirmed + implemented; DSE Training + Weight Training placeholder; admin portal question CRUD + draft/publish workflow; article_type replaces is_dse_core). All SQL migrations run. Phase 8 complete. Phases 9, 10, 11 complete. Pre-Phase 12 refactor + testing plan added. Next: refactor server.js → automated tests → Phase 12 (RevenueCat)._
 
 ## Context
 
@@ -774,6 +774,92 @@ admin/public/
 - Supabase schema
 - Mobile app code
 - Admin UI behaviour
+
+---
+
+## Pre-Phase 12 — Automated Testing
+
+> **Do this after the refactor, before Phase 12.** The refactor creates the module structure that makes testing practical. Phase 12 and every phase after it should start with a safety net.
+
+### Motivation
+
+Every bug on 2026-05-25 was a **data contract bug** — a field silently dropped from a PUT body, a column silently overwritten, a Supabase error silently swallowed. Unit tests would not have caught these; the bug was never in the logic of any single function, it was in how functions composed through the database. Integration tests that hit real routes against a real DB would have caught all of them.
+
+### What to test
+
+#### 1. Admin API integration tests (highest priority)
+
+Use Jest + supertest against the Express app pointed at a Supabase test project. Cover the invariants listed in `CLAUDE.md`:
+
+```
+admin/tests/
+  exercises.test.js    # article CRUD + articleType/is_dse_core/quiz_json invariants
+  questions.test.js    # question CRUD + rebuildQuizJson + publish flow
+  prompts.test.js      # quiz prompt CRUD + Supabase persistence
+```
+
+Key test cases — these map directly to bugs that shipped:
+
+```js
+// exercises.test.js
+test("PUT /api/exercises/:id does not wipe quiz_json when no quiz payload sent")
+test("PUT /api/exercises/:id saves article_type correctly")
+test("PUT /api/exercises/:id sets is_dse_core=true when articleType=dse-exam")
+test("PUT /api/exercises/:id sets is_dse_core=false when articleType=other")
+
+// questions.test.js
+test("PATCH /api/questions/:id/publish rebuilds quiz_json on articles row")
+test("PATCH /api/questions/:id/publish bumps updated_at on articles row")
+test("DELETE /api/questions/:id rebuilds quiz_json after deletion")
+test("POST /api/questions/bulk-delete rebuilds quiz_json after deletion")
+test("PUT /api/exercises/:id does not delete questions when no quiz payload sent")
+
+// prompts.test.js
+test("POST /api/quiz-prompts saves to Supabase with text slug id")
+test("GET /api/quiz-prompts reads from Supabase not local file")
+test("DELETE /api/quiz-prompts/:id removes from Supabase")
+```
+
+#### 2. Mobile data layer tests (medium priority)
+
+Extend the existing Jest setup (`npm test`):
+
+```
+lib/tests/
+  contentStore.test.ts   # backgroundFetch, draft eviction, quiz_json → Quiz mapping
+  quiz.test.ts           # scoring for mc-single, mc-multi, fill-blank, sentence-order (extend existing)
+```
+
+Key test cases:
+```ts
+test("mapSupabaseRow correctly maps quiz_json parts to Quiz type")
+test("backgroundFetch evicts draft articles from cache")
+test("backgroundFetch bumps updated_at triggers re-sync of quiz content")
+```
+
+#### 3. What NOT to test
+
+- LLM generation output — non-deterministic
+- UI rendering details — too brittle, high maintenance cost
+- Supabase RLS policies — test in Supabase dashboard, not in app
+- End-to-end UI flows (Playwright/Detox) — defer until after Phase 12; high setup cost
+
+### Setup
+
+**Admin tests** require a Supabase test project (separate from production). Store its credentials in `admin/.env.test`. The test suite seeds required rows before each test and cleans up after.
+
+**Mobile tests** already run via `npm test` with Jest. No additional setup needed for data layer tests.
+
+### Execution order
+
+1. Complete Pre-Phase 12 refactor (`server.js` + `index.html` split)
+2. Write admin API integration tests covering the CLAUDE.md invariants
+3. Extend mobile data layer tests for `contentStore` + quiz scoring
+4. All tests passing → start Phase 12
+
+### Adding tests for future phases
+
+Every new route or data mutation added in Phase 12+ should include a test in the same PR. The rule: **if it writes to Supabase, it needs a test that reads back and asserts the correct state.**
 
 ---
 
