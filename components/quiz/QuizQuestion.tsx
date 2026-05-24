@@ -78,7 +78,7 @@ export default function QuizQuestion({
         Q{question.id}. {question.stem}
       </Text>
       <View className="gap-2">
-        {question.options.map((opt) => (
+        {(question.options ?? []).map((opt) => (
           <OptionButton
             key={opt.key}
             optionKey={opt.key}
