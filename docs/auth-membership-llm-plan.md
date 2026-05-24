@@ -1,6 +1,6 @@
 # Plan: Auth + Membership + Admin GO LIVE + Content Platform + LLM
 
-_Last revised 2026-05-09 — Phase 7 and all modules dependent on question types/formats delayed pending team sign-off on the final type list and format set. Phase 8 complete (timer + time tracking in quiz_attempts; exercise_sessions deferred to Phase 9). Draft eviction tombstone added to Phase 6 content delivery. Phases 9, 10, 11 complete. Admin is_free toggle + persistent Supabase-backed sessions added to Phase 5._
+_Last revised 2026-05-25 — Phase 7 complete (question types/formats confirmed + implemented; DSE Training + Weight Training placeholder; admin portal question CRUD + draft/publish workflow; article_type replaces is_dse_core). All SQL migrations run. Phase 8 complete. Phases 9, 10, 11 complete. Pre-Phase 12 refactor plan added. Next: refactor server.js → then Phase 12 (RevenueCat)._
 
 ## Context
 
@@ -504,43 +504,73 @@ Goal: app fetches from Supabase; bundled JSON becomes offline fallback; "Update"
 
 ---
 
-## Phase 7 — Question Pool, Types, Formats ⏸ DELAYED
+## Phase 7 — Question Pool, Types, Formats, DSE Training ✅ COMPLETE (2026-05-24)
 
-> **Blocked — team has not yet confirmed the final question type list or format set.**
-> No implementation work should begin until the team signs off on both.
-> All sub-items below remain as the working draft to be confirmed or revised.
+Goal: per-article question pools with diverse types and formats; DSE Training exercise mode; admin portal question CRUD UI.
 
-Goal: per-article question pools with diverse types and formats; exercises sample N from the pool.
+### Question types registry (confirmed, locked)
+Defined in `shared/schema.ts` as `QUESTION_TYPES` const — single source of truth for admin and mobile.
 
-### Question types registry (6–8, final list TBD by team)
-- Defined in `shared/schema.ts` as a const array — single source of truth
-- Working draft (replace once team confirms): `word-meaning`, `sentence-meaning`, `comprehension`, `theme`, `character-analysis`, `rhetorical-device`, `citation`, `application`
-- Each type can host multiple formats
+| Code | Chinese | Format | Selection | Scoring |
+|---|---|---|---|---|
+| `mc-single` | 選擇題（單選）| `mc` | 1 of 4 | Correct = full points |
+| `mc-multi` | 選擇題（多選）| `mc` | 2–5 of 4–8 options | All-or-nothing |
+| `true-false` | 是非題 | `mc` | 1 of 2 | Correct = full points |
+| `fill-blank` | 填充題 | `fill-blank` | text input | Exact match (normalised) |
+| `sentence-order` | 重組句子/語序 | `sentence-order` | drag-to-arrange | Exact sequence only |
 
-### Question formats (MVP set)
-- `mc` — multiple choice (existing)
-- `fill-blank` — fill in the blank (regex / exact match grading; rubric stores accepted answers)
-- `short` — short answer (auto-grade by keyword match against rubric `key_points`; otherwise stored ungraded)
-- `long` — long answer (ungraded in MVP; LLM-graded deferred)
+Short-answer and long-answer types are **excluded from MVP** (grading and marketing complexity).
 
-### Admin portal
-- Question editor in Article Library Detail: add / edit / delete individual questions; tag with `type` + `format`
-- Bulk import via existing LLM quiz prompts (now generates many questions across types — prompt updated to produce the new typology)
-- `exercise_template` editor: list of `{ type, count }` defining the standard exercise mix for that article
+### `shared/schema.ts` ✅
+- `QUESTION_TYPES`: `['mc-single', 'mc-multi', 'true-false', 'fill-blank', 'sentence-order']`
+- `QUESTION_FORMATS`: `['mc', 'fill-blank', 'sentence-order']`
+- `QuestionSchema`: `select_count: z.number().int().positive().default(1)` and `sequence_tokens: z.array(z.string()).optional()`
+- `correct_answer` encoding: mc-single/true-false = single key (`"B"`); mc-multi = comma-separated (`"A,C,E"`); fill-blank = pipe-separated accepted answers (`"學則不固|學則不固。"`); sentence-order = `>`-delimited correct sequence (`"明>月>松>間>照>清>泉>石>上>流"`)
 
-### Mobile
-- New `QuizQuestion` variants:
-  - `MCQuestion` (existing — extracted)
-  - `FillBlankQuestion`
-  - `ShortAnswerQuestion`
-  - `LongAnswerQuestion`
-- `QuizShell` reads `exercise_sessions.question_ids` (the sample drawn from the pool) instead of a hardcoded list
-- **Sampling logic** (`lib/quiz.ts`):
-  ```
-  for each {type, count} in article.exercise_template:
-    sample `count` random rows from questions WHERE article_id = $1 AND type = $type AND status = 'published'
-  ```
-- Scoring (`lib/quiz.ts`) extended per format: MC unchanged; fill-blank exact/regex match; short answer keyword match; long answer ungraded with manual review flag
+### `lib/quiz.ts` ✅ — Scoring extensions
+- **`mc-single` / `true-false`**: existing logic unchanged
+- **`mc-multi`** (`checkMultiAnswer`): parse comma-separated correct set; compare to user's selected set; all-or-nothing
+- **`fill-blank`** (`checkFillBlankAnswer`): normalise both sides (trim, lowercase); pipe-split accepted answers; any match → full points
+- **`sentence-order`** (`checkSentenceOrderAnswer`): parse `>`-separated correct token array; exact sequence match only
+
+### Mobile — New question components ✅
+- **`components/quiz/MCQuestion.tsx`** — handles `mc-single`, `mc-multi`, `true-false`; `select_count = 1` auto-advances; `select_count > 1` shows checkbox multi-select with "提交" button and "選擇 N 個答案" hint
+- **`components/quiz/FillBlankQuestion.tsx`** — renders stem with `TextInput` for `___`; "提交" button; shows correct answer on reveal
+- **`components/quiz/SentenceOrderQuestion.tsx`** — draggable token chips (source area + answer slots); "提交" button; colour-coded feedback on reveal
+- **`components/quiz/QuizShell.tsx`** — format router: `switch (question.format)` → `MCQuestion` | `FillBlankQuestion` | `SentenceOrderQuestion`
+
+### DSE Training Exercise ✅
+- **`app/dse-training.tsx`** — lobby screen: fetches `is_dse_core = true` articles from Supabase, randomly picks 2–3, shows expandable article accordion; quiz runs via `QuizShell`; session saved as `exercise_sessions.kind = 'dse-training'`
+- **`app/index.tsx`** — "DSE 備試練習" CTA card as prominent entry point; "文言用字訓練" placeholder entry (locked)
+
+### Weight Training — Placeholder ✅
+- **`app/weight-training.tsx`** — "即將推出" placeholder screen; full implementation deferred
+
+### Admin Portal — Question CRUD ✅
+- Quiz JSON editor removed; questions managed via structured UI only
+- Question list in Article Library Detail: columns for type, points, status, edit/delete
+- Add/Edit question modal: type dropdown (auto-derives format), options editor (mc), stem + accepted answers (fill-blank), token input + correct order (sentence-order), explanation textarea
+- Edit-lock: all inputs + "新增問題" + "批量生成" buttons disabled until "Edit" clicked
+- Draft/published workflow: LLM generation inserts questions as `status: 'draft'` via `insertQuestionsAsDrafts()` (does not delete existing published questions); admin reviews drafts then publishes individually via `PATCH /api/questions/:id/publish`
+- Re-generate quiz shows pop-up warning that existing published questions will not be deleted but new drafts will be added
+- `article_type` dropdown (dse-exam / dse-non-exam / other) replaces old `is_dse_core` checkbox; `is_dse_core` is now auto-derived: `is_dse_core = (article_type === 'dse-exam')`
+- `level` field removed from article detail and new article form
+
+### Supabase migrations applied ✅
+```sql
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS article_type text NOT NULL DEFAULT 'other'
+  CHECK (article_type IN ('dse-exam', 'dse-non-exam', 'other'));
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS is_dse_core boolean NOT NULL DEFAULT false;
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS expected_minutes int;
+ALTER TABLE questions ADD COLUMN IF NOT EXISTS select_count int NOT NULL DEFAULT 1;
+ALTER TABLE questions ADD COLUMN IF NOT EXISTS sequence_tokens jsonb;
+ALTER TABLE questions DROP CONSTRAINT IF EXISTS questions_format_check;
+ALTER TABLE questions ADD CONSTRAINT questions_format_check
+  CHECK (format IN ('mc','fill-blank','sentence-order'));
+ALTER TABLE exercise_sessions DROP CONSTRAINT IF EXISTS exercise_sessions_kind_check;
+ALTER TABLE exercise_sessions ADD CONSTRAINT exercise_sessions_kind_check
+  CHECK (kind IN ('regular','revision','weight-training','dse-training'));
+```
 
 ---
 
@@ -669,6 +699,70 @@ Locked model (per Decision 2): **Limited articles + ads on free; Pro = all artic
 ### Components
 - `components/UpgradeModal.tsx` — bottom-sheet modal with Pro pitch, "Start Free Trial" button, "Restore Purchases" link
 - `components/ProGate.tsx` — wraps children; renders a locked overlay if user not Pro
+
+---
+
+## Pre-Phase 12 — Refactor: Break down `server.js` and `index.html`
+
+> **Do this before starting Phase 12.** Phase 12 adds a webhook route to `server.js` — better to have the clean structure in place first so the new route has a clear home.
+
+### Motivation
+
+`admin/server.js` has grown to ~1800 lines with 30 routes across 8 logical domains. `admin/public/index.html` is ~2600 lines of inline JS + HTML. Several bugs in 2026-05-25 were caused directly by functions in `server.js` interacting in non-obvious ways that were invisible because the file was too large to read in full during planning.
+
+### Target structure — `server.js`
+
+```
+admin/
+  server.js                  # ~80 lines: express setup, session middleware, auth guard, app.listen
+  lib/
+    supabase.js              # createClient, requireSupabase helper
+    schemas.js               # all Zod schemas (ArticleSchema, QuizSchema, QuestionUpsertSchema, etc.)
+    article-helpers.js       # articleToRow, rowToExercise, rowToIndexEntry, rebuildQuizJson, upsertQuestions, insertQuestionsAsDrafts, createVersionSnapshot
+    quiz-prompts.js          # readQuizPrompts, writeQuizPrompts, readQuizPromptsAsync, writeQuizPromptsAsync, deleteQuizPromptAsync
+    openrouter.js            # callOpenRouter, estimateCost, normalizeOptions
+    generate-runs.js         # generateRuns map + shared run helpers
+  routes/
+    auth.js                  # POST /api/admin/login, POST /api/admin/logout, GET /api/admin/me
+    exercises.js             # GET/POST/PUT/DELETE /api/exercises + /api/exercises/:id
+    questions.js             # GET/POST/PUT/DELETE/PATCH /api/questions + bulk-delete
+    prompts.js               # GET/POST/PUT/DELETE /api/quiz-prompts
+    generate-quiz.js         # POST /api/exercises/:id/generate-quiz + status
+    generate-article.js      # POST /api/generate-article + status
+    assessment.js            # POST /api/assessment/run + config + status + download + history
+```
+
+`article-helpers.js` is the highest priority — it contains `articleToRow`, `rebuildQuizJson`, and `upsertQuestions` whose interactions caused today's data-loss bugs. Co-locating them in one small file makes the invariants visible and auditable.
+
+### Target structure — `index.html`
+
+`index.html` stays as a single file for now — splitting it requires introducing a frontend bundler (Vite/esbuild) which adds build complexity for no immediate debugging benefit. Instead, the inline `<script>` block should be extracted to `admin/public/app.js` and loaded via `<script src="app.js">`. This allows the JS to be read independently without scrolling through HTML, and makes it easier to grep across functions.
+
+```
+admin/public/
+  index.html       # HTML structure only; <script src="app.js"></script> at bottom
+  app.js           # all inline JS extracted here (~2200 lines)
+```
+
+Further splitting `app.js` into modules (e.g. `questions.js`, `prompts.js`) can follow once the extraction is done, using native ES module `<script type="module">` — no bundler needed.
+
+### Approach
+
+- One module at a time, verify server starts and key routes work after each move
+- No logic changes during the refactor — pure file reorganisation
+- Use `module.exports` / `require` for Node modules (server side); no TypeScript conversion
+- Test checklist after each route file is moved:
+  - `GET /api/exercises` returns article list
+  - `PUT /api/exercises/:id` saves without wiping `quiz_json`
+  - `PATCH /api/questions/:id/publish` triggers `rebuildQuizJson`
+  - `POST /api/quiz-prompts` saves to Supabase
+
+### What this does NOT change
+
+- Railway deployment (`railway.json` runs `node server.js` — unchanged)
+- Supabase schema
+- Mobile app code
+- Admin UI behaviour
 
 ---
 
