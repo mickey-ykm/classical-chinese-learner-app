@@ -44,8 +44,9 @@ export interface Question {
 
 export interface QuizAnswer {
   questionId: number
-  selectedOption: string  // OptionKey | comma-sep keys | token index array JSON
+  selectedOption: string | null  // OptionKey | comma-sep keys | null for fill-blank/sentence-order
   isCorrect: boolean
+  pointsEarned?: number
 }
 
 export interface QuizPart {

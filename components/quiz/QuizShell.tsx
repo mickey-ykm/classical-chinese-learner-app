@@ -146,18 +146,52 @@ export default function QuizShell({ questions, partTitles, articleId, expectedMi
         )}
       </View>
 
-      <QuizQuestion
-        question={currentQuestion}
-        partTitle={partTitles[currentQuestion.part] ?? ""}
-        isFirstOfPart={isFirstOfPart}
-        selectedOption={selectedOption}
-        revealAnswer={revealAnswer}
-        waitingForNext={waitingForNext}
-        isCorrect={lastAnswerCorrect}
-        isLastQuestion={isLastQuestion}
-        onSelect={handleSelect}
-        onNext={handleNext}
-      />
+      {currentQuestion.format === "fill-blank" ? (
+        <FillBlankQuestion
+          question={currentQuestion}
+          partTitle={partTitles[currentQuestion.part] ?? ""}
+          isFirstOfPart={isFirstOfPart}
+          isLastQuestion={isLastQuestion}
+          onAnswer={(result) => {
+            setAnswers((prev) => ({ ...prev, [currentQuestion.id]: result }))
+            setLastAnswerCorrect(result.isCorrect)
+            setRevealAnswer(true)
+            setWaitingForNext(true)
+          }}
+          onNext={handleNext}
+          revealAnswer={revealAnswer}
+          isCorrect={lastAnswerCorrect}
+        />
+      ) : currentQuestion.format === "sentence-order" ? (
+        <SentenceOrderQuestion
+          question={currentQuestion}
+          partTitle={partTitles[currentQuestion.part] ?? ""}
+          isFirstOfPart={isFirstOfPart}
+          isLastQuestion={isLastQuestion}
+          onAnswer={(result) => {
+            setAnswers((prev) => ({ ...prev, [currentQuestion.id]: result }))
+            setLastAnswerCorrect(result.isCorrect)
+            setRevealAnswer(true)
+            setWaitingForNext(true)
+          }}
+          onNext={handleNext}
+          revealAnswer={revealAnswer}
+          isCorrect={lastAnswerCorrect}
+        />
+      ) : (
+        <QuizQuestion
+          question={currentQuestion}
+          partTitle={partTitles[currentQuestion.part] ?? ""}
+          isFirstOfPart={isFirstOfPart}
+          selectedOption={selectedOption}
+          revealAnswer={revealAnswer}
+          waitingForNext={waitingForNext}
+          isCorrect={lastAnswerCorrect}
+          isLastQuestion={isLastQuestion}
+          onSelect={handleSelect}
+          onNext={handleNext}
+        />
+      )}
 
       <ArticlePopup
         visible={showArticle}

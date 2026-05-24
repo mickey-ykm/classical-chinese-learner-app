@@ -1,115 +1,112 @@
 import React, { useState } from "react"
 import { View, Text, TextInput, Pressable } from "react-native"
+import type { Question, QuizAnswer } from "@/lib/types"
+import PartHeader from "./PartHeader"
 
-interface FillBlankQuestionProps {
-  stem: string
-  correctAnswer: string // pipe-separated accepted answers e.g. "學則不固|學則不固。"
-  points: number
-  onAnswer: (correct: boolean, userAnswer: string) => void
+interface Props {
+  question: Question
+  partTitle: string
+  isFirstOfPart: boolean
+  isLastQuestion: boolean
+  revealAnswer: boolean
+  isCorrect: boolean
+  onAnswer: (result: QuizAnswer) => void
+  onNext: () => void
 }
 
 function normalise(s: string): string {
   return s.trim().toLowerCase().replace(/[。，、；：！？]/g, "")
 }
 
-export function FillBlankQuestion({
-  stem,
-  correctAnswer,
-  points,
+export default function FillBlankQuestion({
+  question,
+  partTitle,
+  isFirstOfPart,
+  isLastQuestion,
+  revealAnswer,
+  isCorrect,
   onAnswer,
-}: FillBlankQuestionProps) {
+  onNext,
+}: Props) {
   const [input, setInput] = useState("")
-  const [revealed, setRevealed] = useState(false)
-  const [isCorrect, setIsCorrect] = useState(false)
 
-  const acceptedAnswers = correctAnswer.split("|").map(normalise)
+  const acceptedAnswers = question.correctAnswer.split("|").map(normalise)
 
   function handleSubmit() {
-    if (revealed) return
+    if (revealAnswer) return
     const correct = acceptedAnswers.includes(normalise(input))
-    setIsCorrect(correct)
-    setRevealed(true)
-    onAnswer(correct, input)
+    onAnswer({
+      questionId: question.id,
+      selectedOption: null,
+      isCorrect: correct,
+      pointsEarned: correct ? question.points : 0,
+    })
   }
 
-  // Split stem by ___ to render inline inputs
-  const parts = stem.split(/_{2,}/)
-
   return (
-    <View className="px-4 py-2">
-      {/* Stem with blank indicator */}
-      <Text
-        className="text-slate-800 text-base leading-7 mb-4"
-        style={{ fontFamily: "Georgia" }}
-      >
-        {stem}
+    <View className="gap-4">
+      {isFirstOfPart && partTitle ? <PartHeader title={partTitle} /> : null}
+
+      <Text className="text-base text-slate-800 leading-7" style={{ fontFamily: "Georgia" }}>
+        {question.stem}
       </Text>
 
-      {/* Answer input */}
-      <View className="mb-4">
-        <Text className="text-slate-500 text-sm mb-1">請填寫答案：</Text>
-        <TextInput
-          className="border border-slate-300 rounded-lg px-3 py-2 text-base text-slate-800 bg-white"
-          style={{ fontFamily: "Georgia" }}
-          value={input}
-          onChangeText={setInput}
-          editable={!revealed}
-          multiline
-          placeholder="在此輸入答案……"
-          placeholderTextColor="#94a3b8"
-        />
-      </View>
+      <TextInput
+        value={input}
+        onChangeText={setInput}
+        editable={!revealAnswer}
+        placeholder="輸入答案…"
+        placeholderTextColor="#94a3b8"
+        className={`border rounded-xl px-4 py-3 text-base text-slate-800 bg-white ${
+          revealAnswer
+            ? isCorrect
+              ? "border-green-400 bg-green-50"
+              : "border-red-400 bg-red-50"
+            : "border-slate-300"
+        }`}
+        style={{ fontFamily: "Georgia" }}
+      />
 
-      {/* Submit button */}
-      {!revealed && (
-        <Pressable
-          className={`rounded-lg py-3 items-center ${
-            input.trim() ? "bg-amber-500" : "bg-slate-200"
-          }`}
-          onPress={handleSubmit}
-          disabled={!input.trim()}
-        >
-          <Text
-            className={`font-semibold text-base ${
-              input.trim() ? "text-white" : "text-slate-400"
-            }`}
-          >
-            提交
-          </Text>
-        </Pressable>
-      )}
-
-      {/* Reveal feedback */}
-      {revealed && (
-        <View
-          className={`rounded-lg p-3 mt-2 ${
-            isCorrect ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"
-          }`}
-        >
-          <Text
-            className={`font-semibold mb-1 ${isCorrect ? "text-green-700" : "text-red-700"}`}
-          >
-            {isCorrect ? `✓ 正確！+${points} 分` : "✗ 答案不正確"}
+      {revealAnswer && (
+        <View className={`rounded-xl p-4 ${isCorrect ? "bg-green-50" : "bg-red-50"}`}>
+          <Text className={`font-semibold text-base mb-1 ${isCorrect ? "text-green-700" : "text-red-700"}`}>
+            {isCorrect ? "✓ 答對了！" : "✗ 答錯了"}
           </Text>
           {!isCorrect && (
-            <>
-              <Text className="text-slate-500 text-sm">你的答案：</Text>
-              <Text
-                className="text-slate-700 text-sm mb-2"
-                style={{ fontFamily: "Georgia" }}
-              >
-                {input}
+            <Text className="text-sm text-slate-600">
+              正確答案：
+              <Text className="text-green-700 font-medium" style={{ fontFamily: "Georgia" }}>
+                {question.correctAnswer.split("|")[0]}
               </Text>
-            </>
+            </Text>
           )}
-          <Text className="text-slate-500 text-sm">正確答案：</Text>
-          <Text
-            className="text-slate-800 text-sm"
-            style={{ fontFamily: "Georgia" }}
-          >
-            {correctAnswer.split("|")[0]}
-          </Text>
+          {question.explanation ? (
+            <Text className="text-sm text-slate-500 mt-2">{question.explanation}</Text>
+          ) : null}
         </View>
+      )}
+
+      {!revealAnswer ? (
+        <Pressable
+          onPress={handleSubmit}
+          disabled={input.trim().length === 0}
+          className={`py-3 rounded-xl items-center ${
+            input.trim().length > 0 ? "bg-amber-500 active:bg-amber-600" : "bg-slate-200"
+          }`}
+        >
+          <Text className={`text-base font-semibold ${input.trim().length > 0 ? "text-white" : "text-slate-400"}`}>
+            提交答案
+          </Text>
+        </Pressable>
+      ) : (
+        <Pressable
+          onPress={onNext}
+          className="py-3 rounded-xl items-center bg-amber-500 active:bg-amber-600"
+        >
+          <Text className="text-base font-semibold text-white">
+            {isLastQuestion ? "查看成績" : "下一題"}
+          </Text>
+        </Pressable>
       )}
     </View>
   )
