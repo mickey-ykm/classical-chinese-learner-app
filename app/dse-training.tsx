@@ -67,7 +67,7 @@ export default function DSETrainingScreen() {
         stem: r.stem,
         format: r.format ?? "mc",
         type: r.type ?? "mc-single",
-        options: r.options ?? [],
+        options: normalizeOptions(r.options),
         correctAnswer: r.correct_answer ?? "",
         explanation: r.explanation,
         selectCount: r.select_count ?? 1,
