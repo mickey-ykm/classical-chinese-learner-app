@@ -313,6 +313,74 @@ async function createVersionSnapshot(articleId, snapshot) {
   })
 }
 
+// Rebuild quiz_json on the articles row from published questions so the mobile app picks it up.
+async function rebuildQuizJson(articleId) {
+  const [questionsResult, articleResult] = await Promise.all([
+    supabase
+      .from("questions")
+      .select("*")
+      .eq("article_id", articleId)
+      .eq("status", "published")
+      .order("part", { ascending: true, nullsFirst: true })
+      .order("id", { ascending: true }),
+    supabase.from("articles").select("quiz_json").eq("id", articleId).single(),
+  ])
+  if (questionsResult.error) throw new Error("rebuildQuizJson fetch: " + questionsResult.error.message)
+
+  const data = questionsResult.data
+  if (!data || data.length === 0) {
+    await supabase.from("articles").update({ quiz_json: null, updated_at: nowIso() }).eq("id", articleId)
+    return
+  }
+
+  // Preserve existing part titles from quiz_json if available
+  const existingParts = articleResult.data?.quiz_json?.parts ?? []
+  const existingTitleByPart = Object.fromEntries(existingParts.map((p) => [p.part, p.title]))
+
+  // Group into parts
+  const partsMap = new Map()
+  for (const q of data) {
+    const part = q.part ?? 1
+    if (!partsMap.has(part)) partsMap.set(part, [])
+    partsMap.get(part).push(q)
+  }
+
+  const parts = Array.from(partsMap.entries())
+    .sort(([a], [b]) => a - b)
+    .map(([partNum, qs]) => ({
+      part: partNum,
+      title: existingTitleByPart[partNum] || `第${partNum}部分`,
+      pointsPerQuestion: qs[0]?.points ?? 1,
+      questions: qs.map((q) => ({
+        id: q.id,
+        part: q.part ?? partNum,
+        points: q.points ?? 1,
+        stem: q.stem,
+        format: q.format || "mc",
+        type: q.type || "mc-single",
+        options: q.options
+          ? Object.entries(q.options).map(([key, text]) => ({ key, text }))
+          : [],
+        correctAnswer: q.correct_answer,
+        explanation: q.explanation || null,
+        select_count: q.select_count ?? 1,
+        sequence_tokens: q.sequence_tokens ?? null,
+      })),
+    }))
+
+  const totalPoints = parts.reduce(
+    (s, p) => s + p.questions.reduce((ps, q) => ps + (q.points ?? 1), 0),
+    0
+  )
+  const quiz_json = { articleId, totalPoints, parts }
+
+  const { error: upErr } = await supabase
+    .from("articles")
+    .update({ quiz_json, updated_at: nowIso() })
+    .eq("id", articleId)
+  if (upErr) throw new Error("rebuildQuizJson update: " + upErr.message)
+}
+
 // ── Auth routes ───────────────────────────────────────────────────────────────
 
 app.get("/api/admin/me", (req, res) => {
@@ -1660,6 +1728,7 @@ app.put("/api/questions/:id", async (req, res) => {
       .update({ ...parsed.data, updated_at: nowIso() })
       .eq("id", id)
     if (error) throw new Error(error.message)
+    if (parsed.data.status === "published") await rebuildQuizJson(parsed.data.article_id)
     res.json({ success: true })
   } catch (e) {
     res.status(500).json({ error: e.message })
@@ -1674,9 +1743,10 @@ app.delete("/api/questions/:id", async (req, res) => {
       .from("questions")
       .delete()
       .eq("id", id)
-      .select("id")
+      .select("id, article_id")
     if (error) throw new Error(error.message)
     if (!data || data.length === 0) return res.status(404).json({ error: "Question not found" })
+    await rebuildQuizJson(data[0].article_id)
     res.json({ success: true })
   } catch (e) {
     res.status(500).json({ error: e.message })
@@ -1688,8 +1758,15 @@ app.post("/api/questions/bulk-delete", async (req, res) => {
     if (!requireSupabase(res)) return
     const { ids } = req.body || {}
     if (!Array.isArray(ids) || ids.length === 0) return res.status(400).json({ error: "ids[] required" })
+    const { data: rows, error: fetchErr } = await supabase
+      .from("questions")
+      .select("id, article_id")
+      .in("id", ids)
+    if (fetchErr) throw new Error(fetchErr.message)
+    const articleIds = [...new Set((rows || []).map((r) => r.article_id))]
     const { error } = await supabase.from("questions").delete().in("id", ids)
     if (error) throw new Error(error.message)
+    await Promise.all(articleIds.map(rebuildQuizJson))
     res.json({ success: true, deleted: ids.length })
   } catch (e) {
     res.status(500).json({ error: e.message })
@@ -1706,9 +1783,10 @@ app.patch("/api/questions/:id/publish", async (req, res) => {
       .from("questions")
       .update({ status: "published" })
       .eq("id", id)
-      .select("id")
+      .select("id, article_id")
     if (error) throw new Error(error.message)
     if (!data || data.length === 0) return res.status(404).json({ error: "Question not found" })
+    await rebuildQuizJson(data[0].article_id)
     res.json({ success: true })
   } catch (e) {
     res.status(500).json({ error: e.message })
