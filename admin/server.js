@@ -216,6 +216,7 @@ function rowToExercise(row) {
     isChallenge: row.is_challenge || false,
     isFree: row.is_free || false,
     isDseCore: row.is_dse_core || false,
+    articleType: row.article_type || "other",
     level: row.level ?? null,
     status: row.status || "published",
     hasQuizzes: quizHasQuestions(row.quiz_json),
@@ -514,7 +515,7 @@ app.put("/api/exercises/:id", async (req, res) => {
       .eq("id", id)
     if (updateErr) throw new Error(updateErr.message)
 
-    await upsertQuestions(id, finalQuiz)
+    if (hasQuizPayload) await upsertQuestions(id, finalQuiz)
     await createVersionSnapshot(id, { article, quiz: finalQuiz })
 
     res.json({ success: true })
@@ -1599,7 +1600,7 @@ app.get("/api/generate-article/status/:runId", (req, res) => {
 
 const QuestionUpsertSchema = z.object({
   article_id: z.string().min(1),
-  type: z.enum(["mc-single", "mc-multi", "true-false", "fill-blank", "sentence-order"]),
+  type: z.enum(["mc-single", "mc-multi", "true-false", "fill-blank", "sentence-order", "comprehension"]),
   format: z.enum(["mc", "fill-blank", "sentence-order"]),
   part: z.number().int().positive().optional().nullable(),
   points: z.number().int().positive().default(1),
@@ -1677,6 +1678,19 @@ app.delete("/api/questions/:id", async (req, res) => {
     if (error) throw new Error(error.message)
     if (!data || data.length === 0) return res.status(404).json({ error: "Question not found" })
     res.json({ success: true })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
+app.post("/api/questions/bulk-delete", async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return
+    const { ids } = req.body || {}
+    if (!Array.isArray(ids) || ids.length === 0) return res.status(400).json({ error: "ids[] required" })
+    const { error } = await supabase.from("questions").delete().in("id", ids)
+    if (error) throw new Error(error.message)
+    res.json({ success: true, deleted: ids.length })
   } catch (e) {
     res.status(500).json({ error: e.message })
   }
