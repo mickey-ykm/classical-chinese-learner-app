@@ -148,6 +148,7 @@ export default function QuizShell({ questions, partTitles, articleId, expectedMi
 
       {currentQuestion.format === "fill-blank" ? (
         <FillBlankQuestion
+          key={currentQuestion.id}
           question={currentQuestion}
           partTitle={partTitles[currentQuestion.part] ?? ""}
           isFirstOfPart={isFirstOfPart}
