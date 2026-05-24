@@ -13,35 +13,46 @@ npx expo run:android    # Build and run on Android Emulator
 npm test                # Run all Jest tests
 npm test -- quiz.test.ts  # Run a single test file
 expo lint               # Lint the project
+cd admin && node server.js  # Run admin portal locally (port 3001)
 ```
 
 ## Architecture
 
 **Expo Router (file-based stack navigation)**
 
-Three screens under `app/`:
-- `index.tsx` — Article list (home), links to Read and Quiz per article
+Screens under `app/`:
+- `index.tsx` — Journey map (home), article cards with read/quiz links
 - `read.tsx` — Article reader with footnotes and translation toggle; receives `id` route param
 - `quiz.tsx` — Multi-part quiz; receives `id` route param
+- `dse-training.tsx` — DSE training mode; fetches `is_dse_core=true` articles, lobby + quiz
+- `revision.tsx` — Revision chapter; samples wrong answers from quiz history
+- `account.tsx` — User account, quiz history, upgrade prompt
+- `attempt.tsx` — Quiz attempt detail screen
 
 Navigation: Home → Read?id → Quiz?id → Score (Score is rendered inside `QuizShell`, not a separate route).
 
-**Data layer (`lib/` + `data/`)**
+**Data layer**
+
+The mobile app reads exclusively from `lib/contentStore.ts` (never directly from Supabase or bundled JSON at runtime):
 
 ```
-data/
-├── index.json                          # Article registry (title, source, totalPoints, totalQuestions)
-├── articles/{id}.json                  # Article content (segments, footnotes, modernTranslation)
-└── quizzes/{id}.json                   # Quiz content (parts → questions)
+lib/contentStore.ts     # in-memory cache + SQLite persistence + Supabase sync
+lib/contentStore.web.ts # web stub (no SQLite; in-memory + Supabase only)
+lib/data.ts             # thin wrappers around contentStore
+data/articles/{id}.json # bundled seed — first-launch / offline fallback only
+data/quizzes/{id}.json  # bundled seed — first-launch / offline fallback only
+data/index.json         # bundled article registry seed
 ```
 
-`lib/data.ts` exposes `getArticleIndex()`, `getArticle(id)`, `getAllQuestions(id)`, `getPartTitles(id)`. Adding a new article requires: adding JSON files in both `data/articles/` and `data/quizzes/`, registering them in the static `ARTICLES`/`QUIZZES` maps in `lib/data.ts`, and adding an entry to `data/index.json`.
+`contentStore` syncs from Supabase `articles` table on app launch (`backgroundFetch`), keyed on `updated_at`. The `quiz_json` column on the `articles` row is what the mobile app reads for quiz content — it is a **derived cache**, not the source of truth.
 
-`lib/quiz.ts` contains pure scoring logic (`checkAnswer`, `calculateScore`, `getPartScore`). `lib/types.ts` defines all shared interfaces.
+**Admin portal (`admin/server.js`)**
+
+Single Express server (~1800 lines). Deployed on Railway at `https://ccladmin.mickey-calligraphy.art`. Reads/writes Supabase directly using the service role key. Local `assessment-config.json` is ephemeral on Railway — anything that must persist goes to Supabase.
 
 **Quiz state machine (`components/quiz/QuizShell.tsx`)**
 
-All quiz state lives here: current question index, answers map, reveal state, and finished flag. Answer selection triggers a 1.2 s reveal delay before auto-advancing to the next question. `partTitles` (a `Record<number, string>` derived from the quiz's parts array) is passed down to `QuizQuestion` and `ScoreScreen` so part headers and score breakdown are driven by data, not hardcoded strings.
+All quiz state lives here: current question index, answers map, reveal state, and finished flag. Answer selection triggers a 1.2 s reveal delay before auto-advancing to the next question.
 
 **Styling: NativeWind v4**
 
@@ -62,3 +73,68 @@ presets: [
 - Georgia font (`style={{ fontFamily: "Georgia" }}`) is applied to classical Chinese text throughout.
 - Amber is the primary accent colour (`amber-500` / `amber-600`); slate-50 is the background.
 - `hitSlop={12}` is used on small touch targets like back buttons.
+
+## Data flow invariants
+
+These must never be violated. Violating them causes silent data loss that only surfaces at runtime.
+
+**questions table is the source of truth for quiz content**
+- `questions` table in Supabase holds all question data (both draft and published)
+- `quiz_json` on the `articles` row is a **derived cache** rebuilt from published questions
+- Never treat `quiz_json` as the source of truth for editing or counting questions
+- The listing "QUIZZES" column count and `hasQuizzes` flag both derive from `quiz_json`
+
+**rebuildQuizJson must be called after any question state change**
+- Call `rebuildQuizJson(articleId)` after every: question publish, question edit (if published), question delete, bulk delete
+- This rewrites `quiz_json` + bumps `updated_at` on the articles row
+- Bumping `updated_at` triggers the mobile app's incremental sync on next launch
+- Failure to call it = listing count stays wrong + mobile app never sees the new questions
+
+**articleToRow must never include quiz_json unless a quiz payload is present**
+- `articleToRow(article, meta)` builds the Supabase UPDATE payload
+- Only include `quiz_json` when `hasQuizPayload` is true: `...(hasQuizPayload ? { quizJson: finalQuiz } : {})`
+- Unconditionally including `quiz_json: null` wipes the existing quiz on every article metadata save
+
+**PUT /api/exercises/:id must not call upsertQuestions without a real quiz payload**
+- Guard with `if (hasQuizPayload) await upsertQuestions(id, finalQuiz)`
+- `upsertQuestions` starts with `DELETE WHERE article_id = X` — calling it with null wipes all questions
+
+**saveArticleDetail() frontend must include all fields in the PUT body**
+- Fields present in the UI but missing from the PUT body silently default to wrong values server-side
+- Required fields: `article`, `articleType`, `isChallenge`, `isFree`, `status`, `expectedMinutes`
+- Missing `articleType` → `article_type` written as `"other"` and `is_dse_core` set to false
+
+**article_type drives is_dse_core — never set them independently**
+- `is_dse_core` is derived: `is_dse_core = (articleType === 'dse-exam')` in `articleToRow`
+- The DSE Training screen queries `is_dse_core = true` — wrong `article_type` = article invisible to DSE training
+
+**quiz_prompts.id is text, not uuid**
+- The `quiz_prompts` table uses human-readable slug IDs (e.g. `"phase7-multi-type"`)
+- The Supabase schema was altered: `ALTER TABLE quiz_prompts ALTER COLUMN id TYPE text`
+- Do not revert this or create new uuid-keyed prompt tables
+
+**quiz-prompts routes must use async Supabase-backed functions**
+- Use `readQuizPromptsAsync` / `writeQuizPromptsAsync` / `deleteQuizPromptAsync`
+- Never use `readQuizPrompts()` / `writeQuizPrompts()` in route handlers — these write local file only, which is ephemeral on Railway
+
+**Never swallow Supabase errors silently**
+- Do not wrap Supabase calls in try/catch that only `console.warn` — the route will return success while data was not saved
+- Always throw or return an error response so the UI can surface the failure
+
+## Admin portal pre-implementation checklist
+
+Before adding any new field or route to `admin/server.js`, read:
+1. `articleToRow()` — does the new field need to be added here?
+2. `rowToExercise()` and `rowToIndexEntry()` — does the new field need to be returned to the frontend?
+3. The PUT route destructuring — is the new field destructured from `req.body`?
+4. The frontend `saveArticleDetail()` body — is the new field included in the PUT payload?
+5. Any function that writes to the same Supabase table — could the new change conflict?
+
+## Supabase schema notes
+
+All SQL migrations that have been run are documented in `docs/auth-membership-llm-plan.md`. Key non-obvious schema facts:
+- `quiz_prompts.id` is `text` (altered from `uuid`)
+- `questions.select_count` and `questions.sequence_tokens` were added via ALTER TABLE
+- `articles.article_type` CHECK constraint: `('dse-exam', 'dse-non-exam', 'other')`
+- `questions.format` CHECK constraint was replaced: now `('mc', 'fill-blank', 'sentence-order')`
+- The original unnamed `format` constraint `('mc','fill-blank','short','long')` may still exist alongside the named one — inserting `'sentence-order'` will fail if the old constraint was not dropped
