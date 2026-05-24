@@ -1,16 +1,22 @@
 import { useState, useEffect } from "react"
-import { View, Text, ActivityIndicator, ScrollView } from "react-native"
+import { View, Text, ActivityIndicator, ScrollView, LayoutAnimation, Platform, UIManager } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
 import { Pressable } from "react-native"
 import QuizShell from "@/components/quiz/QuizShell"
 import { useAuth } from "@/hooks/useAuth"
 import { supabase } from "@/lib/supabase"
-import type { Question } from "@/lib/types"
+import { getArticle } from "@/lib/data"
+import type { Question, Article } from "@/lib/types"
+
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true)
+}
 
 interface SelectedArticle {
   id: string
   title: string
+  article: Article
 }
 
 function pickRandom<T>(arr: T[], n: number): T[] {
@@ -24,6 +30,56 @@ function normalizeOptions(opts: any): { key: string; text: string }[] {
     return Object.entries(opts).map(([key, text]) => ({ key, text: String(text) }))
   }
   return []
+}
+
+function ArticleAccordion({ article, index }: { article: SelectedArticle; index: number }) {
+  const [expanded, setExpanded] = useState(false)
+
+  function toggle() {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
+    setExpanded((v) => !v)
+  }
+
+  const segments = article.article.segments ?? []
+
+  return (
+    <View className="bg-white rounded-2xl border border-slate-200 mb-3 overflow-hidden shadow-sm">
+      {/* Header row — always visible */}
+      <Pressable
+        onPress={toggle}
+        className="flex-row items-center px-5 py-4 active:opacity-70"
+      >
+        <View className="bg-amber-100 rounded-lg px-2.5 py-1 mr-3">
+          <Text className="text-amber-700 font-bold text-sm">{index + 1}</Text>
+        </View>
+        <Text
+          className="text-base font-semibold text-slate-800 flex-1 leading-relaxed"
+          style={{ fontFamily: "Georgia" }}
+        >
+          {article.title}
+        </Text>
+        <Text className="text-slate-400 text-base ml-2">{expanded ? "▲" : "▼"}</Text>
+      </Pressable>
+
+      {/* Expanded content */}
+      {expanded && (
+        <View className="border-t border-slate-100 px-5 py-4 bg-amber-50">
+          {segments.map((seg, i) => (
+            <Text
+              key={i}
+              className="text-sm text-slate-700 leading-7 mb-1"
+              style={{ fontFamily: "Georgia" }}
+            >
+              {seg.text}
+            </Text>
+          ))}
+          {segments.length === 0 && (
+            <Text className="text-sm text-slate-400 italic">（未有文章內容）</Text>
+          )}
+        </View>
+      )}
+    </View>
+  )
 }
 
 export default function DSETrainingScreen() {
@@ -59,7 +115,14 @@ export default function DSETrainingScreen() {
       // Pick 2–3 random articles
       const count = articles.length >= 3 ? (Math.random() < 0.5 ? 2 : 3) : Math.min(2, articles.length)
       const picked = pickRandom(articles, count)
-      setSelectedArticles(picked)
+
+      // Load local article data for accordion content
+      const withContent: SelectedArticle[] = picked.map((a) => ({
+        id: a.id,
+        title: a.title,
+        article: getArticle(a.id),
+      }))
+      setSelectedArticles(withContent)
 
       const articleIds = picked.map((a) => a.id)
 
@@ -176,41 +239,19 @@ export default function DSETrainingScreen() {
 
       <ScrollView className="flex-1 px-5" contentContainerStyle={{ paddingBottom: 32 }}>
         {/* Intro */}
-        <View className="mt-4 mb-6">
+        <View className="mt-4 mb-5">
           <Text className="text-2xl font-bold text-slate-800 mb-2" style={{ fontFamily: "Georgia" }}>
             今日練習篇章
           </Text>
           <Text className="text-sm text-slate-500 leading-5">
             系統已為你隨機抽選以下 {selectedArticles.length} 篇 DSE 核心篇章。
-            建議先溫習文章，再開始答題。
+            點擊篇章可展開閱讀，再開始答題。
           </Text>
         </View>
 
-        {/* Article cards */}
+        {/* Accordion articles */}
         {selectedArticles.map((article, index) => (
-          <View
-            key={article.id}
-            className="bg-white rounded-2xl border border-slate-200 px-5 py-4 mb-3 shadow-sm"
-          >
-            <View className="flex-row items-start mb-3">
-              <View className="bg-amber-100 rounded-lg px-2.5 py-1 mr-3 mt-0.5">
-                <Text className="text-amber-700 font-bold text-sm">{index + 1}</Text>
-              </View>
-              <Text
-                className="text-base font-semibold text-slate-800 flex-1 leading-relaxed"
-                style={{ fontFamily: "Georgia" }}
-              >
-                {article.title}
-              </Text>
-            </View>
-
-            <Pressable
-              onPress={() => router.push(`/read?id=${article.id}` as any)}
-              className="flex-row items-center justify-center bg-amber-50 border border-amber-200 rounded-xl py-2.5 active:opacity-70"
-            >
-              <Text className="text-amber-700 font-semibold text-sm">📖 閱讀文章</Text>
-            </Pressable>
-          </View>
+          <ArticleAccordion key={article.id} article={article} index={index} />
         ))}
 
         {/* Stats */}
