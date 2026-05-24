@@ -188,6 +188,7 @@ function articleToRow(article, meta) {
     level,
     is_challenge: meta.isChallenge || false,
     is_free: meta.isFree || false,
+    article_type: meta.articleType || "other",
     is_dse_core: meta.articleType === 'dse-exam',
     status: meta.status === "draft" ? "draft" : "published",
     expected_minutes:
@@ -522,7 +523,7 @@ app.put("/api/exercises/:id", async (req, res) => {
   try {
     if (!requireSupabase(res)) return
     const { id } = req.params
-    const { article, quiz, isChallenge, isFree, isDseCore, level, status, expectedMinutes, exerciseTemplate } =
+    const { article, quiz, isChallenge, isFree, isDseCore, articleType, level, status, expectedMinutes, exerciseTemplate } =
       req.body || {}
 
     const { data: existing, error: fetchErr } = await supabase
@@ -569,6 +570,7 @@ app.put("/api/exercises/:id", async (req, res) => {
     const row = articleToRow(article, {
       isChallenge,
       isFree,
+      articleType,
       isDseCore,
       level: incomingLevel,
       status: nextStatus,

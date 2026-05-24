@@ -1162,6 +1162,7 @@ async function saveArticleDetail() {
         article,
         isChallenge: document.getElementById('ad-is-challenge').checked,
         isFree: document.getElementById('ad-is-free').checked,
+        articleType: document.getElementById('ad-article-type').value || 'other',
         status: document.getElementById('ad-status').value,
         expectedMinutes: Number.isFinite(expectedMinutes) ? expectedMinutes : null,
       }),
