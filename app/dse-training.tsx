@@ -13,6 +13,14 @@ function pickRandom<T>(arr: T[], n: number): T[] {
   return shuffled.slice(0, n)
 }
 
+function normalizeOptions(opts: any): { key: string; text: string }[] {
+  if (Array.isArray(opts)) return opts
+  if (opts && typeof opts === "object") {
+    return Object.entries(opts).map(([key, text]) => ({ key, text: String(text) }))
+  }
+  return []
+}
+
 export default function DSETrainingScreen() {
   const router = useRouter()
   const { user } = useAuth()
