@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { View, Text, ActivityIndicator } from "react-native"
+import { View, Text, ActivityIndicator, ScrollView } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
 import { Pressable } from "react-native"
@@ -7,6 +7,11 @@ import QuizShell from "@/components/quiz/QuizShell"
 import { useAuth } from "@/hooks/useAuth"
 import { supabase } from "@/lib/supabase"
 import type { Question } from "@/lib/types"
+
+interface SelectedArticle {
+  id: string
+  title: string
+}
 
 function pickRandom<T>(arr: T[], n: number): T[] {
   const shuffled = [...arr].sort(() => Math.random() - 0.5)
@@ -24,6 +29,8 @@ function normalizeOptions(opts: any): { key: string; text: string }[] {
 export default function DSETrainingScreen() {
   const router = useRouter()
   const { user } = useAuth()
+  const [phase, setPhase] = useState<"lobby" | "quiz">("lobby")
+  const [selectedArticles, setSelectedArticles] = useState<SelectedArticle[]>([])
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -37,10 +44,10 @@ export default function DSETrainingScreen() {
       setLoading(true)
       setError(null)
 
-      // Fetch DSE core articles
+      // Fetch DSE core articles (with title for lobby display)
       const { data: articles, error: artErr } = await supabase
         .from("articles")
-        .select("id")
+        .select("id, title")
         .eq("is_dse_core", true)
 
       if (artErr) throw artErr
@@ -52,6 +59,8 @@ export default function DSETrainingScreen() {
       // Pick 2–3 random articles
       const count = articles.length >= 3 ? (Math.random() < 0.5 ? 2 : 3) : Math.min(2, articles.length)
       const picked = pickRandom(articles, count)
+      setSelectedArticles(picked)
+
       const articleIds = picked.map((a) => a.id)
 
       // Fetch published questions for those articles
@@ -129,8 +138,33 @@ export default function DSETrainingScreen() {
     )
   }
 
+  // ── Quiz phase ───────────────────────────────────────────────────────────────
+  if (phase === "quiz") {
+    return (
+      <SafeAreaView className="flex-1 bg-slate-50">
+        <View className="px-5 pt-4 pb-2 flex-row items-center">
+          <Pressable onPress={() => setPhase("lobby")} hitSlop={12} className="mr-3">
+            <Text className="text-amber-600 font-semibold text-sm">← 返回</Text>
+          </Pressable>
+          <Text className="text-base font-bold text-slate-800" style={{ fontFamily: "Georgia" }}>
+            DSE 備試練習
+          </Text>
+        </View>
+        <View className="flex-1 px-5 pt-2">
+          <QuizShell
+            questions={questions}
+            partTitles={{ 1: "DSE 備試練習" }}
+            onSave={handleSave}
+          />
+        </View>
+      </SafeAreaView>
+    )
+  }
+
+  // ── Lobby phase ──────────────────────────────────────────────────────────────
   return (
     <SafeAreaView className="flex-1 bg-slate-50">
+      {/* Header */}
       <View className="px-5 pt-4 pb-2 flex-row items-center">
         <Pressable onPress={() => router.back()} hitSlop={12} className="mr-3">
           <Text className="text-amber-600 font-semibold text-sm">← 返回</Text>
@@ -139,13 +173,68 @@ export default function DSETrainingScreen() {
           DSE 備試練習
         </Text>
       </View>
-      <View className="flex-1 px-5 pt-2">
-        <QuizShell
-          questions={questions}
-          partTitles={{ 1: "DSE 備試練習" }}
-          onSave={handleSave}
-        />
-      </View>
+
+      <ScrollView className="flex-1 px-5" contentContainerStyle={{ paddingBottom: 32 }}>
+        {/* Intro */}
+        <View className="mt-4 mb-6">
+          <Text className="text-2xl font-bold text-slate-800 mb-2" style={{ fontFamily: "Georgia" }}>
+            今日練習篇章
+          </Text>
+          <Text className="text-sm text-slate-500 leading-5">
+            系統已為你隨機抽選以下 {selectedArticles.length} 篇 DSE 核心篇章。
+            建議先溫習文章，再開始答題。
+          </Text>
+        </View>
+
+        {/* Article cards */}
+        {selectedArticles.map((article, index) => (
+          <View
+            key={article.id}
+            className="bg-white rounded-2xl border border-slate-200 px-5 py-4 mb-3 shadow-sm"
+          >
+            <View className="flex-row items-start mb-3">
+              <View className="bg-amber-100 rounded-lg px-2.5 py-1 mr-3 mt-0.5">
+                <Text className="text-amber-700 font-bold text-sm">{index + 1}</Text>
+              </View>
+              <Text
+                className="text-base font-semibold text-slate-800 flex-1 leading-relaxed"
+                style={{ fontFamily: "Georgia" }}
+              >
+                {article.title}
+              </Text>
+            </View>
+
+            <Pressable
+              onPress={() => router.push(`/read?id=${article.id}` as any)}
+              className="flex-row items-center justify-center bg-amber-50 border border-amber-200 rounded-xl py-2.5 active:opacity-70"
+            >
+              <Text className="text-amber-700 font-semibold text-sm">📖 閱讀文章</Text>
+            </Pressable>
+          </View>
+        ))}
+
+        {/* Stats */}
+        <View className="bg-slate-100 rounded-xl px-4 py-3 mb-6">
+          <Text className="text-sm text-slate-600 text-center">
+            共 <Text className="font-bold text-slate-800">{questions.length}</Text> 題・
+            滿分 <Text className="font-bold text-slate-800">
+              {questions.reduce((s, q) => s + q.points, 0)}
+            </Text> 分
+          </Text>
+        </View>
+
+        {/* Start CTA */}
+        <Pressable
+          onPress={() => setPhase("quiz")}
+          className="bg-amber-500 py-4 rounded-2xl items-center active:opacity-80 shadow-sm"
+        >
+          <Text className="text-white font-bold text-base">開始練習 →</Text>
+        </Pressable>
+
+        <Text className="text-xs text-slate-400 text-center mt-4">
+          完成後成績將自動儲存
+        </Text>
+      </ScrollView>
     </SafeAreaView>
   )
 }
