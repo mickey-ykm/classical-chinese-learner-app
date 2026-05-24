@@ -46,3 +46,5 @@ app-example
 # admin portal runtime artifacts
 admin/assessment-config.json
 admin/assessment-results/
+admin/ios/
+admin/app.json

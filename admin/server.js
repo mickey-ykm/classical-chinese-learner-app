@@ -115,7 +115,7 @@ const ArticleSchema = z.object({
 })
 
 const QuizOptionSchema = z.object({
-  key: z.enum(["A", "B", "C", "D"]),
+  key: z.string().min(1),
   text: z.string().min(1),
 })
 
@@ -124,12 +124,21 @@ const QuizQuestionSchema = z.object({
   part: z.number().int().positive().optional(),
   points: z.number().int().positive().optional(),
   stem: z.string().min(1, "stem is required"),
-  options: z.array(QuizOptionSchema).min(2, "options[] needs ≥2 items"),
-  correctAnswer: z.enum(["A", "B", "C", "D"], {
-    errorMap: () => ({ message: "correctAnswer must be A, B, C, or D" }),
-  }),
+  format: z.enum(["mc", "fill-blank", "sentence-order"]).optional(),
+  type: z.string().optional(),
+  options: z.array(QuizOptionSchema).optional().default([]),
+  correctAnswer: z.string().optional().default(""),
   explanation: z.string().optional(),
-})
+  selectCount: z.number().int().positive().optional(),
+  sequenceTokens: z.array(z.string()).optional(),
+}).refine(
+  (q) => {
+    const fmt = q.format ?? "mc"
+    if (fmt === "mc") return (q.options?.length ?? 0) >= 2
+    return true
+  },
+  { message: "mc questions require options[] with ≥2 items" }
+)
 
 const QuizPartSchema = z.object({
   part: z.number().int().positive(),
@@ -1485,6 +1494,113 @@ app.get("/api/generate-article/status/:runId", (req, res) => {
     quizJson: run.quizJson,
     error: run.error,
   })
+})
+
+// ── Question CRUD ─────────────────────────────────────────────────────────────
+
+const QuestionUpsertSchema = z.object({
+  article_id: z.string().min(1),
+  type: z.enum(["mc-single", "mc-multi", "true-false", "fill-blank", "sentence-order"]),
+  format: z.enum(["mc", "fill-blank", "sentence-order"]),
+  part: z.number().int().positive().optional().nullable(),
+  points: z.number().int().positive().default(1),
+  stem: z.string().min(1, "stem is required"),
+  options: z.record(z.string()).optional().nullable(),
+  correct_answer: z.string().min(1, "correct_answer is required"),
+  select_count: z.number().int().positive().default(1),
+  sequence_tokens: z.array(z.string()).optional().nullable(),
+  explanation: z.string().optional().nullable(),
+  source_excerpt: z.string().optional().nullable(),
+  status: z.enum(["draft", "published"]).default("draft"),
+})
+
+app.get("/api/questions", async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return
+    const { articleId } = req.query
+    if (!articleId) return res.status(400).json({ error: "articleId query param required" })
+    const { data, error } = await supabase
+      .from("questions")
+      .select("*")
+      .eq("article_id", articleId)
+      .order("part", { ascending: true, nullsFirst: true })
+      .order("id", { ascending: true })
+    if (error) throw new Error(error.message)
+    res.json(data || [])
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
+app.post("/api/questions", async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return
+    const parsed = QuestionUpsertSchema.safeParse(req.body)
+    if (!parsed.success) return res.status(400).json({ errors: formatZodErrors(parsed.error) })
+    const { data, error } = await supabase
+      .from("questions")
+      .insert({ ...parsed.data, created_at: nowIso(), updated_at: nowIso() })
+      .select("id")
+      .single()
+    if (error) throw new Error(error.message)
+    res.json({ success: true, id: data.id })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
+app.put("/api/questions/:id", async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return
+    const { id } = req.params
+    const parsed = QuestionUpsertSchema.safeParse(req.body)
+    if (!parsed.success) return res.status(400).json({ errors: formatZodErrors(parsed.error) })
+    const { error } = await supabase
+      .from("questions")
+      .update({ ...parsed.data, updated_at: nowIso() })
+      .eq("id", id)
+    if (error) throw new Error(error.message)
+    res.json({ success: true })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
+app.delete("/api/questions/:id", async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return
+    const { id } = req.params
+    const { data, error } = await supabase
+      .from("questions")
+      .delete()
+      .eq("id", id)
+      .select("id")
+    if (error) throw new Error(error.message)
+    if (!data || data.length === 0) return res.status(404).json({ error: "Question not found" })
+    res.json({ success: true })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
+// ── is_dse_core flag on articles ──────────────────────────────────────────────
+
+app.patch("/api/exercises/:id/dse-core", async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return
+    const { id } = req.params
+    const { is_dse_core } = req.body || {}
+    if (typeof is_dse_core !== "boolean")
+      return res.status(400).json({ error: "is_dse_core must be boolean" })
+    const { error } = await supabase
+      .from("articles")
+      .update({ is_dse_core, updated_at: nowIso() })
+      .eq("id", id)
+    if (error) throw new Error(error.message)
+    res.json({ success: true })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
 })
 
 app.listen(PORT, () => {

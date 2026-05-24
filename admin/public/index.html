@@ -110,6 +110,10 @@
           <input type="checkbox" id="ad-is-free" disabled class="w-4 h-4 accent-green-600 cursor-pointer" />
           <label for="ad-is-free" class="text-sm text-slate-600 cursor-pointer select-none">免費</label>
         </div>
+        <div class="flex items-center gap-2">
+          <input type="checkbox" id="ad-is-dse-core" disabled class="w-4 h-4 accent-blue-600 cursor-pointer" />
+          <label for="ad-is-dse-core" class="text-sm text-slate-600 cursor-pointer select-none">DSE Core</label>
+        </div>
         <div class="flex items-center gap-1.5">
           <label for="ad-level" class="text-sm text-slate-600 select-none">程度</label>
           <select id="ad-level" disabled
@@ -196,6 +200,23 @@
         <textarea id="ad-quiz-json" rows="14" readonly oninput="onAdQuizInput()"
           class="w-full font-mono text-xs border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-stone-50"></textarea>
         <div id="ad-quiz-errors" class="mt-1.5 space-y-1 hidden"></div>
+      </div>
+
+      <!-- Questions CRUD -->
+      <div class="border-t border-stone-100 pt-5">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h3 class="text-sm font-semibold">Questions</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Structured question management (Supabase-backed)</p>
+          </div>
+          <button onclick="openQuestionModal(null)"
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-600 text-white hover:bg-amber-700 transition-colors">
+            + Add Question
+          </button>
+        </div>
+        <div id="ad-questions-loading" class="text-xs text-slate-400 py-4 text-center">Loading questions…</div>
+        <div id="ad-questions-list" class="hidden space-y-2"></div>
+        <div id="ad-questions-empty" class="hidden text-xs text-slate-400 py-4 text-center">No questions yet. Click "Add Question" to create one.</div>
       </div>
 
     </div>
@@ -695,13 +716,20 @@ function validateQuiz(q) {
         errs.push(`parts[${pi}]: empty questions[]`)
       } else {
         p.questions.forEach((qq, qi) => {
-          if (!qq.correctAnswer)
+          // Derive format from type if not explicitly set
+          const derivedFmt = qq.format
+            ?? (qq.type === 'fill-blank' ? 'fill-blank'
+              : qq.type === 'sentence-order' ? 'sentence-order'
+              : 'mc')
+          if (!qq.correctAnswer && derivedFmt === 'mc')
             errs.push(`parts[${pi}].questions[${qi}]: missing correctAnswer`)
-          const opts = qq.options
-          const optCount = Array.isArray(opts) ? opts.length
-            : (opts && typeof opts === 'object' ? Object.keys(opts).length : 0)
-          if (optCount < 2)
-            errs.push(`parts[${pi}].questions[${qi}]: needs ≥2 options`)
+          if (derivedFmt === 'mc') {
+            const opts = qq.options
+            const optCount = Array.isArray(opts) ? opts.length
+              : (opts && typeof opts === 'object' ? Object.keys(opts).length : 0)
+            if (optCount < 2)
+              errs.push(`parts[${pi}].questions[${qi}]: needs ≥2 options`)
+          }
         })
       }
     })
@@ -1079,6 +1107,7 @@ async function openArticleDetail(id) {
       ? JSON.stringify(data.quiz, null, 2) : ''
     document.getElementById('ad-is-challenge').checked = !!data.isChallenge
     document.getElementById('ad-is-free').checked = !!data.isFree
+    document.getElementById('ad-is-dse-core').checked = !!data.isDseCore
     document.getElementById('ad-level').value = data.level ?? ''
     document.getElementById('ad-status').value = data.status || 'published'
     document.getElementById('ad-expected-minutes').value = data.expectedMinutes ?? ''
@@ -1088,6 +1117,7 @@ async function openArticleDetail(id) {
     }
 
     setAdReadOnly(true)
+    loadQuestions()
   } catch (e) {
     document.getElementById('ad-title').textContent = 'Error'
     document.getElementById('ad-article-json').value = 'Failed to load: ' + e.message
@@ -1107,6 +1137,7 @@ function setAdReadOnly(readOnly) {
   document.getElementById('ad-quiz-json').readOnly = readOnly
   document.getElementById('ad-is-challenge').disabled = readOnly
   document.getElementById('ad-is-free').disabled = readOnly
+  document.getElementById('ad-is-dse-core').disabled = readOnly
   document.getElementById('ad-level').disabled = readOnly
   document.getElementById('ad-status').disabled = readOnly
   document.getElementById('ad-expected-minutes').disabled = readOnly
@@ -1145,6 +1176,7 @@ async function saveArticleDetail() {
         quiz,
         isChallenge: document.getElementById('ad-is-challenge').checked,
         isFree: document.getElementById('ad-is-free').checked,
+        isDseCore: document.getElementById('ad-is-dse-core').checked,
         level: parseInt(document.getElementById('ad-level').value) || null,
         status: document.getElementById('ad-status').value,
         expectedMinutes: Number.isFinite(expectedMinutes) ? expectedMinutes : null,
@@ -1164,6 +1196,7 @@ async function saveArticleDetail() {
         status: document.getElementById('ad-status').value,
         level: parseInt(document.getElementById('ad-level').value) || null,
         isChallenge: document.getElementById('ad-is-challenge').checked,
+        isDseCore: document.getElementById('ad-is-dse-core').checked,
         expectedMinutes: Number.isFinite(expectedMinutes) ? expectedMinutes : null,
       }
       document.getElementById('ad-title').textContent = article.title || currentArticleId
@@ -1185,6 +1218,7 @@ function cancelArticleDetail() {
       ? JSON.stringify(adOriginal.quiz, null, 2) : ''
     document.getElementById('ad-is-challenge').checked = !!adOriginal.isChallenge
     document.getElementById('ad-is-free').checked = !!adOriginal.isFree
+    document.getElementById('ad-is-dse-core').checked = !!adOriginal.isDseCore
     document.getElementById('ad-level').value = adOriginal.level ?? ''
     document.getElementById('ad-status').value = adOriginal.status || 'published'
     document.getElementById('ad-expected-minutes').value = adOriginal.expectedMinutes ?? ''
@@ -2135,6 +2169,130 @@ loadAssessmentConfig()
   </div><!-- /modal-content -->
 </div><!-- /raw-modal -->
 
+<!-- ── Question Modal ─────────────────────────────────────────────────────── -->
+<div id="question-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/40" onclick="closeQuestionModal()"></div>
+  <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div class="px-6 py-4 border-b border-stone-100 flex items-center justify-between sticky top-0 bg-white z-10">
+      <h3 id="qm-title" class="font-semibold text-base">Add Question</h3>
+      <button onclick="closeQuestionModal()" class="text-slate-400 hover:text-slate-700 text-lg leading-none px-1">✕</button>
+    </div>
+    <div class="p-6 space-y-4">
+
+      <!-- Type + Format -->
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs font-medium text-slate-600 block mb-1">Question Type <span class="text-red-400">*</span></label>
+          <select id="qm-type" onchange="onQmTypeChange()"
+            class="w-full text-sm border border-stone-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-white">
+            <option value="mc-single">mc-single — 選擇題（單選）</option>
+            <option value="mc-multi">mc-multi — 選擇題（多選）</option>
+            <option value="true-false">true-false — 是非題</option>
+            <option value="fill-blank">fill-blank — 填充題</option>
+            <option value="sentence-order">sentence-order — 重組句子</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs font-medium text-slate-600 block mb-1">Part</label>
+          <input type="number" id="qm-part" min="1" max="10" value="1"
+            class="w-full text-sm border border-stone-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400" />
+        </div>
+      </div>
+
+      <!-- Points + Status + Select Count -->
+      <div class="grid grid-cols-3 gap-4">
+        <div>
+          <label class="text-xs font-medium text-slate-600 block mb-1">Points</label>
+          <input type="number" id="qm-points" min="1" value="1"
+            class="w-full text-sm border border-stone-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400" />
+        </div>
+        <div>
+          <label class="text-xs font-medium text-slate-600 block mb-1">Status</label>
+          <select id="qm-status"
+            class="w-full text-sm border border-stone-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-white">
+            <option value="draft">Draft</option>
+            <option value="published">Published</option>
+          </select>
+        </div>
+        <div id="qm-select-count-wrap">
+          <label class="text-xs font-medium text-slate-600 block mb-1">Select Count</label>
+          <input type="number" id="qm-select-count" min="1" value="1"
+            class="w-full text-sm border border-stone-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400" />
+          <p class="text-xs text-slate-400 mt-0.5">How many options to select (mc-multi)</p>
+        </div>
+      </div>
+
+      <!-- Stem -->
+      <div>
+        <label class="text-xs font-medium text-slate-600 block mb-1">Stem / Question Text <span class="text-red-400">*</span></label>
+        <textarea id="qm-stem" rows="3"
+          class="w-full text-sm border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-stone-50"></textarea>
+        <p class="text-xs text-slate-400 mt-0.5">For fill-blank, use ___ to mark blanks.</p>
+      </div>
+
+      <!-- MC Options (shown for mc-single, mc-multi, true-false) -->
+      <div id="qm-mc-section" class="space-y-2">
+        <label class="text-xs font-medium text-slate-600 block">Options <span class="text-red-400">*</span></label>
+        <p class="text-xs text-slate-400">Enter options below. For mc-multi, tick all correct answers. For true-false, only options A (true/是) and B (false/否) are used.</p>
+        <div id="qm-options-list" class="space-y-2"></div>
+        <button onclick="addQmOption()"
+          class="text-xs text-amber-600 hover:text-amber-700 font-medium mt-1">+ Add Option</button>
+        <div class="mt-1">
+          <label class="text-xs font-medium text-slate-600 block mb-1">Correct Answer(s)</label>
+          <input type="text" id="qm-correct-answer-mc" placeholder="e.g. A  or  A,C  for mc-multi"
+            class="w-full text-sm border border-stone-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400" />
+          <p class="text-xs text-slate-400 mt-0.5">Single letter (A/B/C…) for mc-single/true-false; comma-separated for mc-multi (e.g. A,C)</p>
+        </div>
+      </div>
+
+      <!-- Fill-blank correct answers (shown for fill-blank) -->
+      <div id="qm-fill-section" class="hidden">
+        <label class="text-xs font-medium text-slate-600 block mb-1">Accepted Answers <span class="text-red-400">*</span></label>
+        <textarea id="qm-fill-answers" rows="3" placeholder="One accepted answer per line (all are accepted as correct)"
+          class="w-full text-sm border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-stone-50"></textarea>
+        <p class="text-xs text-slate-400 mt-0.5">Stored as pipe-separated string (e.g. answer1|answer2). Matching is case-insensitive.</p>
+      </div>
+
+      <!-- Sentence order tokens (shown for sentence-order) -->
+      <div id="qm-order-section" class="hidden space-y-3">
+        <div>
+          <label class="text-xs font-medium text-slate-600 block mb-1">Tokens (correct order, comma-separated) <span class="text-red-400">*</span></label>
+          <input type="text" id="qm-order-tokens" placeholder="e.g. 明,月,松,間,照,清,泉,石,上,流"
+            class="w-full text-sm border border-stone-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400" />
+          <p class="text-xs text-slate-400 mt-0.5">Correct order. Shuffled display order is auto-generated.</p>
+        </div>
+      </div>
+
+      <!-- Explanation -->
+      <div>
+        <label class="text-xs font-medium text-slate-600 block mb-1">Explanation <span class="text-slate-400 font-normal">(optional)</span></label>
+        <textarea id="qm-explanation" rows="2"
+          class="w-full text-sm border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-stone-50"></textarea>
+      </div>
+
+      <!-- Source Excerpt -->
+      <div>
+        <label class="text-xs font-medium text-slate-600 block mb-1">Source Excerpt <span class="text-slate-400 font-normal">(optional)</span></label>
+        <textarea id="qm-source-excerpt" rows="2"
+          class="w-full text-sm border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-stone-50"></textarea>
+      </div>
+
+      <!-- Save / Cancel -->
+      <div class="flex gap-3 pt-2 border-t border-stone-100">
+        <button onclick="saveQuestion()"
+          class="flex-1 py-2 rounded-lg text-sm font-semibold bg-green-600 text-white hover:bg-green-700 transition-colors">
+          Save Question
+        </button>
+        <button onclick="closeQuestionModal()"
+          class="px-5 py-2 rounded-lg text-sm font-medium border border-stone-200 hover:bg-stone-50 transition-colors">
+          Cancel
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <script>
   fetch("/api/admin/me").then(r => r.json()).then(d => {
     if (d.email) document.getElementById("adminEmail").textContent = d.email
@@ -2144,6 +2302,253 @@ loadAssessmentConfig()
     await fetch("/api/admin/logout", { method: "POST" })
     window.location.href = "/login.html"
   }
+</script>
+
+<script>
+// ── Question CRUD ─────────────────────────────────────────────────────────────
+
+let questionsList = []
+let editingQuestionId = null
+let qmOptionKeys = ['A', 'B', 'C', 'D', 'E', 'F']
+
+async function loadQuestions() {
+  if (!currentArticleId) return
+  const loadingEl = document.getElementById('ad-questions-loading')
+  const listEl = document.getElementById('ad-questions-list')
+  const emptyEl = document.getElementById('ad-questions-empty')
+  loadingEl.classList.remove('hidden')
+  listEl.classList.add('hidden')
+  emptyEl.classList.add('hidden')
+
+  try {
+    const res = await fetch(`/api/questions?articleId=${encodeURIComponent(currentArticleId)}`)
+    if (!res.ok) throw new Error('Failed to load')
+    questionsList = await res.json()
+    loadingEl.classList.add('hidden')
+    if (!questionsList.length) {
+      emptyEl.classList.remove('hidden')
+      return
+    }
+    listEl.innerHTML = questionsList.map((q) => renderQuestionCard(q)).join('')
+    listEl.classList.remove('hidden')
+  } catch (e) {
+    loadingEl.textContent = 'Failed to load questions: ' + e.message
+  }
+}
+
+function renderQuestionCard(q) {
+  const typeLabel = {
+    'mc-single': '單選', 'mc-multi': '多選', 'true-false': '是非',
+    'fill-blank': '填充', 'sentence-order': '排序'
+  }[q.type] || q.type
+  const statusBadge = q.status === 'published'
+    ? '<span class="text-xs px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-medium">Published</span>'
+    : '<span class="text-xs px-1.5 py-0.5 rounded bg-stone-100 text-stone-500 font-medium">Draft</span>'
+  return `
+    <div class="border border-stone-200 rounded-xl px-4 py-3 bg-stone-50">
+      <div class="flex items-start gap-3">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-1 flex-wrap">
+            <span class="text-xs font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">${escHtml(typeLabel)}</span>
+            <span class="text-xs text-slate-400">Part ${escHtml(String(q.part ?? 1))}</span>
+            <span class="text-xs text-slate-400">${escHtml(String(q.points ?? 1))}pt</span>
+            ${statusBadge}
+          </div>
+          <p class="text-sm text-slate-800 leading-snug">${escHtml(q.stem || '')}</p>
+          ${q.explanation ? `<p class="text-xs text-slate-400 mt-1">💡 ${escHtml(q.explanation)}</p>` : ''}
+        </div>
+        <div class="flex gap-1.5 shrink-0">
+          <button onclick="openQuestionModal('${q.id}')"
+            class="text-xs px-2.5 py-1 rounded border border-stone-200 hover:bg-white transition-colors">Edit</button>
+          <button onclick="deleteQuestion('${q.id}')"
+            class="text-xs px-2 py-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors">✕</button>
+        </div>
+      </div>
+    </div>`
+}
+
+function onQmTypeChange() {
+  const type = document.getElementById('qm-type').value
+  const mcSection = document.getElementById('qm-mc-section')
+  const fillSection = document.getElementById('qm-fill-section')
+  const orderSection = document.getElementById('qm-order-section')
+  const selectCountWrap = document.getElementById('qm-select-count-wrap')
+
+  mcSection.classList.toggle('hidden', type === 'fill-blank' || type === 'sentence-order')
+  fillSection.classList.toggle('hidden', type !== 'fill-blank')
+  orderSection.classList.toggle('hidden', type !== 'sentence-order')
+  selectCountWrap.classList.toggle('hidden', type !== 'mc-multi')
+
+  if (type === 'true-false') {
+    // Pre-fill true/false options
+    document.getElementById('qm-options-list').innerHTML = renderQmOptionRow('A', '是（True）') + renderQmOptionRow('B', '否（False）')
+  } else if (type === 'mc-single' || type === 'mc-multi') {
+    if (!document.getElementById('qm-options-list').children.length) {
+      document.getElementById('qm-options-list').innerHTML =
+        renderQmOptionRow('A') + renderQmOptionRow('B') + renderQmOptionRow('C') + renderQmOptionRow('D')
+    }
+  }
+}
+
+function renderQmOptionRow(key, value = '') {
+  return `
+    <div class="flex items-center gap-2" id="qm-opt-row-${key}">
+      <span class="text-xs font-bold text-slate-500 w-4 shrink-0">${escHtml(key)}</span>
+      <input type="text" id="qm-opt-${key}" value="${escHtml(value)}"
+        placeholder="Option ${escHtml(key)}"
+        class="flex-1 text-sm border border-stone-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-white" />
+    </div>`
+}
+
+function addQmOption() {
+  const list = document.getElementById('qm-options-list')
+  const count = list.children.length
+  if (count >= 8) { showToast('Maximum 8 options', 'error'); return }
+  const key = qmOptionKeys[count] || String.fromCharCode(65 + count)
+  list.insertAdjacentHTML('beforeend', renderQmOptionRow(key))
+}
+
+function openQuestionModal(id) {
+  editingQuestionId = id
+  document.getElementById('qm-title').textContent = id ? 'Edit Question' : 'Add Question'
+
+  // Reset fields
+  document.getElementById('qm-type').value = 'mc-single'
+  document.getElementById('qm-part').value = '1'
+  document.getElementById('qm-points').value = '1'
+  document.getElementById('qm-status').value = 'draft'
+  document.getElementById('qm-select-count').value = '1'
+  document.getElementById('qm-stem').value = ''
+  document.getElementById('qm-correct-answer-mc').value = ''
+  document.getElementById('qm-fill-answers').value = ''
+  document.getElementById('qm-order-tokens').value = ''
+  document.getElementById('qm-explanation').value = ''
+  document.getElementById('qm-source-excerpt').value = ''
+  document.getElementById('qm-options-list').innerHTML =
+    renderQmOptionRow('A') + renderQmOptionRow('B') + renderQmOptionRow('C') + renderQmOptionRow('D')
+
+  if (id) {
+    const q = questionsList.find((x) => x.id === id)
+    if (!q) { showToast('Question not found', 'error'); return }
+    document.getElementById('qm-type').value = q.type || 'mc-single'
+    document.getElementById('qm-part').value = q.part ?? 1
+    document.getElementById('qm-points').value = q.points ?? 1
+    document.getElementById('qm-status').value = q.status || 'draft'
+    document.getElementById('qm-select-count').value = q.select_count ?? 1
+    document.getElementById('qm-stem').value = q.stem || ''
+    document.getElementById('qm-explanation').value = q.explanation || ''
+    document.getElementById('qm-source-excerpt').value = q.source_excerpt || ''
+
+    if (q.format === 'mc') {
+      // Populate options
+      const opts = q.options || {}
+      const keys = Object.keys(opts)
+      document.getElementById('qm-options-list').innerHTML = keys.map((k) => renderQmOptionRow(k, opts[k])).join('')
+      document.getElementById('qm-correct-answer-mc').value = q.correct_answer || ''
+    } else if (q.format === 'fill-blank') {
+      // Convert pipe-separated to one-per-line
+      document.getElementById('qm-fill-answers').value = (q.correct_answer || '').split('|').join('\n')
+    } else if (q.format === 'sentence-order') {
+      // correct_answer is ">"-delimited correct order
+      document.getElementById('qm-order-tokens').value = (q.correct_answer || '').split('>').join(',')
+    }
+  }
+
+  onQmTypeChange()
+  document.getElementById('question-modal').classList.remove('hidden')
+  document.body.style.overflow = 'hidden'
+}
+
+function closeQuestionModal() {
+  document.getElementById('question-modal').classList.add('hidden')
+  document.body.style.overflow = ''
+  editingQuestionId = null
+}
+
+async function saveQuestion() {
+  const type = document.getElementById('qm-type').value
+  const format = (type === 'fill-blank') ? 'fill-blank' : (type === 'sentence-order') ? 'sentence-order' : 'mc'
+  const stem = document.getElementById('qm-stem').value.trim()
+  if (!stem) { showToast('Stem is required', 'error'); return }
+
+  let correct_answer = ''
+  let options = undefined
+  let sequence_tokens = undefined
+
+  if (format === 'mc') {
+    // Collect options from input fields
+    const optRows = document.getElementById('qm-options-list').querySelectorAll('[id^="qm-opt-"]')
+    options = {}
+    optRows.forEach((el) => {
+      const key = el.id.replace('qm-opt-', '')
+      if (el.value.trim()) options[key] = el.value.trim()
+    })
+    correct_answer = document.getElementById('qm-correct-answer-mc').value.trim().toUpperCase()
+    if (!correct_answer) { showToast('Correct answer is required', 'error'); return }
+  } else if (format === 'fill-blank') {
+    const lines = document.getElementById('qm-fill-answers').value.split('\n').map((l) => l.trim()).filter(Boolean)
+    if (!lines.length) { showToast('At least one accepted answer is required', 'error'); return }
+    correct_answer = lines.join('|')
+  } else if (format === 'sentence-order') {
+    const tokens = document.getElementById('qm-order-tokens').value.split(',').map((t) => t.trim()).filter(Boolean)
+    if (!tokens.length) { showToast('Tokens are required', 'error'); return }
+    correct_answer = tokens.join('>')
+    // Shuffle for display
+    sequence_tokens = [...tokens].sort(() => Math.random() - 0.5)
+  }
+
+  const body = {
+    article_id: currentArticleId,
+    type,
+    format,
+    part: parseInt(document.getElementById('qm-part').value) || 1,
+    points: parseInt(document.getElementById('qm-points').value) || 1,
+    stem,
+    options,
+    correct_answer,
+    select_count: parseInt(document.getElementById('qm-select-count').value) || 1,
+    sequence_tokens,
+    explanation: document.getElementById('qm-explanation').value.trim() || undefined,
+    source_excerpt: document.getElementById('qm-source-excerpt').value.trim() || undefined,
+    status: document.getElementById('qm-status').value,
+  }
+
+  try {
+    const url = editingQuestionId ? `/api/questions/${editingQuestionId}` : '/api/questions'
+    const method = editingQuestionId ? 'PUT' : 'POST'
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      showToast('Save failed: ' + (data.errors?.join('; ') || data.error), 'error')
+    } else {
+      showToast(editingQuestionId ? 'Question updated' : 'Question created', 'success')
+      closeQuestionModal()
+      loadQuestions()
+    }
+  } catch (e) {
+    showToast('Network error: ' + e.message, 'error')
+  }
+}
+
+async function deleteQuestion(id) {
+  if (!confirm('Delete this question?')) return
+  try {
+    const res = await fetch(`/api/questions/${id}`, { method: 'DELETE' })
+    const data = await res.json()
+    if (!res.ok) {
+      showToast('Delete failed: ' + data.error, 'error')
+    } else {
+      showToast('Question deleted', 'success')
+      loadQuestions()
+    }
+  } catch (e) {
+    showToast('Network error: ' + e.message, 'error')
+  }
+}
 </script>
 
 </body>

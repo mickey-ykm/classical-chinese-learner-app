@@ -20,7 +20,9 @@ export interface Article {
   modernTranslation: string[]
 }
 
-export type OptionKey = "A" | "B" | "C" | "D"
+export type OptionKey = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H"
+
+export type QuestionFormat = "mc" | "fill-blank" | "sentence-order"
 
 export interface QuizOption {
   key: OptionKey
@@ -32,14 +34,17 @@ export interface Question {
   part: 1 | 2 | 3 | 4
   points: number
   stem: string
+  format?: QuestionFormat
   options: QuizOption[]
-  correctAnswer: OptionKey
+  correctAnswer: string  // OptionKey for mc; comma-sep keys for mc-multi; >-sep tokens for sentence-order
+  selectCount?: number   // how many options to select (1 = single, >1 = multi)
+  sequenceTokens?: string[]  // shuffled tokens for sentence-order
   explanation?: string
 }
 
 export interface QuizAnswer {
   questionId: number
-  selectedOption: OptionKey
+  selectedOption: string  // OptionKey | comma-sep keys | token index array JSON
   isCorrect: boolean
 }
 

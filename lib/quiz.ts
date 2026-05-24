@@ -1,5 +1,13 @@
 import type { Question, QuizAnswer, OptionKey } from "./types"
 
+// ── Normalise fill-blank input ────────────────────────────────────────────────
+
+function normalise(str: string): string {
+  return str.trim().toLowerCase().replace(/\s+/g, " ")
+}
+
+// ── Check answer (single question) ───────────────────────────────────────────
+
 export function checkAnswer(question: Question, selected: OptionKey): QuizAnswer {
   return {
     questionId: question.id,
@@ -7,6 +15,57 @@ export function checkAnswer(question: Question, selected: OptionKey): QuizAnswer
     isCorrect: selected === question.correctAnswer,
   }
 }
+
+/**
+ * Check mc-multi answer: all-or-nothing.
+ * selectedKeys: array of selected option keys e.g. ["A", "C"]
+ * correctAnswer: comma-separated string e.g. "A,C,E"
+ */
+export function checkMultiAnswer(
+  question: Question,
+  selectedKeys: OptionKey[]
+): { questionId: number; selectedOptions: OptionKey[]; isCorrect: boolean } {
+  const correctSet = new Set(
+    (question.correctAnswer as string).split(",").map((k) => k.trim())
+  )
+  const selectedSet = new Set(selectedKeys.map((k) => k.trim()))
+  const isCorrect =
+    correctSet.size === selectedSet.size &&
+    [...correctSet].every((k) => selectedSet.has(k))
+  return { questionId: question.id, selectedOptions: selectedKeys, isCorrect }
+}
+
+/**
+ * Check fill-blank answer: exact match after normalisation.
+ * correctAnswer: pipe-separated accepted answers e.g. "answer1|answer2"
+ */
+export function checkFillBlankAnswer(
+  question: Question,
+  input: string
+): { questionId: number; input: string; isCorrect: boolean } {
+  const accepted = (question.correctAnswer as string)
+    .split("|")
+    .map(normalise)
+  const isCorrect = accepted.includes(normalise(input))
+  return { questionId: question.id, input, isCorrect }
+}
+
+/**
+ * Check sentence-order answer: exact token sequence match.
+ * correctAnswer: ">"-delimited correct order e.g. "明>月>松>間>照>清>泉>石>上>流"
+ */
+export function checkSentenceOrderAnswer(
+  question: Question,
+  submittedTokens: string[]
+): { questionId: number; submittedTokens: string[]; isCorrect: boolean } {
+  const correctTokens = (question.correctAnswer as string).split(">")
+  const isCorrect =
+    correctTokens.length === submittedTokens.length &&
+    correctTokens.every((t, i) => t === submittedTokens[i])
+  return { questionId: question.id, submittedTokens, isCorrect }
+}
+
+// ── Score calculation ─────────────────────────────────────────────────────────
 
 export function calculateScore(
   questions: Question[],

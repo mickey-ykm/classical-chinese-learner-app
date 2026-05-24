@@ -200,6 +200,30 @@ export default function HomeScreen() {
           </View>
         </View>
 
+        {/* DSE Training + Weight Training CTAs */}
+        <View className="gap-3 mb-8">
+          <Pressable
+            onPress={() => router.push("/dse-training")}
+            className="bg-amber-500 rounded-2xl px-5 py-4 active:opacity-80"
+          >
+            <Text className="text-white font-bold text-base mb-0.5">📝 DSE 備試練習</Text>
+            <Text className="text-amber-100 text-xs">隨機抽取 2–3 篇核心文章，模擬考試練習</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => router.push("/weight-training")}
+            className="bg-slate-100 rounded-2xl px-5 py-4 active:opacity-80 border border-slate-200"
+          >
+            <View className="flex-row items-center gap-2">
+              <Text className="text-slate-500 font-bold text-base flex-1">🏋️ 文言用字訓練</Text>
+              <View className="bg-slate-200 rounded px-2 py-0.5">
+                <Text className="text-slate-400 text-[10px] font-bold tracking-widest">即將推出</Text>
+              </View>
+            </View>
+            <Text className="text-slate-400 text-xs mt-0.5">跨篇章文言字詞專項訓練</Text>
+          </Pressable>
+        </View>
+
         {/* Journey map */}
         {lessons.map(({ num, article, state }, idx) => {
           const isLast = idx === lessons.length - 1
