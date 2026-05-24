@@ -75,7 +75,7 @@ export default function QuizQuestion({
         className="text-base font-semibold text-slate-800 mb-4 leading-relaxed"
         style={{ fontFamily: "Georgia" }}
       >
-        Q{question.id}. {question.stem}
+        {question.stem}
       </Text>
       <View className="gap-2">
         {(question.options ?? []).map((opt) => (
