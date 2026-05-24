@@ -804,35 +804,27 @@ async function readQuizPromptsAsync() {
 }
 
 async function writeQuizPromptsAsync(prompts) {
-  // Always write to local file as backup
   writeQuizPrompts(prompts)
   if (supabase) {
-    try {
-      // Upsert all prompts to Supabase
-      const rows = prompts.map((p) => ({
-        id: p.id,
-        name: p.name,
-        description: p.description || "",
-        prompt_template: p.promptTemplate,
-        default_model: p.defaultModel || null,
-        created_at: p.createdAt || nowIso(),
-        updated_at: p.updatedAt || nowIso(),
-      }))
-      await supabase.from("quiz_prompts").upsert(rows, { onConflict: "id" })
-    } catch (e) {
-      console.warn("  ⚠ Failed to sync quiz prompts to Supabase:", e.message)
-    }
+    const rows = prompts.map((p) => ({
+      id: p.id,
+      name: p.name,
+      description: p.description || "",
+      prompt_template: p.promptTemplate,
+      default_model: p.defaultModel || null,
+      created_at: p.createdAt || nowIso(),
+      updated_at: p.updatedAt || nowIso(),
+    }))
+    const { error } = await supabase.from("quiz_prompts").upsert(rows, { onConflict: "id" })
+    if (error) throw new Error("Failed to save prompt to Supabase: " + error.message)
   }
 }
 
 async function deleteQuizPromptAsync(id) {
   writeQuizPrompts(readQuizPrompts().filter((p) => p.id !== id))
   if (supabase) {
-    try {
-      await supabase.from("quiz_prompts").delete().eq("id", id)
-    } catch (e) {
-      console.warn("  ⚠ Failed to delete quiz prompt from Supabase:", e.message)
-    }
+    const { error } = await supabase.from("quiz_prompts").delete().eq("id", id)
+    if (error) throw new Error("Failed to delete prompt from Supabase: " + error.message)
   }
 }
 
