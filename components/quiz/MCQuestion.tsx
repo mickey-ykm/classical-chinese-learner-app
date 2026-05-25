@@ -1,5 +1,6 @@
 import React, { useState } from "react"
 import { View, Text, TouchableOpacity, Pressable } from "react-native"
+import { Mascot } from "@/components/Mascot"
 
 interface MCOption {
   key: string
@@ -13,6 +14,8 @@ interface MCQuestionProps {
   selectCount: number
   points?: number
   onAnswer: (isCorrect: boolean, selected: string[]) => void
+  onNext: () => void
+  isLastQuestion: boolean
 }
 
 export default function MCQuestion({
@@ -22,9 +25,12 @@ export default function MCQuestion({
   selectCount,
   points,
   onAnswer,
+  onNext,
+  isLastQuestion,
 }: MCQuestionProps) {
   const [selected, setSelected] = useState<string[]>([])
   const [revealed, setRevealed] = useState(false)
+  const [isCorrect, setIsCorrect] = useState(false)
 
   const correctSet = new Set(correctAnswer.split(",").map((k) => k.trim()))
 
@@ -32,10 +38,11 @@ export default function MCQuestion({
     if (revealed) return
     if (selectCount === 1) {
       // Single select — immediately reveal
-      const isCorrect = correctSet.has(key) && correctSet.size === 1
+      const correct = correctSet.has(key) && correctSet.size === 1
       setSelected([key])
       setRevealed(true)
-      onAnswer(isCorrect, [key])
+      setIsCorrect(correct)
+      onAnswer(correct, [key])
     } else {
       setSelected((prev) =>
         prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
@@ -46,11 +53,12 @@ export default function MCQuestion({
   function handleSubmit() {
     if (revealed || selected.length !== selectCount) return
     const selectedSet = new Set(selected)
-    const isCorrect =
+    const correct =
       selectedSet.size === correctSet.size &&
       [...selectedSet].every((k) => correctSet.has(k))
     setRevealed(true)
-    onAnswer(isCorrect, selected)
+    setIsCorrect(correct)
+    onAnswer(correct, selected)
   }
 
   function optionStyle(key: string): string {
@@ -122,15 +130,22 @@ export default function MCQuestion({
         </Pressable>
       )}
 
-      {/* Feedback after reveal */}
+      {/* Feedback + Next after reveal */}
       {revealed && (
-        <View className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
-          <Text className="text-sm text-slate-600">
-            正確答案：
-            <Text className="font-semibold text-green-700">
-              {correctAnswer}
+        <View className="mt-4 items-center gap-3">
+          <Mascot mood={isCorrect ? "happy" : "sad"} size={90} />
+          <View className="w-full bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+            <Text className="text-xs font-semibold text-amber-700 mb-1">正確答案</Text>
+            <Text className="text-sm text-slate-700">{correctAnswer}</Text>
+          </View>
+          <Pressable
+            onPress={onNext}
+            className="w-full py-3.5 rounded-xl bg-amber-500 items-center active:opacity-80 mt-1"
+          >
+            <Text className="text-white font-semibold text-base">
+              {isLastQuestion ? "查看成績" : "下一題 →"}
             </Text>
-          </Text>
+          </Pressable>
         </View>
       )}
     </View>

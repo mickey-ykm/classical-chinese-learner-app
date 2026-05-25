@@ -179,6 +179,29 @@ export default function QuizShell({ questions, partTitles, articleId, expectedMi
           revealAnswer={revealAnswer}
           isCorrect={lastAnswerCorrect}
         />
+      ) : (currentQuestion.selectCount ?? 1) > 1 ? (
+        <MCQuestion
+          key={currentQuestion.id}
+          stem={currentQuestion.stem}
+          options={currentQuestion.options ?? []}
+          correctAnswer={currentQuestion.correctAnswer}
+          selectCount={currentQuestion.selectCount ?? 2}
+          points={currentQuestion.points}
+          onAnswer={(correct, selected) => {
+            setAnswers((prev) => ({
+              ...prev,
+              [currentQuestion.id]: {
+                questionId: currentQuestion.id,
+                selectedOption: selected.join(","),
+                isCorrect: correct,
+                pointsEarned: correct ? (currentQuestion.points ?? 1) : 0,
+              },
+            }))
+            setLastAnswerCorrect(correct)
+          }}
+          onNext={handleNext}
+          isLastQuestion={isLastQuestion}
+        />
       ) : (
         <QuizQuestion
           question={currentQuestion}
