@@ -166,7 +166,6 @@ export async function saveGeneratedArticle() {
       document.getElementById('na-article-json').value = ''
       document.getElementById('na-is-challenge').checked = false
       document.getElementById('na-is-free').checked = false
-      document.getElementById('na-level').value = ''
       naArticleValid = false
     }
   } catch (e) {
