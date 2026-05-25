@@ -206,8 +206,8 @@ async function rebuildQuizJson(articleId) {
           : [],
         correctAnswer: q.correct_answer,
         explanation: q.explanation || null,
-        select_count: q.select_count ?? 1,
-        sequence_tokens: q.sequence_tokens ?? null,
+        selectCount: q.select_count ?? 1,
+        sequenceTokens: q.sequence_tokens ?? null,
       })),
     }))
 
