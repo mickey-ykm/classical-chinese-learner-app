@@ -48,11 +48,38 @@ data/index.json         # bundled article registry seed
 
 **Admin portal (`admin/server.js`)**
 
-Single Express server (~1800 lines). Deployed on Railway at `https://ccladmin.mickey-calligraphy.art`. Reads/writes Supabase directly using the service role key. Local `assessment-config.json` is ephemeral on Railway — anything that must persist goes to Supabase.
+Express server. Deployed on Railway at `https://ccladmin.mickey-calligraphy.art`. Reads/writes Supabase directly using the service role key. Local `assessment-config.json` is ephemeral on Railway — anything that must persist goes to Supabase.
+
+After the Pre-Phase 12 refactor, `server.js` is ~60 lines of setup + route wiring. Logic lives in:
+
+```
+admin/
+  lib/
+    supabase.js          # createClient, SupabaseStore, requireSupabase
+    schemas.js           # all Zod schemas (ArticleSchema, QuizSchema, QuestionUpsertSchema…)
+    article-helpers.js   # articleToRow, rowToExercise, rowToIndexEntry, rebuildQuizJson, upsertQuestions…
+    quiz-prompts.js      # readQuizPromptsAsync, writeQuizPromptsAsync, deleteQuizPromptAsync…
+    openrouter.js        # callOpenRouter, estimateCost, normalizeOptions
+    generate-runs.js     # shared generateRuns / runs maps (in-memory async job state)
+  routes/
+    auth.js              # POST /api/admin/login, logout, GET /api/admin/me
+    exercises.js         # GET/POST/PUT/DELETE /api/exercises + PATCH dse-core
+    questions.js         # GET/POST/PUT/DELETE/PATCH /api/questions + bulk-delete
+    prompts.js           # GET/POST/PUT/DELETE /api/quiz-prompts
+    generate-quiz.js     # POST /api/exercises/:id/generate-quiz + status
+    generate-article.js  # POST /api/generate-article + status
+    assessment.js        # POST /api/assessment/run + config + status + download + history
+```
+
+The admin frontend (`admin/public/`) is also split — `index.html` is HTML-only; all JS lives in `admin/public/js/` as native ES modules (`type=module`).
 
 **Quiz state machine (`components/quiz/QuizShell.tsx`)**
 
-All quiz state lives here: current question index, answers map, reveal state, and finished flag. Answer selection triggers a 1.2 s reveal delay before auto-advancing to the next question.
+All quiz state lives here. Routing by question format:
+- `fill-blank` → `FillBlankQuestion`
+- `sentence-order` → `SentenceOrderQuestion`
+- `selectCount > 1` (mc-multi) → `MCQuestion` (multi-select with explicit submit button)
+- everything else → `QuizQuestion` (single-choice, immediate reveal on tap)
 
 **Styling: NativeWind v4**
 
@@ -120,6 +147,11 @@ These must never be violated. Violating them causes silent data loss that only s
 **Never swallow Supabase errors silently**
 - Do not wrap Supabase calls in try/catch that only `console.warn` — the route will return success while data was not saved
 - Always throw or return an error response so the UI can surface the failure
+
+**rebuildQuizJson must write camelCase fields to match the mobile Quiz type**
+- `contentStore.ts` casts `quiz_json` directly to the TypeScript `Quiz` type with no field mapping
+- Fields in `quiz_json` must match the TypeScript names exactly: `sequenceTokens` not `sequence_tokens`, `selectCount` not `select_count`, `correctAnswer` not `correct_answer`
+- Using snake_case silently produces `undefined` on the mobile side (no runtime error, just missing data)
 
 ## Admin portal pre-implementation checklist
 

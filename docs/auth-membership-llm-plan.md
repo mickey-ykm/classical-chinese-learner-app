@@ -1,6 +1,6 @@
 # Plan: Auth + Membership + Admin GO LIVE + Content Platform + LLM
 
-_Last revised 2026-05-25 — Phase 7 complete (question types/formats confirmed + implemented; DSE Training + Weight Training placeholder; admin portal question CRUD + draft/publish workflow; article_type replaces is_dse_core). All SQL migrations run. Phase 8 complete. Phases 9, 10, 11 complete. Pre-Phase 12 refactor + testing plan added. Next: refactor server.js → automated tests → Phase 12 (RevenueCat)._
+_Last revised 2026-05-26 — Phase 7 complete. Phases 8, 9, 10, 11 complete. Pre-Phase 12 refactor complete (server.js split into lib/ + routes/, index.html split into ES modules). Three post-refactor bugs found and fixed in production: (1) stale `na-level` reset in saveGeneratedArticle, (2) rebuildQuizJson writing snake_case fields into quiz_json (sequence_tokens → sequenceTokens, select_count → selectCount), (3) mc-multi questions incorrectly routed to QuizQuestion instead of MCQuestion. Next: automated tests → Phase 12 (RevenueCat)._
 
 ## Context
 
@@ -852,7 +852,7 @@ test("backgroundFetch bumps updated_at triggers re-sync of quiz content")
 
 ### Execution order
 
-1. Complete Pre-Phase 12 refactor (`server.js` + `index.html` split)
+1. ~~Complete Pre-Phase 12 refactor (`server.js` + `index.html` split)~~ ✅ done 2026-05-26
 2. Write admin API integration tests covering the CLAUDE.md invariants
 3. Extend mobile data layer tests for `contentStore` + quiz scoring
 4. All tests passing → start Phase 12
