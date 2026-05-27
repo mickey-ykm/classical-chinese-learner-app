@@ -463,6 +463,20 @@
               <input type="number" id="na-expected-minutes" min="1" max="240" placeholder="e.g. 30"
                 class="w-full text-sm border border-stone-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-400" />
             </div>
+            <div class="flex items-center gap-4 flex-wrap pt-1">
+              <div class="flex items-center gap-2">
+                <input type="checkbox" id="na-is-challenge" class="w-4 h-4 accent-amber-600 cursor-pointer" />
+                <label for="na-is-challenge" class="text-sm cursor-pointer select-none">
+                  章節挑戰 <span class="text-slate-400 font-normal">(chapter challenge)</span>
+                </label>
+              </div>
+              <div class="flex items-center gap-2">
+                <input type="checkbox" id="na-is-free" class="w-4 h-4 accent-green-600 cursor-pointer" />
+                <label for="na-is-free" class="text-sm cursor-pointer select-none">
+                  免費 <span class="text-slate-400 font-normal">(free for all users)</span>
+                </label>
+              </div>
+            </div>
             <div>
               <label class="text-xs font-medium text-slate-600 block mb-1">Classical Chinese Text <span class="text-red-400">*</span></label>
               <textarea id="na-text" rows="9" oninput="updateNaGenerateBtn()"
@@ -557,35 +571,7 @@
           </div>
 
           <!-- Save controls -->
-          <div class="flex items-center justify-between pt-3 border-t border-stone-100">
-            <div class="flex items-center gap-4 flex-wrap">
-              <div class="flex items-center gap-3">
-                <input type="checkbox" id="na-is-challenge" class="w-4 h-4 accent-amber-600 cursor-pointer" />
-                <label for="na-is-challenge" class="text-sm font-medium cursor-pointer select-none">
-                  章節挑戰 <span class="text-slate-400 font-normal">(mark as chapter challenge)</span>
-                </label>
-              </div>
-              <div class="flex items-center gap-3">
-                <input type="checkbox" id="na-is-free" class="w-4 h-4 accent-green-600 cursor-pointer" />
-                <label for="na-is-free" class="text-sm font-medium cursor-pointer select-none">
-                  免費 <span class="text-slate-400 font-normal">(free for all users)</span>
-                </label>
-              </div>
-              <div class="flex items-center gap-1.5">
-                <label for="na-article-type" class="text-sm text-slate-600 select-none">文章類型</label>
-                <select id="na-article-type"
-                  class="text-sm border border-stone-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-white">
-                  <option value="other">其他</option>
-                  <option value="dse-exam">DSE考試</option>
-                  <option value="dse-non-exam">DSE非考試</option>
-                </select>
-              </div>
-              <div class="flex items-center gap-1.5">
-                <label for="na-expected-minutes" class="text-sm text-slate-600 select-none">預期(分)</label>
-                <input type="number" id="na-expected-minutes" min="1" max="240" placeholder="—"
-                  class="w-16 text-sm border border-stone-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-400" />
-              </div>
-            </div>
+          <div class="flex items-center justify-end pt-3 border-t border-stone-100">
             <button id="na-save-btn" onclick="saveGeneratedArticle()" disabled
               class="px-5 py-2.5 rounded-lg text-sm font-semibold bg-green-600 text-white
                      disabled:opacity-40 disabled:cursor-not-allowed
