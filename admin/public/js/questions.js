@@ -182,7 +182,7 @@ export function openQuestionModal(id) {
     renderQmOptionRow('A') + renderQmOptionRow('B') + renderQmOptionRow('C') + renderQmOptionRow('D')
 
   if (id) {
-    const q = questionsList.find((x) => x.id === id)
+    const q = questionsList.find((x) => String(x.id) === String(id))
     if (!q) { showToast('Question not found', 'error'); return }
     document.getElementById('qm-type').value = q.type || 'mc-single'
     document.getElementById('qm-part').value = q.part ?? 1
