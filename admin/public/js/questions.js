@@ -184,7 +184,11 @@ export function openQuestionModal(id) {
   if (id) {
     const q = questionsList.find((x) => String(x.id) === String(id))
     if (!q) { showToast('Question not found', 'error'); return }
-    document.getElementById('qm-type').value = q.type || 'mc-single'
+    const validTypes = ['mc-single', 'mc-multi', 'true-false', 'fill-blank', 'sentence-order']
+    const resolvedType = validTypes.includes(q.type)
+      ? q.type
+      : (q.format === 'fill-blank' ? 'fill-blank' : q.format === 'sentence-order' ? 'sentence-order' : 'mc-single')
+    document.getElementById('qm-type').value = resolvedType
     document.getElementById('qm-part').value = q.part ?? 1
     document.getElementById('qm-points').value = q.points ?? 1
     document.getElementById('qm-status').value = q.status || 'draft'
