@@ -227,7 +227,7 @@ export async function saveQuestion() {
   let sequence_tokens = undefined
 
   if (format === 'mc') {
-    const optRows = document.getElementById('qm-options-list').querySelectorAll('[id^="qm-opt-"]')
+    const optRows = document.getElementById('qm-options-list').querySelectorAll('input[id^="qm-opt-"]')
     options = {}
     optRows.forEach((el) => {
       const key = el.id.replace('qm-opt-', '')
