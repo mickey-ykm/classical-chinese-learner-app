@@ -17,6 +17,16 @@ expo lint               # Lint the project
 cd admin && node server.js  # Run admin portal locally (port 3001)
 ```
 
+## Deployment
+
+**Admin portal deploys automatically to Railway on every push to `main`.**
+
+- Railway service is linked to `mickey-ykm/classical-chinese-learner-app`, branch `main`
+- **Root Directory** is set to `admin` in Railway service settings — Railway builds from `admin/` directly
+- `railway.json` at repo root contains `"buildCommand": "npm install"` and `"startCommand": "node server.js"` (no `cd admin &&` prefix — Root Directory handles that)
+- Do NOT add `cd admin &&` back to `railway.json` commands; it will cause a build failure
+- Live at: `https://ccladmin.mickey-calligraphy.art`
+
 ## Architecture
 
 **Expo Router (file-based navigation — tabs + stack)**
