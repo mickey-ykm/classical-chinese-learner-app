@@ -19,13 +19,21 @@ cd admin && node server.js  # Run admin portal locally (port 3001)
 
 ## Deployment
 
-**Admin portal deploys automatically to Railway on every push to `main`.**
-
-- Railway service is linked to `mickey-ykm/classical-chinese-learner-app`, branch `main`
-- **Root Directory** is set to `admin` in Railway service settings — Railway builds from `admin/` directly
-- `railway.json` at repo root contains `"buildCommand": "npm install"` and `"startCommand": "node server.js"` (no `cd admin &&` prefix — Root Directory handles that)
-- Do NOT add `cd admin &&` back to `railway.json` commands; it will cause a build failure
+**Admin portal — Railway (auto-deploy on push to `main`)**
+- Railway service linked to `mickey-ykm/classical-chinese-learner-app`, branch `main`
+- **Root Directory** = `admin` in Railway service settings — Railway builds from `admin/` directly
+- `railway.json` at repo root: `"buildCommand": "npm install"`, `"startCommand": "node server.js"` — no `cd admin &&` prefix (Root Directory handles that; adding it back breaks the build)
 - Live at: `https://ccladmin.mickey-calligraphy.art`
+
+**Mobile app — not yet deployed to stores**
+- Development / TestFlight only at this stage
+- Local testing: `npx expo run:ios` / `npx expo run:android`
+- When ready for App Store / Play Store, set up EAS: `npm install -g eas-cli && eas build`
+
+**Supabase schema changes — manual SQL in dashboard**
+- All migrations run directly in the Supabase SQL editor (no CLI / migration files)
+- All SQL that has been run is documented in `docs/auth-membership-llm-plan.md`
+- Before running any SQL, add it to that doc first so there's a record
 
 ## Architecture
 
