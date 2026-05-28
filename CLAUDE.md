@@ -10,26 +10,37 @@ npx expo start --clear  # Start with cache cleared (required after config change
 npx expo start --web    # Web browser preview (works without a native build)
 npx expo run:ios        # Build and run on iOS Simulator (requires Xcode)
 npx expo run:android    # Build and run on Android Emulator
-npm test                # Run all Jest tests
+npm test                # Run all Jest tests (mobile + admin)
 npm test -- quiz.test.ts  # Run a single test file
+cd admin && npm test    # Run admin API integration tests (requires admin/.env.test)
 expo lint               # Lint the project
 cd admin && node server.js  # Run admin portal locally (port 3001)
 ```
 
 ## Architecture
 
-**Expo Router (file-based stack navigation)**
+**Expo Router (file-based navigation — tabs + stack)**
 
-Screens under `app/`:
-- `index.tsx` — Journey map (home), article cards with read/quiz links
-- `read.tsx` — Article reader with footnotes and translation toggle; receives `id` route param
-- `quiz.tsx` — Multi-part quiz; receives `id` route param
-- `dse-training.tsx` — DSE training mode; fetches `is_dse_core=true` articles, lobby + quiz
-- `revision.tsx` — Revision chapter; samples wrong answers from quiz history
-- `account.tsx` — User account, quiz history, upgrade prompt
-- `attempt.tsx` — Quiz attempt detail screen
+The app uses a `(tabs)` group for the main 5-tab bottom navigation, with stack screens pushed on top:
 
-Navigation: Home → Read?id → Quiz?id → Score (Score is rendered inside `QuizShell`, not a separate route).
+```
+app/
+  index.tsx          # redirects to /(tabs)
+  (tabs)/
+    _layout.tsx      # Tabs navigator (首頁, DSE文章, 其他文章, DSE操練, 重量訓練)
+    index.tsx        # 首頁 — greeting, DSE操練 banner, article previews, recent history
+    dse-learner.tsx  # DSE 文章 — filtered by articleType === "dse-exam" | "dse-non-exam"
+    extra-articles.tsx # 其他文章 — filtered by articleType === "other" | undefined
+    dse-training.tsx # DSE 操練 — lobby + QuizShell
+    weight-training.tsx # 重量訓練 — coming soon
+  read.tsx           # Article reader (stack, pushed over tabs)
+  quiz.tsx           # Quiz (stack, pushed over tabs)
+  account.tsx        # Account / history (stack)
+  attempt.tsx        # Attempt detail (stack)
+  revision.tsx       # Revision chapter (stack)
+```
+
+Navigation: Tab → Read?id → Quiz?id → Score (Score rendered inside QuizShell).
 
 **Data layer**
 
@@ -153,7 +164,36 @@ These must never be violated. Violating them causes silent data loss that only s
 - Fields in `quiz_json` must match the TypeScript names exactly: `sequenceTokens` not `sequence_tokens`, `selectCount` not `select_count`, `correctAnswer` not `correct_answer`
 - Using snake_case silently produces `undefined` on the mobile side (no runtime error, just missing data)
 
-## Admin portal pre-implementation checklist
+## Admin frontend conventions
+
+**Question modal (`admin/public/js/questions.js`)**
+- `editingQuestionId` is set by `openQuestionModal(id)` where `id` comes from HTML as a string
+- Always compare with `String(x.id) === String(id)` — Supabase returns numeric IDs but HTML onclick passes strings
+- Option input selector must be `input[id^="qm-opt-"]` (not `[id^="qm-opt-"]`) — the wrapper div also has `id="qm-opt-row-X"` and has no `.value`, causing TypeError
+- `q.type` from Supabase may not match dropdown values (e.g. AI-generated `"comprehension"`) — resolve to a valid dropdown value using `q.format` as fallback
+
+**Add New Article panel (`admin/public/index.html`)**
+- Article Details form (top-left) contains all 4 metadata fields: `na-article-type`, `na-expected-minutes`, `na-is-challenge`, `na-is-free`
+- The Review Generated Article section (bottom) has only the Article JSON textarea + Save button — no duplicate metadata fields
+- `saveGeneratedArticle()` reads all 4 IDs from the Article Details form
+
+**articleType must be fetched from Supabase and stored in ArticleMeta**
+- `ArticleEntry.articleType` drives tab filtering (DSE文章 vs 其他文章)
+- `contentStore.ts` must include `article_type` in the Supabase select query and map it to `meta.articleType`
+- Seed articles have no `articleType` in SQLite cache — after adding `article_type` to the query, users must delete + reinstall the app to force a full re-sync (incremental sync only fetches rows where `updated_at` changed)
+- Tab filters: `dse-learner` = strict (`articleType === "dse-exam" | "dse-non-exam"`); `extra-articles` = fallback (`articleType === "other" || !articleType`)
+
+**MC option shuffling in QuizShell**
+- `QuizShell` shuffles `options` array (Fisher-Yates) once per quiz session at mount via `useState(() => rawQuestions.map(...))`
+- `correctAnswer` stores option **keys** (e.g. `"A"`, `"A,C"`), not text — keys travel with shuffled objects so answer-checking is unaffected
+- `SentenceOrderQuestion` already shuffles `sequenceTokens` internally — no change needed
+
+**react-native-svg is available for inline vector illustrations**
+- `react-native-svg@15.12.1` is installed
+- Use `Svg`, `Circle`, `Ellipse`, `Path`, `Polygon`, `Line` etc. for custom icon/mascot components
+- Do not use emojis for UI visuals when an SVG component is more appropriate
+
+
 
 Before adding any new field or route to `admin/server.js`, read:
 1. `articleToRow()` — does the new field need to be added here?
