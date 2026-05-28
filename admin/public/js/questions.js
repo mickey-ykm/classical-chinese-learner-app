@@ -312,3 +312,61 @@ window.openQuestionModal = openQuestionModal
 window.closeQuestionModal = closeQuestionModal
 window.saveQuestion = saveQuestion
 window.deleteQuestion = deleteQuestion
+window.openImportQuizModal = openImportQuizModal
+window.closeImportQuizModal = closeImportQuizModal
+window.confirmImportQuiz = confirmImportQuiz
+
+// ── Import Quiz JSON modal ────────────────────────────────────────────────────
+
+function openImportQuizModal() {
+  document.getElementById('import-quiz-textarea').value = ''
+  document.getElementById('import-quiz-error').classList.add('hidden')
+  document.getElementById('import-quiz-confirm-btn').disabled = false
+  document.getElementById('import-quiz-modal').classList.remove('hidden')
+}
+
+function closeImportQuizModal() {
+  document.getElementById('import-quiz-modal').classList.add('hidden')
+}
+
+async function confirmImportQuiz() {
+  const raw = document.getElementById('import-quiz-textarea').value.trim()
+  const errEl = document.getElementById('import-quiz-error')
+  const btn = document.getElementById('import-quiz-confirm-btn')
+  errEl.classList.add('hidden')
+
+  let quizJson
+  try {
+    quizJson = JSON.parse(raw)
+  } catch (e) {
+    errEl.textContent = 'Invalid JSON: ' + e.message
+    errEl.classList.remove('hidden')
+    return
+  }
+
+  btn.disabled = true
+  btn.textContent = 'Importing…'
+
+  try {
+    const res = await fetch('/api/questions/import', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ articleId: currentArticleId, quizJson }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      errEl.textContent = data.error || 'Import failed'
+      errEl.classList.remove('hidden')
+      return
+    }
+    closeImportQuizModal()
+    showToast(`Imported ${data.imported} question${data.imported === 1 ? '' : 's'} as drafts`, 'success')
+    loadQuestions()
+  } catch (e) {
+    errEl.textContent = 'Network error: ' + e.message
+    errEl.classList.remove('hidden')
+  } finally {
+    btn.disabled = false
+    btn.textContent = 'Import as Drafts'
+  }
+}

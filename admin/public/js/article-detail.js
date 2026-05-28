@@ -162,6 +162,8 @@ export function setAdReadOnly(readOnly) {
   document.getElementById('ad-generate-quiz-btn').disabled = readOnly
   const addQBtn = document.getElementById('ad-add-question-btn')
   if (addQBtn) addQBtn.disabled = readOnly
+  const importQBtn = document.getElementById('ad-import-quiz-btn')
+  if (importQBtn) importQBtn.disabled = readOnly
 }
 
 export function editArticleDetail() {

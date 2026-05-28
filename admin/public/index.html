@@ -194,10 +194,16 @@
             <h3 class="text-sm font-semibold">Questions</h3>
             <p class="text-xs text-slate-400 mt-0.5">Structured question management (Supabase-backed)</p>
           </div>
-          <button id="ad-add-question-btn" onclick="openQuestionModal(null)" disabled
-            class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-600 text-white hover:bg-amber-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-            + Add Question
-          </button>
+          <div class="flex items-center gap-2">
+            <button id="ad-import-quiz-btn" onclick="openImportQuizModal()" disabled
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-600 text-white hover:bg-slate-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+              Import Quiz JSON
+            </button>
+            <button id="ad-add-question-btn" onclick="openQuestionModal(null)" disabled
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-600 text-white hover:bg-amber-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+              + Add Question
+            </button>
+          </div>
         </div>
         <div id="ad-questions-loading" class="text-xs text-slate-400 py-4 text-center">Loading questions…</div>
         <div id="ad-questions-list" class="hidden space-y-2"></div>
@@ -207,7 +213,38 @@
     </div>
   </div><!-- /panel-article-detail -->
 
-  <!-- ── Quiz Prompt MGT ──────────────────────────────────────────────────── -->
+<!-- ── Import Quiz JSON Modal ──────────────────────────────────────────────── -->
+<div id="import-quiz-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/40" onclick="closeImportQuizModal()"></div>
+  <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl flex flex-col max-h-[90vh]">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-stone-100">
+      <div>
+        <h2 class="text-base font-semibold">Import Quiz JSON</h2>
+        <p class="text-xs text-slate-400 mt-0.5">Existing draft questions will be replaced. Published questions are kept.</p>
+      </div>
+      <button onclick="closeImportQuizModal()" class="text-slate-400 hover:text-slate-700 text-lg leading-none px-1">✕</button>
+    </div>
+    <div class="px-6 py-4 flex-1 overflow-y-auto space-y-3">
+      <p class="text-xs text-slate-500">Paste a quiz JSON object (<code class="bg-slate-100 px-1 rounded">{"parts":[...]}</code>) or a flat array of question objects (<code class="bg-slate-100 px-1 rounded">[{"stem":...}]</code>).</p>
+      <textarea id="import-quiz-textarea" rows="16" spellcheck="false"
+        placeholder='{"parts":[{"part":1,"title":"第一部分","pointsPerQuestion":1,"questions":[...]}]}'
+        class="w-full font-mono text-xs border border-stone-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-400 resize-y"></textarea>
+      <div id="import-quiz-error" class="hidden text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"></div>
+    </div>
+    <div class="px-6 py-4 border-t border-stone-100 flex justify-end gap-3">
+      <button onclick="closeImportQuizModal()"
+        class="px-4 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 transition-colors">
+        Cancel
+      </button>
+      <button id="import-quiz-confirm-btn" onclick="confirmImportQuiz()"
+        class="px-4 py-2 rounded-lg text-sm font-semibold bg-slate-700 text-white hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+        Import as Drafts
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Quiz Prompt MGT ──────────────────────────────────────────────────── -->
   <div id="panel-quiz-prompts" class="hidden pb-6">
 
     <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
