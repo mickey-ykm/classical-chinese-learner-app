@@ -15,6 +15,10 @@ npm test -- quiz.test.ts  # Run a single test file
 cd admin && npm test    # Run admin API integration tests (requires admin/.env.test)
 expo lint               # Lint the project
 cd admin && node server.js  # Run admin portal locally (port 3001)
+
+# Supabase data management
+cd admin && node backup-supabase.js  # Backup articles, questions, quiz_prompts to admin/backups/
+cd admin && node clear-supabase.js   # Clear all articles and questions (preserves quiz_prompts)
 ```
 
 ## Deployment
@@ -134,6 +138,13 @@ presets: [
 
 These must never be violated. Violating them causes silent data loss that only surfaces at runtime.
 
+**Mobile app sync behavior**
+- `contentStore.ts` syncs from Supabase on app launch via `backgroundFetch()` (once per session)
+- Incremental sync uses `updated_at > last_sync_at` — only detects changed articles, not deleted ones
+- After a Supabase data purge, use "清除快取並重新同步" button in Account screen to force a full re-sync
+- `clearCacheAndResync()` clears SQLite + in-memory cache, then fetches all published articles from Supabase
+- Bundled seed data (18 articles in `data/articles/` and `data/quizzes/`) is only used as fallback if Supabase returns nothing
+
 **questions table is the source of truth for quiz content**
 - `questions` table in Supabase holds all question data (both draft and published)
 - `quiz_json` on the `articles` row is a **derived cache** rebuilt from published questions
@@ -141,10 +152,12 @@ These must never be violated. Violating them causes silent data loss that only s
 - The listing "QUIZZES" column count and `hasQuizzes` flag both derive from `quiz_json`
 
 **rebuildQuizJson must be called after any question state change**
-- Call `rebuildQuizJson(articleId)` after every: question publish, question edit (if published), question delete, bulk delete
+- Call `rebuildQuizJson(articleId)` after every: question publish, question edit (if published), question delete, bulk delete, bulk publish
 - This rewrites `quiz_json` + bumps `updated_at` on the articles row
 - Bumping `updated_at` triggers the mobile app's incremental sync on next launch
 - Failure to call it = listing count stays wrong + mobile app never sees the new questions
+- Both POST and PUT question routes check `status === "published"` and call `rebuildQuizJson` accordingly
+- Bulk operations (bulk-delete, bulk-publish) group by article_id and call `rebuildQuizJson` once per article (not once per question)
 
 **articleToRow must never include quiz_json unless a quiz payload is present**
 - `articleToRow(article, meta)` builds the Supabase UPDATE payload
@@ -189,6 +202,16 @@ These must never be violated. Violating them causes silent data loss that only s
 - Always compare with `String(x.id) === String(id)` — Supabase returns numeric IDs but HTML onclick passes strings
 - Option input selector must be `input[id^="qm-opt-"]` (not `[id^="qm-opt-"]`) — the wrapper div also has `id="qm-opt-row-X"` and has no `.value`, causing TypeError
 - `q.type` from Supabase may not match dropdown values (e.g. AI-generated `"comprehension"`) — resolve to a valid dropdown value using `q.format` as fallback
+- Two save buttons: "Save Question" (saves as draft/keeps current status) and "Save and Publish" (saves + sets status to published)
+- `saveAndPublishQuestion()` temporarily overrides status dropdown to "published" before calling `saveQuestion()`
+
+**Question listing and bulk operations**
+- Draft questions have checkboxes for bulk selection
+- "Publish Selected" button bulk-publishes selected draft questions via `POST /api/questions/bulk-publish`
+- "Delete Selected" button bulk-deletes selected draft questions via `POST /api/questions/bulk-delete`
+- Both bulk operations validate non-empty selection and show confirmation dialog
+- Backend filters to only draft questions (bulk-publish skips already published ones)
+- Backend groups by article_id and calls `rebuildQuizJson()` once per article (not once per question)
 
 **Add New Article panel (`admin/public/index.html`)**
 - Article Details form (top-left) contains all 4 metadata fields: `na-article-type`, `na-expected-minutes`, `na-is-challenge`, `na-is-free`

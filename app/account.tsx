@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context"
 import { useAuth } from "@/hooks/useAuth"
 import { supabase } from "@/lib/supabase"
 import { getArticleIndex } from "@/lib/data"
-import { refresh as refreshContent } from "@/lib/contentStore"
+import { refresh as refreshContent, clearCacheAndResync } from "@/lib/contentStore"
 import { countRevisionMistakes } from "@/lib/revisionSession"
 import UpgradeModal from "@/components/UpgradeModal"
 
@@ -157,6 +157,34 @@ export default function AccountScreen() {
     }
   }
 
+  async function handleClearCacheAndResync() {
+    Alert.alert(
+      "清除快取並重新同步",
+      "這會刪除本地快取的所有文章，並從伺服器重新下載。確定要繼續嗎？",
+      [
+        { text: "取消", style: "cancel" },
+        {
+          text: "確定",
+          style: "destructive",
+          onPress: async () => {
+            setSyncing(true)
+            setSyncMsg(null)
+            try {
+              const { updated, errors } = await clearCacheAndResync()
+              if (errors > 0) setSyncMsg(`已重新同步 ${updated} 篇，${errors} 篇有問題`)
+              else setSyncMsg(`已重新同步 ${updated} 篇`)
+            } catch {
+              setSyncMsg("重新同步失敗，請稍後再試")
+            } finally {
+              setSyncing(false)
+              setTimeout(() => setSyncMsg(null), 3000)
+            }
+          },
+        },
+      ]
+    )
+  }
+
   const displayName = profile?.display_name ?? user.email ?? "用戶"
   const avatarUrl = profile?.avatar_url
 
@@ -268,6 +296,15 @@ export default function AccountScreen() {
               {syncMsg ?? "更新內容"}
             </Text>
           )}
+        </Pressable>
+
+        {/* Clear cache and resync */}
+        <Pressable
+          onPress={handleClearCacheAndResync}
+          disabled={syncing}
+          className="border border-slate-200 rounded-2xl py-4 items-center active:opacity-70 bg-white mt-3"
+        >
+          <Text className="text-red-500 font-semibold text-sm">清除快取並重新同步</Text>
         </Pressable>
 
         {/* Sign out */}

@@ -51,7 +51,7 @@ const ARTICLE_ORDER = Object.keys(SEED_ARTICLES)
 
 // ── In-memory cache ───────────────────────────────────────────────────────────
 
-type ArticleMeta = { level?: number; isChallenge?: boolean; expectedMinutes?: number; isFree?: boolean }
+type ArticleMeta = { level?: number; isChallenge?: boolean; expectedMinutes?: number; isFree?: boolean; articleType?: string }
 
 const _articles = new Map<string, Article>()
 const _quizzes = new Map<string, Quiz>()
@@ -101,6 +101,7 @@ function buildIndexEntry(id: string): ArticleEntry | null {
     type: meta.isChallenge ? "challenge" : undefined,
     expectedMinutes: meta.expectedMinutes,
     isFree: meta.isFree,
+    articleType: meta.articleType,
   }
 }
 
@@ -189,6 +190,7 @@ function mapSupabaseRow(row: Record<string, unknown>): { article: Article; quiz:
       isChallenge: (row.is_challenge as boolean) ?? false,
       expectedMinutes: (row.expected_minutes as number) ?? undefined,
       isFree: (row.is_free as boolean) ?? false,
+      articleType: (row.article_type as string) ?? "other",
     }
     return { article, quiz, meta }
   } catch {
@@ -200,7 +202,7 @@ async function fetchAndStore(lastSyncAt: string | null): Promise<{ updated: numb
   let query = supabase
     .from("articles")
     .select(
-      "id, title, source, title_footnote_id, segments, footnotes, modern_translation, level, is_challenge, is_free, quiz_json, expected_minutes, updated_at, status"
+      "id, title, source, title_footnote_id, segments, footnotes, modern_translation, level, is_challenge, is_free, quiz_json, expected_minutes, updated_at, status, article_type"
     )
     .order("updated_at", { ascending: true })
 
@@ -329,6 +331,24 @@ export async function refresh(): Promise<{ updated: number; errors: number }> {
     ["last_sync_at"]
   )
   return fetchAndStore(row?.value ?? null)
+}
+
+export async function clearCacheAndResync(): Promise<{ updated: number; errors: number }> {
+  const db = await getDb()
+  // Clear all cached content
+  await db.execAsync("DELETE FROM content_cache; DELETE FROM content_meta;")
+  // Clear in-memory cache
+  _articles.clear()
+  _quizzes.clear()
+  _meta.clear()
+  ARTICLE_ORDER.length = 0
+  // Force full re-sync (no last_sync_at) — this will fetch ONLY published articles from Supabase
+  const result = await fetchAndStore(null)
+  // If sync returned nothing, fall back to seed data
+  if (_articles.size === 0) {
+    loadSeedIntoMemory()
+  }
+  return result
 }
 
 export function getArticleIndex(): ArticleEntry[] {

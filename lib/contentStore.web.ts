@@ -128,6 +128,27 @@ export async function refresh(): Promise<{ updated: number; errors: number }> {
   return fetchAndStore(null)
 }
 
+export async function clearCacheAndResync(): Promise<{ updated: number; errors: number }> {
+  // Clear in-memory cache
+  _articles.clear()
+  _quizzes.clear()
+  _meta.clear()
+  ARTICLE_ORDER.length = 0
+  // Force full re-sync — this will fetch ONLY published articles from Supabase
+  const result = await fetchAndStore(null)
+  // If sync returned nothing, fall back to seed data
+  if (_articles.size === 0) {
+    for (const [id, article] of Object.entries(SEED_ARTICLES)) {
+      _articles.set(id, article)
+      ARTICLE_ORDER.push(id)
+    }
+    for (const [id, quiz] of Object.entries(SEED_QUIZZES)) {
+      _quizzes.set(id, quiz)
+    }
+  }
+  return result
+}
+
 export function getArticleIndex(): ArticleEntry[] {
   return ARTICLE_ORDER.flatMap((id) => {
     const e = buildIndexEntry(id)

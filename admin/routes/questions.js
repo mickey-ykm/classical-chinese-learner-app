@@ -43,6 +43,43 @@ router.post("/bulk-delete", async (req, res) => {
   }
 })
 
+router.post("/bulk-publish", async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return
+    const { ids } = req.body || {}
+    if (!Array.isArray(ids) || ids.length === 0) return res.status(400).json({ error: "ids[] required" })
+
+    // Fetch the questions to get their article_ids and filter to drafts only
+    const { data: questions, error: fetchErr } = await supabase
+      .from("questions")
+      .select("id, article_id, status")
+      .in("id", ids)
+    if (fetchErr) throw new Error(fetchErr.message)
+
+    // Filter to only draft questions
+    const draftIds = (questions || []).filter(q => q.status === "draft").map(q => q.id)
+
+    if (draftIds.length === 0) {
+      return res.json({ success: true, published: 0, message: "No draft questions to publish" })
+    }
+
+    // Update all to published
+    const { error: updateErr } = await supabase
+      .from("questions")
+      .update({ status: "published", updated_at: nowIso() })
+      .in("id", draftIds)
+    if (updateErr) throw new Error(updateErr.message)
+
+    // Get unique article IDs and rebuild each
+    const articleIds = [...new Set(questions.map(q => q.article_id))]
+    await Promise.all(articleIds.map(rebuildQuizJson))
+
+    res.json({ success: true, published: draftIds.length })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
 router.post("/", async (req, res) => {
   try {
     if (!requireSupabase(res)) return
@@ -54,6 +91,8 @@ router.post("/", async (req, res) => {
       .select("id")
       .single()
     if (error) throw new Error(error.message)
+    // If creating a published question, rebuild quiz_json
+    if (parsed.data.status === "published") await rebuildQuizJson(parsed.data.article_id)
     res.json({ success: true, id: data.id })
   } catch (e) {
     res.status(500).json({ error: e.message })

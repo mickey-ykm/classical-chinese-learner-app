@@ -36,8 +36,12 @@ export async function loadQuestions() {
       html += `<div>
         <div class="flex items-center justify-between mb-2">
           <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wide">草稿題目 (Draft)</h4>
-          <button onclick="bulkDeleteDraftQuestions()"
-            class="text-xs px-2.5 py-1 rounded border border-red-200 text-red-600 hover:bg-red-50 transition-colors">Delete Selected</button>
+          <div class="flex gap-2">
+            <button onclick="bulkPublishDraftQuestions()"
+              class="text-xs px-2.5 py-1 rounded border border-green-200 text-green-600 hover:bg-green-50 transition-colors">Publish Selected</button>
+            <button onclick="bulkDeleteDraftQuestions()"
+              class="text-xs px-2.5 py-1 rounded border border-red-200 text-red-600 hover:bg-red-50 transition-colors">Delete Selected</button>
+          </div>
         </div>
         <div class="flex flex-col gap-2">${drafts.map(q => renderQuestionCard(q)).join('')}</div>
       </div>`
@@ -73,6 +77,26 @@ export async function bulkDeleteDraftQuestions() {
     })
     if (!res.ok) throw new Error('Failed to delete')
     showToast(`Deleted ${ids.length} question(s)`, 'success')
+    loadQuestions(currentArticleId)
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error')
+  }
+}
+
+export async function bulkPublishDraftQuestions() {
+  const checkboxes = document.querySelectorAll('.draft-q-checkbox:checked')
+  const ids = Array.from(checkboxes).map(cb => cb.dataset.id)
+  if (!ids.length) { showToast('No draft questions selected', 'error'); return }
+  if (!confirm(`Publish ${ids.length} selected draft question(s)?`)) return
+  try {
+    const res = await fetch('/api/questions/bulk-publish', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids })
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Failed to publish')
+    showToast(`Published ${data.published} question(s)`, 'success')
     loadQuestions(currentArticleId)
   } catch (e) {
     showToast('Error: ' + e.message, 'error')
@@ -287,6 +311,19 @@ export async function saveQuestion() {
   }
 }
 
+export async function saveAndPublishQuestion() {
+  // Temporarily override the status dropdown to "published"
+  const statusDropdown = document.getElementById('qm-status')
+  const originalStatus = statusDropdown.value
+  statusDropdown.value = 'published'
+
+  // Call the regular save function
+  await saveQuestion()
+
+  // Restore original status (in case save failed and modal stays open)
+  statusDropdown.value = originalStatus
+}
+
 export async function deleteQuestion(id) {
   if (!confirm('Delete this question?')) return
   try {
@@ -306,11 +343,13 @@ export async function deleteQuestion(id) {
 window.loadQuestions = loadQuestions
 window.publishQuestion = publishQuestion
 window.bulkDeleteDraftQuestions = bulkDeleteDraftQuestions
+window.bulkPublishDraftQuestions = bulkPublishDraftQuestions
 window.onQmTypeChange = onQmTypeChange
 window.addQmOption = addQmOption
 window.openQuestionModal = openQuestionModal
 window.closeQuestionModal = closeQuestionModal
 window.saveQuestion = saveQuestion
+window.saveAndPublishQuestion = saveAndPublishQuestion
 window.deleteQuestion = deleteQuestion
 window.openImportQuizModal = openImportQuizModal
 window.closeImportQuizModal = closeImportQuizModal
