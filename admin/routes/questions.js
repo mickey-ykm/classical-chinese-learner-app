@@ -1,7 +1,7 @@
 const express = require("express")
 const { supabase, requireSupabase } = require("../lib/supabase")
 const { nowIso, rebuildQuizJson } = require("../lib/article-helpers")
-const { QuestionUpsertSchema, formatZodErrors } = require("../lib/schemas")
+const { QuestionUpsertSchema, formatZodErrors, VALID_QUESTION_TYPES } = require("../lib/schemas")
 
 const router = express.Router()
 
@@ -191,6 +191,13 @@ router.post("/import", async (req, res) => {
         if (!Array.isArray(q.options) && q.options && typeof q.options === "object") {
           Object.assign(optMap, q.options)
         }
+        // Filter question_types to only valid values
+        let questionTypes = q.questionTypes ?? q.question_types ?? []
+        if (Array.isArray(questionTypes)) {
+          questionTypes = questionTypes.filter(t => VALID_QUESTION_TYPES.includes(t))
+        } else {
+          questionTypes = []
+        }
         rows.push({
           article_id: articleId,
           type: q.type || "mc-single",
@@ -203,6 +210,7 @@ router.post("/import", async (req, res) => {
           explanation: q.explanation || null,
           select_count: q.selectCount ?? q.select_count ?? 1,
           sequence_tokens: q.sequenceTokens ?? q.sequence_tokens ?? null,
+          question_types: questionTypes.length > 0 ? questionTypes : null,
           status: "draft",
         })
       }

@@ -208,6 +208,7 @@ async function rebuildQuizJson(articleId) {
         explanation: q.explanation || null,
         selectCount: q.select_count ?? 1,
         sequenceTokens: q.sequence_tokens ?? null,
+        questionTypes: q.question_types ?? [],
       })),
     }))
 

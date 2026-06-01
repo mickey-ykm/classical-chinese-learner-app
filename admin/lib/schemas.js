@@ -1,5 +1,13 @@
 const { z } = require("zod")
 
+const VALID_QUESTION_TYPES = [
+  '字詞解釋',
+  '語句背誦',
+  '語句翻譯',
+  '修辭手法',
+  '內容重點'
+]
+
 const SegmentSchema = z.object({
   text: z.string(),
   footnoteId: z.string().optional(),
@@ -39,6 +47,7 @@ const QuizQuestionSchema = z.object({
   explanation: z.string().optional(),
   selectCount: z.number().int().positive().optional(),
   sequenceTokens: z.array(z.string()).optional(),
+  questionTypes: z.array(z.enum(VALID_QUESTION_TYPES)).optional(),
 }).refine(
   (q) => {
     const fmt = q.format ?? "mc"
@@ -75,6 +84,7 @@ const QuestionUpsertSchema = z.object({
   explanation: z.string().optional().nullable(),
   source_excerpt: z.string().optional().nullable(),
   status: z.enum(["draft", "published"]).default("draft"),
+  question_types: z.array(z.enum(VALID_QUESTION_TYPES)).optional().nullable(),
 })
 
 function formatZodErrors(zodError) {
@@ -82,6 +92,7 @@ function formatZodErrors(zodError) {
 }
 
 module.exports = {
+  VALID_QUESTION_TYPES,
   SegmentSchema,
   FootnoteSchema,
   ArticleSchema,

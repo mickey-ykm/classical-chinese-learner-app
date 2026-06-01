@@ -204,6 +204,8 @@ These must never be violated. Violating them causes silent data loss that only s
 - `q.type` from Supabase may not match dropdown values (e.g. AI-generated `"comprehension"`) — resolve to a valid dropdown value using `q.format` as fallback
 - Two save buttons: "Save Question" (saves as draft/keeps current status) and "Save and Publish" (saves + sets status to published)
 - `saveAndPublishQuestion()` temporarily overrides status dropdown to "published" before calling `saveQuestion()`
+- Question type labels: 5 checkboxes for pedagogical categorization (字詞解釋, 語句背誦, 語句翻譯, 修辭手法, 內容重點)
+- `openQuestionModal()` sets checkboxes based on `q.question_types` array; `saveQuestion()` collects checked values into `question_types` array
 
 **Question listing and bulk operations**
 - Draft questions have checkboxes for bulk selection

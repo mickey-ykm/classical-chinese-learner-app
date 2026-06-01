@@ -204,6 +204,8 @@ export function openQuestionModal(id) {
   document.getElementById('qm-source-excerpt').value = ''
   document.getElementById('qm-options-list').innerHTML =
     renderQmOptionRow('A') + renderQmOptionRow('B') + renderQmOptionRow('C') + renderQmOptionRow('D')
+  // Clear question type checkboxes
+  document.querySelectorAll('.qm-type-checkbox').forEach(cb => cb.checked = false)
 
   if (id) {
     const q = questionsList.find((x) => String(x.id) === String(id))
@@ -220,6 +222,12 @@ export function openQuestionModal(id) {
     document.getElementById('qm-stem').value = q.stem || ''
     document.getElementById('qm-explanation').value = q.explanation || ''
     document.getElementById('qm-source-excerpt').value = q.source_excerpt || ''
+
+    // Set question type checkboxes
+    const questionTypes = q.question_types || []
+    document.querySelectorAll('.qm-type-checkbox').forEach(cb => {
+      cb.checked = questionTypes.includes(cb.value)
+    })
 
     if (q.format === 'mc') {
       const opts = q.options || {}
@@ -274,6 +282,9 @@ export async function saveQuestion() {
     sequence_tokens = [...tokens].sort(() => Math.random() - 0.5)
   }
 
+  // Collect selected question type labels
+  const questionTypes = Array.from(document.querySelectorAll('.qm-type-checkbox:checked')).map(cb => cb.value)
+
   const body = {
     article_id: currentArticleId,
     type,
@@ -288,6 +299,7 @@ export async function saveQuestion() {
     explanation: document.getElementById('qm-explanation').value.trim() || undefined,
     source_excerpt: document.getElementById('qm-source-excerpt').value.trim() || undefined,
     status: document.getElementById('qm-status').value,
+    question_types: questionTypes.length > 0 ? questionTypes : undefined,
   }
 
   try {

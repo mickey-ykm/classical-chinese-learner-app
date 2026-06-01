@@ -40,6 +40,7 @@ export interface Question {
   selectCount?: number   // how many options to select (1 = single, >1 = multi)
   sequenceTokens?: string[]  // shuffled tokens for sentence-order
   explanation?: string
+  questionTypes?: string[]  // Question type labels: 字詞解釋, 語句背誦, 語句翻譯, 修辭手法, 內容重點
 }
 
 export interface QuizAnswer {
@@ -72,4 +73,5 @@ export interface ArticleEntry {
   level?: 1 | 2 | 3 | 4 | 5 | 6 | 7
   expectedMinutes?: number
   isFree?: boolean
+  articleType?: string
 }
