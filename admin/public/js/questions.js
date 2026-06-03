@@ -115,6 +115,22 @@ function renderQuestionCard(q) {
   const statusBadge = q.status === 'published'
     ? '<span class="text-xs px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-medium">Published</span>'
     : '<span class="text-xs px-1.5 py-0.5 rounded bg-stone-100 text-stone-500 font-medium">Draft</span>'
+
+  // Question type labels (教學標籤)
+  const questionTypeLabelInfo = {
+    '字詞解釋': { cls: 'bg-teal-100 text-teal-700' },
+    '語句背誦': { cls: 'bg-indigo-100 text-indigo-700' },
+    '語句翻譯': { cls: 'bg-rose-100 text-rose-700' },
+    '修辭手法': { cls: 'bg-cyan-100 text-cyan-700' },
+    '內容重點': { cls: 'bg-amber-100 text-amber-700' },
+  }
+  const questionTypeLabels = (q.question_types || [])
+    .map(label => {
+      const info = questionTypeLabelInfo[label] || { cls: 'bg-stone-100 text-stone-600' }
+      return `<span class="text-xs px-1.5 py-0.5 rounded ${info.cls}">${escHtml(label)}</span>`
+    })
+    .join('')
+
   const publishBtn = q.status !== 'published'
     ? `<button onclick="publishQuestion('${q.id}')"
         class="text-xs px-2.5 py-1 rounded border border-green-300 text-green-700 hover:bg-green-50 transition-colors">Publish</button>`
@@ -132,6 +148,7 @@ function renderQuestionCard(q) {
             <span class="text-xs text-slate-400">Part ${escHtml(String(q.part ?? 1))}</span>
             <span class="text-xs text-slate-400">${escHtml(String(q.points ?? 1))}pt</span>
             ${statusBadge}
+            ${questionTypeLabels}
           </div>
           <p class="text-sm text-slate-800 leading-snug">${escHtml(q.stem || '')}</p>
           ${q.explanation ? `<p class="text-xs text-slate-400 mt-1">💡 ${escHtml(q.explanation)}</p>` : ''}
