@@ -1,7 +1,8 @@
 import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native"
 import { useRouter, useLocalSearchParams } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
+import { useFocusEffect } from "expo-router"
 import { getPartTitles, getArticleIndex, isArticleFree } from "@/lib/data"
 import { sampleQuiz } from "@/lib/sampleQuiz"
 import { useAuth } from "@/hooks/useAuth"
@@ -20,11 +21,25 @@ export default function QuizScreen() {
   const [result, setResult] = useState<SampledQuizResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [needsProgressRefresh, setNeedsProgressRefresh] = useState(false)
 
   useEffect(() => {
     if (gated) return
     fetchSample()
   }, [id, gated])
+
+  // When returning to this screen after quiz completion, refresh poolProgress
+  useFocusEffect(
+    useCallback(() => {
+      if (!needsProgressRefresh || !result) return
+      setNeedsProgressRefresh(false)
+      sampleQuiz(id, user?.id)
+        .then((updated) =>
+          setResult((prev) => prev ? { ...prev, poolProgress: updated.poolProgress } : prev)
+        )
+        .catch(() => {})
+    }, [needsProgressRefresh, id, user?.id])
+  )
 
   async function fetchSample() {
     setLoading(true)
@@ -77,15 +92,6 @@ export default function QuizScreen() {
   const expectedMinutes = getArticleIndex().find((a) => a.id === id)?.expectedMinutes
   const isAnonymous = !user || user.is_anonymous
 
-  async function handleFinished() {
-    try {
-      const updated = await sampleQuiz(id, user?.id)
-      setResult((prev) => prev ? { ...prev, poolProgress: updated.poolProgress } : prev)
-    } catch {
-      // non-critical — ignore if refresh fails
-    }
-  }
-
   return (
     <SafeAreaView className="flex-1 bg-slate-50">
       <ScrollView className="flex-1 px-5" contentContainerClassName="py-8">
@@ -122,7 +128,7 @@ export default function QuizScreen() {
           partTitles={partTitles}
           articleId={id}
           expectedMinutes={expectedMinutes}
-          onFinished={handleFinished}
+          onFinished={() => setNeedsProgressRefresh(true)}
         />
       </ScrollView>
     </SafeAreaView>

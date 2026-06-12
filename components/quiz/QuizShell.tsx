@@ -42,7 +42,21 @@ export default function QuizShell({ questions: rawQuestions, partTitles, article
   const [questions] = useState<Question[]>(() =>
     rawQuestions.map((q) => {
       if (q.format === "mc" && q.options && q.options.length > 0) {
-        return { ...q, options: shuffleArray(q.options) }
+        const shuffled = shuffleArray(q.options)
+        // Re-assign keys A, B, C... in alphabetical order after shuffle
+        const keys = ["A", "B", "C", "D", "E", "F", "G", "H"] as const
+        const oldKeyToNew: Record<string, string> = {}
+        const reKeyed = shuffled.map((opt, i) => {
+          const newKey = keys[i]
+          oldKeyToNew[opt.key] = newKey
+          return { ...opt, key: newKey }
+        })
+        // Remap correctAnswer to new keys
+        const remappedCorrect = q.correctAnswer
+          .split(",")
+          .map((k) => oldKeyToNew[k.trim()] ?? k.trim())
+          .join(",")
+        return { ...q, options: reKeyed, correctAnswer: remappedCorrect }
       }
       return q
     })
