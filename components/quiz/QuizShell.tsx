@@ -94,7 +94,7 @@ export default function QuizShell({ questions: rawQuestions, partTitles, article
         user.id, articleId, questions, answers, earned, total,
         totalSecs,
         expectedMinutes != null ? expectedMinutes * 60 : undefined,
-      ).then(() => { onFinished?.() }).catch((e) => { console.error("[QuizShell] saveQuizAttempt threw:", e) })
+      ).then(() => { onFinished?.() }).catch(() => {})
     }
   }, [isFinished])
 
