@@ -236,6 +236,15 @@ These must never be violated. Violating them causes silent data loss that only s
 - Use `Svg`, `Circle`, `Ellipse`, `Path`, `Polygon`, `Line` etc. for custom icon/mascot components
 - Do not use emojis for UI visuals when an SVG component is more appropriate
 
+**Quiz sampling (`lib/sampleQuiz.ts` + `admin/routes/quiz.js`)**
+- `app/quiz.tsx` calls `sampleQuiz(articleId, user?.id)` instead of loading `quiz_json` — always fetches fresh from the API
+- Sampling endpoint: `GET /api/quiz/:articleId/sample?userId=<uuid>` — public (no admin session required), mounted before the auth guard in `server.js`
+- Part quotas are hardcoded in `admin/lib/sampling.js`: 6+2+4+2+2+6 = 22 questions
+- Repeat avoidance: unseen questions first; when a part runs short, fills up from least-recently-seen (by `quiz_attempts.completed_at`)
+- `Question.part` type is `1|2|3|4|5|6` (widened from 1–4); questions table already has parts 5 and 6
+- API response includes `poolProgress` (`totalInPool`, `seenCount`, `attemptNumber`, `estimatedAttemptsToComplete`) — used for the "已見過 X / Y 題" display in `app/quiz.tsx`
+- Test the sampling logic at `https://ccladmin.mickey-calligraphy.art/test-sampling.html`
+
 
 
 Before adding any new field or route to `admin/server.js`, read:

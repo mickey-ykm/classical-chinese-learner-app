@@ -64,7 +64,7 @@ function buildIndexEntry(id: string): ArticleEntry | null {
     source: article.source ?? "",
     totalPoints: quiz?.totalPoints ?? 0,
     totalQuestions: quiz ? quiz.parts.reduce((s, p) => s + p.questions.length, 0) : 0,
-    level: meta.level,
+    level: meta.level as ArticleEntry["level"],
     type: meta.isChallenge ? "challenge" : undefined,
   }
 }

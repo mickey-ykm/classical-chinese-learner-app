@@ -7,7 +7,7 @@ import QuizShell from "@/components/quiz/QuizShell"
 import { useAuth } from "@/hooks/useAuth"
 import { supabase } from "@/lib/supabase"
 import { getArticle } from "@/lib/data"
-import type { Question, Article } from "@/lib/types"
+import type { Question, Article, QuizOption } from "@/lib/types"
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true)
@@ -24,10 +24,10 @@ function pickRandom<T>(arr: T[], n: number): T[] {
   return shuffled.slice(0, n)
 }
 
-function normalizeOptions(opts: any): { key: string; text: string }[] {
-  if (Array.isArray(opts)) return opts
+function normalizeOptions(opts: any): QuizOption[] {
+  if (Array.isArray(opts)) return opts as QuizOption[]
   if (opts && typeof opts === "object") {
-    return Object.entries(opts).map(([key, text]) => ({ key, text: String(text) }))
+    return Object.entries(opts).map(([key, text]) => ({ key: key as QuizOption["key"], text: String(text) }))
   }
   return []
 }

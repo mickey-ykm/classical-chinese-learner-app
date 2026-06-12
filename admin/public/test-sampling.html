@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Test Sampling — 文言教室 Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; }
+    #toast {
+      position: fixed; bottom: 24px; right: 24px;
+      padding: 12px 20px; border-radius: 8px; font-size: 14px;
+      transform: translateY(80px); opacity: 0;
+      transition: transform 0.25s ease, opacity 0.25s ease;
+      z-index: 1000; pointer-events: none;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+  </style>
+</head>
+<body class="bg-stone-50 text-slate-800 min-h-screen">
+
+<script>
+  fetch("/api/admin/me").then(r => { if (!r.ok) window.location.href = "/login.html" })
+</script>
+
+<!-- Header -->
+<header class="bg-white border-b border-stone-200 px-6 py-4 flex items-center gap-3">
+  <a href="/" class="w-9 h-9 rounded-md bg-amber-600 flex items-center justify-center text-white font-bold text-sm">文</a>
+  <div>
+    <h1 class="font-bold text-lg leading-tight">文言教室 Admin</h1>
+    <p class="text-xs text-slate-500">Test Sampling</p>
+  </div>
+  <div class="ml-auto">
+    <a href="/" class="text-xs text-slate-500 hover:text-slate-700 border border-stone-200 rounded px-3 py-1.5">← Back</a>
+  </div>
+</header>
+
+<div class="max-w-4xl mx-auto px-6 py-8">
+
+  <div class="mb-6">
+    <h2 class="font-semibold text-base mb-1">Quiz Sampling Tester</h2>
+    <p class="text-sm text-slate-500">Simulate what a user would see when starting a quiz. Verifies part quotas and repeat avoidance logic.</p>
+  </div>
+
+  <!-- Input form -->
+  <div class="bg-white rounded-xl border border-stone-200 p-5 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Article ID <span class="text-red-400">*</span></label>
+        <input id="input-article-id" type="text" placeholder="e.g. wang-rong-he-jiao"
+          class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400" />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">User ID <span class="text-slate-400">(optional — omit for anonymous)</span></label>
+        <input id="input-user-id" type="text" placeholder="UUID of a test user"
+          class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400" />
+      </div>
+    </div>
+    <button onclick="runSample()"
+      class="bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors">
+      Run Sample
+    </button>
+  </div>
+
+  <!-- Results -->
+  <div id="results" class="hidden">
+
+    <!-- Pool progress -->
+    <div id="pool-progress" class="bg-white rounded-xl border border-stone-200 p-5 mb-4">
+      <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Pool Progress</h3>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div>
+          <div id="stat-total-in-pool" class="text-2xl font-bold text-slate-800">—</div>
+          <div class="text-xs text-slate-500 mt-0.5">Total in pool</div>
+        </div>
+        <div>
+          <div id="stat-seen-count" class="text-2xl font-bold text-slate-800">—</div>
+          <div class="text-xs text-slate-500 mt-0.5">Seen by user</div>
+        </div>
+        <div>
+          <div id="stat-attempt-number" class="text-2xl font-bold text-slate-800">—</div>
+          <div class="text-xs text-slate-500 mt-0.5">Attempt #</div>
+        </div>
+        <div>
+          <div id="stat-est-attempts" class="text-2xl font-bold text-amber-600">—</div>
+          <div class="text-xs text-slate-500 mt-0.5">Suggested remaining</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Part distribution -->
+    <div class="bg-white rounded-xl border border-stone-200 p-5 mb-4">
+      <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Part Distribution</h3>
+      <div id="part-distribution" class="space-y-2"></div>
+    </div>
+
+    <!-- Question list -->
+    <div class="bg-white rounded-xl border border-stone-200 p-5">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Sampled Questions (<span id="total-questions">0</span>)</h3>
+        <button onclick="runSample()" class="text-xs text-amber-600 hover:text-amber-700 font-medium">Re-sample</button>
+      </div>
+      <div id="question-list" class="space-y-2"></div>
+    </div>
+
+  </div>
+
+  <!-- Error state -->
+  <div id="error-state" class="hidden bg-red-50 border border-red-200 rounded-xl p-5 text-sm text-red-700"></div>
+
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+const QUOTAS = { 1: 6, 2: 2, 3: 4, 4: 2, 5: 2, 6: 6 }
+
+async function runSample() {
+  const articleId = document.getElementById("input-article-id").value.trim()
+  const userId = document.getElementById("input-user-id").value.trim()
+
+  if (!articleId) {
+    showToast("Article ID is required", "error")
+    return
+  }
+
+  document.getElementById("results").classList.add("hidden")
+  document.getElementById("error-state").classList.add("hidden")
+
+  try {
+    const url = new URL(`/api/quiz/${encodeURIComponent(articleId)}/sample`, location.origin)
+    if (userId) url.searchParams.set("userId", userId)
+
+    const res = await fetch(url)
+    const data = await res.json()
+
+    if (!res.ok) {
+      showError(data.error || `HTTP ${res.status}`)
+      return
+    }
+
+    renderResults(data)
+  } catch (e) {
+    showError(e.message)
+  }
+}
+
+function renderResults(data) {
+  const { poolProgress, questions, totalQuestions } = data
+
+  // Pool progress stats
+  document.getElementById("stat-total-in-pool").textContent = poolProgress.totalInPool
+  document.getElementById("stat-seen-count").textContent = poolProgress.seenCount
+  document.getElementById("stat-attempt-number").textContent = poolProgress.attemptNumber
+  document.getElementById("stat-est-attempts").textContent = poolProgress.estimatedAttemptsToComplete
+  document.getElementById("total-questions").textContent = totalQuestions
+
+  // Part distribution
+  const partCounts = {}
+  for (const q of questions) {
+    partCounts[q.part] = (partCounts[q.part] || 0) + 1
+  }
+
+  const distEl = document.getElementById("part-distribution")
+  distEl.innerHTML = ""
+  for (let p = 1; p <= 6; p++) {
+    const quota = QUOTAS[p] ?? "?"
+    const got = partCounts[p] ?? 0
+    const ok = got === quota
+    const short = got < quota
+    distEl.innerHTML += `
+      <div class="flex items-center gap-3">
+        <div class="text-xs font-medium text-slate-500 w-14">Part ${p}</div>
+        <div class="flex-1 bg-stone-100 rounded-full h-2 overflow-hidden">
+          <div class="h-2 rounded-full ${short ? "bg-amber-400" : "bg-green-500"}" style="width:${Math.min(100, quota > 0 ? (got / quota) * 100 : 0)}%"></div>
+        </div>
+        <div class="text-xs tabular-nums ${short ? "text-amber-600" : "text-slate-700"} w-20 text-right">
+          ${got} / ${quota}${short ? " ⚠" : ok ? " ✓" : ""}
+        </div>
+      </div>`
+  }
+
+  // Question list
+  const listEl = document.getElementById("question-list")
+  listEl.innerHTML = ""
+  for (const q of questions) {
+    const typeBadge = (q.questionTypes || []).map(t =>
+      `<span class="bg-slate-100 text-slate-600 text-xs px-1.5 py-0.5 rounded">${t}</span>`
+    ).join(" ")
+    listEl.innerHTML += `
+      <div class="border border-stone-100 rounded-lg px-4 py-3">
+        <div class="flex items-start gap-2 mb-1">
+          <span class="text-xs bg-amber-100 text-amber-700 font-medium px-2 py-0.5 rounded shrink-0">Part ${q.part}</span>
+          <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded shrink-0">${q.format}</span>
+          ${typeBadge}
+          <span class="text-xs text-slate-400 ml-auto shrink-0">#${q.id}</span>
+        </div>
+        <div class="text-sm text-slate-700 leading-relaxed" style="font-family: Georgia, serif">${escHtml(q.stem)}</div>
+      </div>`
+  }
+
+  document.getElementById("results").classList.remove("hidden")
+}
+
+function showError(msg) {
+  const el = document.getElementById("error-state")
+  el.textContent = msg
+  el.classList.remove("hidden")
+}
+
+function escHtml(str) {
+  return String(str ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+}
+
+function showToast(msg, type = "info") {
+  const el = document.getElementById("toast")
+  el.textContent = msg
+  el.className = `show ${type === "error" ? "bg-red-600 text-white" : "bg-slate-800 text-white"}`
+  setTimeout(() => { el.className = "" }, 2500)
+}
+
+window.runSample = runSample
+</script>
+</body>
+</html>

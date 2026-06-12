@@ -14,6 +14,7 @@ const promptsRouter = require("./routes/prompts")
 const questionsRouter = require("./routes/questions")
 const assessmentRouter = require("./routes/assessment")
 const generateArticleRouter = require("./routes/generate-article")
+const quizRouter = require("./routes/quiz")
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -37,6 +38,9 @@ app.use(express.static(path.join(__dirname, "public")))
 
 // Auth routes (no guard needed)
 app.use("/api/admin", authRouter)
+
+// Public mobile API routes (no admin session required)
+app.use("/api/quiz", quizRouter)
 
 // Auth guard for all other /api/* routes
 app.use((req, res, next) => {

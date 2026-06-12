@@ -97,7 +97,7 @@ function buildIndexEntry(id: string): ArticleEntry | null {
     source: article.source ?? "",
     totalPoints,
     totalQuestions,
-    level: meta.level,
+    level: meta.level as ArticleEntry["level"],
     type: meta.isChallenge ? "challenge" : undefined,
     expectedMinutes: meta.expectedMinutes,
     isFree: meta.isFree,

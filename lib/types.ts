@@ -31,7 +31,7 @@ export interface QuizOption {
 
 export interface Question {
   id: number
-  part: 1 | 2 | 3 | 4
+  part: 1 | 2 | 3 | 4 | 5 | 6
   points: number
   stem: string
   format?: QuestionFormat
@@ -51,7 +51,7 @@ export interface QuizAnswer {
 }
 
 export interface QuizPart {
-  part: 1 | 2 | 3 | 4
+  part: 1 | 2 | 3 | 4 | 5 | 6
   title: string
   pointsPerQuestion: number
   questions: Question[]
@@ -74,4 +74,18 @@ export interface ArticleEntry {
   expectedMinutes?: number
   isFree?: boolean
   articleType?: string
+}
+
+export interface PoolProgress {
+  totalInPool: number
+  seenCount: number
+  attemptNumber: number
+  estimatedAttemptsToComplete: number
+}
+
+export interface SampledQuizResponse {
+  articleId: string
+  totalQuestions: number
+  poolProgress: PoolProgress
+  questions: Question[]
 }

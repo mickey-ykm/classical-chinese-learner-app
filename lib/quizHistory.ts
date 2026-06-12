@@ -34,7 +34,7 @@ export async function saveQuizAttempt(
       attempt_id: attempt.id,
       question_id: String(q.id),
       part_number: q.part,
-      user_choice: answer ? OPTION_INDEX[answer.selectedOption] : null,
+      user_choice: answer?.selectedOption != null ? OPTION_INDEX[answer.selectedOption] : null,
       correct_choice: OPTION_INDEX[q.correctAnswer],
       is_correct: answer?.isCorrect ?? false,
       points_earned: answer?.isCorrect ? q.points : 0,

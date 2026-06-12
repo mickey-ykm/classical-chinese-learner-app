@@ -28,7 +28,24 @@ function formatTimer(seconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`
 }
 
-export default function QuizShell({ questions, partTitles, articleId, expectedMinutes, onSave }: Props) {
+function shuffleArray<T>(arr: T[]): T[] {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
+export default function QuizShell({ questions: rawQuestions, partTitles, articleId, expectedMinutes, onSave }: Props) {
+  const [questions] = useState<Question[]>(() =>
+    rawQuestions.map((q) => {
+      if (q.format === "mc" && q.options && q.options.length > 0) {
+        return { ...q, options: shuffleArray(q.options) }
+      }
+      return q
+    })
+  )
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<number, QuizAnswer>>({})
   const [selectedOption, setSelectedOption] = useState<OptionKey | null>(null)
@@ -124,7 +141,7 @@ export default function QuizShell({ questions, partTitles, articleId, expectedMi
   }
 
   const isFirstOfPart =
-    currentIndex === 0 || questions[currentIndex - 1].part !== currentQuestion.part
+    currentIndex === 0 || questions[currentIndex - 1]?.part !== currentQuestion.part
 
   return (
     <View className="gap-6">

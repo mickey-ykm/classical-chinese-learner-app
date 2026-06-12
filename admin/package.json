@@ -4,7 +4,9 @@
   "description": "Admin portal for managing exercises",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.3",
@@ -13,5 +15,9 @@
     "express": "^4.18.2",
     "express-session": "^1.19.0",
     "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^7.2.2"
   }
 }
