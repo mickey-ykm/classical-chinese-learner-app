@@ -92,7 +92,7 @@ export default function MCQuestion({
           onPress={() => toggleOption(opt.key)}
           className={`flex-row items-start border rounded-xl px-4 py-3 mb-3 ${optionStyle(opt.key)}`}
         >
-          {/* Checkbox / radio indicator */}
+          {/* Key indicator */}
           <View
             className={`w-6 h-6 rounded-full border-2 mr-3 mt-0.5 items-center justify-center flex-shrink-0 ${
               selected.includes(opt.key)
@@ -100,14 +100,11 @@ export default function MCQuestion({
                 : "border-slate-300 bg-white"
             }`}
           >
-            {selected.includes(opt.key) && (
-              <View className="w-2.5 h-2.5 rounded-full bg-white" />
-            )}
+            <Text className={`text-xs font-bold ${selected.includes(opt.key) ? "text-white" : "text-slate-500"}`}>
+              {opt.key}
+            </Text>
           </View>
-          <Text className="text-sm text-slate-700 flex-1 leading-5">
-            <Text className="font-semibold">{opt.key}. </Text>
-            {opt.text}
-          </Text>
+          <Text className="text-sm text-slate-700 flex-1 leading-5">{opt.text}</Text>
         </TouchableOpacity>
       ))}
 

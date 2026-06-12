@@ -77,6 +77,15 @@ export default function QuizScreen() {
   const expectedMinutes = getArticleIndex().find((a) => a.id === id)?.expectedMinutes
   const isAnonymous = !user || user.is_anonymous
 
+  async function handleFinished() {
+    try {
+      const updated = await sampleQuiz(id, user?.id)
+      setResult((prev) => prev ? { ...prev, poolProgress: updated.poolProgress } : prev)
+    } catch {
+      // non-critical — ignore if refresh fails
+    }
+  }
+
   return (
     <SafeAreaView className="flex-1 bg-slate-50">
       <ScrollView className="flex-1 px-5" contentContainerClassName="py-8">
@@ -113,6 +122,7 @@ export default function QuizScreen() {
           partTitles={partTitles}
           articleId={id}
           expectedMinutes={expectedMinutes}
+          onFinished={handleFinished}
         />
       </ScrollView>
     </SafeAreaView>

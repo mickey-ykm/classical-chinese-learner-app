@@ -20,6 +20,7 @@ interface Props {
   articleId?: string
   expectedMinutes?: number
   onSave?: (score: number, total: number, totalSeconds: number) => void
+  onFinished?: () => void
 }
 
 function formatTimer(seconds: number): string {
@@ -37,7 +38,7 @@ function shuffleArray<T>(arr: T[]): T[] {
   return a
 }
 
-export default function QuizShell({ questions: rawQuestions, partTitles, articleId, expectedMinutes, onSave }: Props) {
+export default function QuizShell({ questions: rawQuestions, partTitles, articleId, expectedMinutes, onSave, onFinished }: Props) {
   const [questions] = useState<Question[]>(() =>
     rawQuestions.map((q) => {
       if (q.format === "mc" && q.options && q.options.length > 0) {
@@ -79,7 +80,7 @@ export default function QuizShell({ questions: rawQuestions, partTitles, article
         user.id, articleId, questions, answers, earned, total,
         totalSecs,
         expectedMinutes != null ? expectedMinutes * 60 : undefined,
-      ).catch(() => {})
+      ).then(() => { onFinished?.() }).catch(() => {})
     }
   }, [isFinished])
 
