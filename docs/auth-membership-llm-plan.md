@@ -1,6 +1,6 @@
 # Plan: Auth + Membership + Admin GO LIVE + Content Platform + LLM
 
-_Last revised 2026-05-26 — Phase 7 complete. Phases 8, 9, 10, 11 complete. Pre-Phase 12 refactor complete (server.js split into lib/ + routes/, index.html split into ES modules). Three post-refactor bugs found and fixed in production: (1) stale `na-level` reset in saveGeneratedArticle, (2) rebuildQuizJson writing snake_case fields into quiz_json (sequence_tokens → sequenceTokens, select_count → selectCount), (3) mc-multi questions incorrectly routed to QuizQuestion instead of MCQuestion. Next: automated tests → Phase 12 (RevenueCat)._
+_Last revised 2026-05-27 — Phase 7 complete. Phases 8, 9, 10, 11 complete. Pre-Phase 12 refactor complete (server.js split into lib/ + routes/, index.html split into ES modules). Three post-refactor bugs found and fixed in production: (1) stale `na-level` reset in saveGeneratedArticle, (2) rebuildQuizJson writing snake_case fields into quiz_json (sequence_tokens → sequenceTokens, select_count → selectCount), (3) mc-multi questions incorrectly routed to QuizQuestion instead of MCQuestion. Pre-Phase 12 automated testing complete (2026-05-27). Next: Phase 12 (RevenueCat)._
 
 ## Context
 
