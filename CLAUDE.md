@@ -228,8 +228,18 @@ These must never be violated. Violating them causes silent data loss that only s
 
 **MC option shuffling in QuizShell**
 - `QuizShell` shuffles `options` array (Fisher-Yates) once per quiz session at mount via `useState(() => rawQuestions.map(...))`
-- `correctAnswer` stores option **keys** (e.g. `"A"`, `"A,C"`), not text — keys travel with shuffled objects so answer-checking is unaffected
+- After shuffling, keys are re-assigned A, B, C, D in order and `correctAnswer` is remapped to match — options always display alphabetically regardless of shuffle
 - `SentenceOrderQuestion` already shuffles `sequenceTokens` internally — no change needed
+
+**Question.id is a UUID string for Supabase-sourced questions**
+- `Question.id` and `QuizAnswer.questionId` are typed as `string | number` — legacy bundled questions use numeric IDs, Supabase questions use UUID strings
+- `answers` state in `QuizShell` is `Record<string | number, QuizAnswer>` — keyed by `q.id` directly
+- `quiz_answers.question_id` column is `text` — stores UUID strings for new questions, numeric strings for legacy ones
+
+**Pool progress (已見過 X/Y 題)**
+- Displayed in `app/quiz.tsx` for logged-in users only — hidden for anonymous users
+- Re-fetches from `/api/quiz/:articleId/sample` when user returns to the quiz entry screen after completing a quiz (`useFocusEffect` + `needsProgressRefresh` flag)
+- Anonymous users get no repeat avoidance and no pool progress display
 
 **react-native-svg is available for inline vector illustrations**
 - `react-native-svg@15.12.1` is installed
