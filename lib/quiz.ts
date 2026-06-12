@@ -24,7 +24,7 @@ export function checkAnswer(question: Question, selected: OptionKey): QuizAnswer
 export function checkMultiAnswer(
   question: Question,
   selectedKeys: OptionKey[]
-): { questionId: number; selectedOptions: OptionKey[]; isCorrect: boolean } {
+): { questionId: string | number; selectedOptions: OptionKey[]; isCorrect: boolean } {
   const correctSet = new Set(
     (question.correctAnswer as string).split(",").map((k) => k.trim())
   )
@@ -42,7 +42,7 @@ export function checkMultiAnswer(
 export function checkFillBlankAnswer(
   question: Question,
   input: string
-): { questionId: number; input: string; isCorrect: boolean } {
+): { questionId: string | number; input: string; isCorrect: boolean } {
   const accepted = (question.correctAnswer as string)
     .split("|")
     .map(normalise)
@@ -57,7 +57,7 @@ export function checkFillBlankAnswer(
 export function checkSentenceOrderAnswer(
   question: Question,
   submittedTokens: string[]
-): { questionId: number; submittedTokens: string[]; isCorrect: boolean } {
+): { questionId: string | number; submittedTokens: string[]; isCorrect: boolean } {
   const correctTokens = (question.correctAnswer as string).split(">")
   const isCorrect =
     correctTokens.length === submittedTokens.length &&
@@ -69,7 +69,7 @@ export function checkSentenceOrderAnswer(
 
 export function calculateScore(
   questions: Question[],
-  answers: Record<number, QuizAnswer>
+  answers: Record<string | number, QuizAnswer>
 ): { earned: number; total: number; percentage: number } {
   let earned = 0
   let total = 0
@@ -83,7 +83,7 @@ export function calculateScore(
 export function getPartScore(
   part: 1 | 2 | 3 | 4,
   questions: Question[],
-  answers: Record<number, QuizAnswer>
+  answers: Record<string | number, QuizAnswer>
 ): { earned: number; total: number } {
   const partQuestions = questions.filter((q) => q.part === part)
   let earned = 0

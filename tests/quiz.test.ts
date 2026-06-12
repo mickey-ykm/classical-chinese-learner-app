@@ -5,7 +5,7 @@ import type { Question, QuizAnswer, OptionKey } from "@/lib/types"
 
 const allQuestions = quizData.parts.flatMap((p) => p.questions) as unknown as Question[]
 
-const ANSWER_KEY: Record<number, OptionKey> = {
+const ANSWER_KEY: Record<string | number, OptionKey> = {
   1: "B", 2: "C", 3: "C", 4: "B", 5: "D",
   6: "B", 7: "B", 8: "C", 9: "A", 10: "C",
   11: "C", 12: "B", 13: "B", 14: "A", 15: "C",
@@ -52,7 +52,7 @@ describe("calculateScore", () => {
   })
 
   it("returns 100% when all answers are correct", () => {
-    const answers: Record<number, QuizAnswer> = {}
+    const answers: Record<string | number, QuizAnswer> = {}
     for (const q of allQuestions) {
       answers[q.id] = { questionId: q.id, selectedOption: q.correctAnswer, isCorrect: true }
     }
@@ -64,7 +64,7 @@ describe("calculateScore", () => {
 
   it("weights Part 3 questions at 3 points each", () => {
     const part3 = allQuestions.filter((q) => q.part === 3)
-    const answers: Record<number, QuizAnswer> = {}
+    const answers: Record<string | number, QuizAnswer> = {}
     for (const q of part3) {
       answers[q.id] = { questionId: q.id, selectedOption: q.correctAnswer, isCorrect: true }
     }
@@ -72,7 +72,7 @@ describe("calculateScore", () => {
   })
 
   it("scores Part 1 only correct as 20 points", () => {
-    const answers: Record<number, QuizAnswer> = {}
+    const answers: Record<string | number, QuizAnswer> = {}
     for (const q of allQuestions.filter((q) => q.part === 1)) {
       answers[q.id] = { questionId: q.id, selectedOption: q.correctAnswer, isCorrect: true }
     }
@@ -81,7 +81,7 @@ describe("calculateScore", () => {
 
   it("rounds percentage correctly for a non-integer result", () => {
     const q = allQuestions.find((q) => q.part === 3)!
-    const answers: Record<number, QuizAnswer> = {
+    const answers: Record<string | number, QuizAnswer> = {
       [q.id]: { questionId: q.id, selectedOption: q.correctAnswer, isCorrect: true },
     }
     const { percentage } = calculateScore(allQuestions, answers)

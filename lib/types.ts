@@ -30,7 +30,7 @@ export interface QuizOption {
 }
 
 export interface Question {
-  id: number
+  id: string | number  // UUID string for Supabase-sourced questions; number for legacy bundled data
   part: 1 | 2 | 3 | 4 | 5 | 6
   points: number
   stem: string
@@ -44,7 +44,7 @@ export interface Question {
 }
 
 export interface QuizAnswer {
-  questionId: number
+  questionId: string | number
   selectedOption: string | null  // OptionKey | comma-sep keys | null for fill-blank/sentence-order
   isCorrect: boolean
   pointsEarned?: number

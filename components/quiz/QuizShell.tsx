@@ -62,7 +62,7 @@ export default function QuizShell({ questions: rawQuestions, partTitles, article
     })
   )
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [answers, setAnswers] = useState<Record<number, QuizAnswer>>({})
+  const [answers, setAnswers] = useState<Record<string | number, QuizAnswer>>({})
   const [selectedOption, setSelectedOption] = useState<OptionKey | null>(null)
   const [revealAnswer, setRevealAnswer] = useState(false)
   const [waitingForNext, setWaitingForNext] = useState(false)

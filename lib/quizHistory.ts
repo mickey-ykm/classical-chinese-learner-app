@@ -7,7 +7,7 @@ export async function saveQuizAttempt(
   userId: string,
   articleId: string,
   questions: Question[],
-  answers: Record<number, QuizAnswer>,
+  answers: Record<string | number, QuizAnswer>,
   score: number,
   totalPoints: number,
   totalSeconds?: number,
