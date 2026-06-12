@@ -101,27 +101,26 @@ export default function QuizScreen() {
 
         <Text className="text-lg font-bold text-slate-800 mb-4">閱讀理解測驗</Text>
 
-        {/* Pool progress */}
-        <View className="mb-5">
-          <Text className="text-sm text-slate-500">
-            已見過{" "}
-            <Text className="text-slate-700 font-medium">
-              {poolProgress.seenCount} / {poolProgress.totalInPool}
-            </Text>{" "}
-            題
-            {poolProgress.estimatedAttemptsToComplete > 0 && (
-              <>
-                {"　"}
-                <Text className="text-amber-600">
-                  建議再練習 {poolProgress.estimatedAttemptsToComplete} 次
-                </Text>
-              </>
-            )}
-          </Text>
-          {isAnonymous && (
-            <Text className="text-xs text-slate-400 mt-1">登入以避免重複題目</Text>
-          )}
-        </View>
+        {/* Pool progress — logged-in users only */}
+        {!isAnonymous && (
+          <View className="mb-5">
+            <Text className="text-sm text-slate-500">
+              已見過{" "}
+              <Text className="text-slate-700 font-medium">
+                {poolProgress.seenCount} / {poolProgress.totalInPool}
+              </Text>{" "}
+              題
+              {poolProgress.estimatedAttemptsToComplete > 0 && (
+                <>
+                  {"　"}
+                  <Text className="text-amber-600">
+                    建議再練習 {poolProgress.estimatedAttemptsToComplete} 次
+                  </Text>
+                </>
+              )}
+            </Text>
+          </View>
+        )}
 
         <QuizShell
           questions={questions}
