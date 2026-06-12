@@ -1,16 +1,36 @@
 import { ScrollView, View, Text, Pressable } from "react-native"
 import { useRouter, useFocusEffect } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { getArticleIndex } from "@/lib/data"
+import { subscribeToUpdates } from "@/lib/contentStore"
 import { getReadArticles } from "@/lib/readProgress"
 import { useAuth } from "@/hooks/useAuth"
 import UpgradeModal from "@/components/UpgradeModal"
 import type { ArticleEntry } from "@/lib/types"
 
+function ArticleTypeBadge({ articleType }: { articleType?: string }) {
+  if (articleType === "dse-exam") {
+    return (
+      <View className="self-start bg-amber-100 border border-amber-200 rounded px-2 py-0.5 mb-2">
+        <Text className="text-[10px] font-bold tracking-wide text-amber-700">DSE甲部指定篇章</Text>
+      </View>
+    )
+  }
+  if (articleType === "dse-non-exam") {
+    return (
+      <View className="self-start bg-blue-50 border border-blue-200 rounded px-2 py-0.5 mb-2">
+        <Text className="text-[10px] font-bold tracking-wide text-blue-600">高中教學課文</Text>
+      </View>
+    )
+  }
+  return null
+}
+
 function LessonCard({ article, onStart }: { article: ArticleEntry; onStart: () => void }) {
   return (
     <View className="bg-white rounded-2xl border border-slate-100 shadow-sm px-4 pt-4 pb-3 mb-3">
+      <ArticleTypeBadge articleType={article.articleType} />
       <Text className="text-base font-bold text-slate-800 leading-snug mb-0.5" style={{ fontFamily: "Georgia" }}>
         {article.title}
       </Text>
@@ -26,8 +46,9 @@ function LessonCard({ article, onStart }: { article: ArticleEntry; onStart: () =
 function ChallengeCard({ article, onStart }: { article: ArticleEntry; onStart: () => void }) {
   return (
     <View className="rounded-2xl px-4 pt-4 pb-3 border border-slate-700 bg-slate-800 mb-3">
-      <View className="flex-row items-center mb-2.5">
-        <View className="bg-amber-500 rounded px-2 py-0.5">
+      <View className="flex-row items-center gap-2 mb-2.5">
+        <ArticleTypeBadge articleType={article.articleType} />
+        <View className="bg-amber-500 rounded px-2 py-0.5 mb-2">
           <Text className="text-white text-[10px] font-bold tracking-widest">章節挑戰</Text>
         </View>
       </View>
@@ -43,23 +64,25 @@ function ChallengeCard({ article, onStart }: { article: ArticleEntry; onStart: (
   )
 }
 
+function filterDSE(index: ArticleEntry[]) {
+  return index.filter((a) => a.articleType === "dse-exam" || a.articleType === "dse-non-exam")
+}
+
 export default function DSELearnerTab() {
   const router = useRouter()
   const { user } = useAuth()
   const [readIds, setReadIds] = useState<Set<string>>(new Set())
   const [showUpgrade, setShowUpgrade] = useState(false)
+  const [articles, setArticles] = useState<ArticleEntry[]>(() => filterDSE(getArticleIndex()))
 
   useFocusEffect(
     useCallback(() => {
       getReadArticles().then((ids) => setReadIds(new Set(ids)))
+      setArticles(filterDSE(getArticleIndex()))
     }, [])
   )
 
-  const allArticles = getArticleIndex()
-  // Only show articles explicitly typed as DSE (requires Supabase sync to populate articleType)
-  const articles = allArticles.filter(
-    (a) => a.articleType === "dse-exam" || a.articleType === "dse-non-exam"
-  )
+  useEffect(() => subscribeToUpdates(() => setArticles(filterDSE(getArticleIndex()))), [])
 
   function handleStart(article: ArticleEntry) {
     if (!article.isFree && !user) {

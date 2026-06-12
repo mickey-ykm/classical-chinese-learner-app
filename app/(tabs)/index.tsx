@@ -1,11 +1,12 @@
 import { ScrollView, View, Text, Pressable } from "react-native"
 import { useRouter, useFocusEffect } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useAuth } from "@/hooks/useAuth"
 import { Logo } from "@/components/Logo"
 import { supabase } from "@/lib/supabase"
 import { getArticleIndex } from "@/lib/data"
+import { subscribeToUpdates } from "@/lib/contentStore"
 import type { ArticleEntry } from "@/lib/types"
 import Svg, { Circle, Ellipse, Path, Rect, Polygon, Line } from "react-native-svg"
 
@@ -88,21 +89,22 @@ export default function HomeTab() {
   const [dseArticles, setDseArticles] = useState<ArticleEntry[]>([])
   const [otherArticles, setOtherArticles] = useState<ArticleEntry[]>([])
 
+  const loadArticles = useCallback(() => {
+    const index = getArticleIndex()
+    setTitleById(Object.fromEntries(index.map((a) => [a.id, a.title])))
+    setDseArticles(
+      index.filter((a) => a.articleType === "dse-exam" || a.articleType === "dse-non-exam").slice(0, 3)
+    )
+    setOtherArticles(
+      index.filter((a) => a.articleType === "other" || !a.articleType).slice(0, 3)
+    )
+  }, [])
+
+  useEffect(() => subscribeToUpdates(loadArticles), [loadArticles])
+
   useFocusEffect(
     useCallback(() => {
-      const index = getArticleIndex()
-      setTitleById(Object.fromEntries(index.map((a) => [a.id, a.title])))
-
-      const dse = index.filter(
-        (a) => a.articleType === "dse-exam" || a.articleType === "dse-non-exam"
-      ).slice(0, 3)
-      setDseArticles(dse)
-
-      const other = index.filter(
-        (a) => a.articleType === "other" || !a.articleType
-      ).slice(0, 3)
-      setOtherArticles(other)
-
+      loadArticles()
       if (!user) return
       supabase
         .from("quiz_attempts")
@@ -113,7 +115,7 @@ export default function HomeTab() {
         .then(({ data }) => {
           if (data) setRecentAttempts(data as RecentAttempt[])
         })
-    }, [user])
+    }, [user, loadArticles])
   )
 
   function formatDate(iso: string) {

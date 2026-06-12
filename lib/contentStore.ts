@@ -59,6 +59,13 @@ const _meta = new Map<string, ArticleMeta>()
 let _initialized = false
 let _sessionFetched = false
 
+const _listeners = new Set<() => void>()
+function notifyListeners() { for (const l of _listeners) l() }
+export function subscribeToUpdates(fn: () => void): () => void {
+  _listeners.add(fn)
+  return () => _listeners.delete(fn)
+}
+
 // ── SQLite ────────────────────────────────────────────────────────────────────
 
 let _db: SQLite.SQLiteDatabase | null = null
@@ -290,6 +297,7 @@ async function fetchAndStore(lastSyncAt: string | null): Promise<{ updated: numb
     )
   }
 
+  if (updated > 0) notifyListeners()
   return { updated, errors }
 }
 

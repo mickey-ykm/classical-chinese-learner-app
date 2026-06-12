@@ -50,8 +50,15 @@ const ARTICLE_ORDER = Object.keys(SEED_ARTICLES)
 const _articles = new Map<string, Article>(Object.entries(SEED_ARTICLES))
 const _quizzes = new Map<string, Quiz>(Object.entries(SEED_QUIZZES))
 
-type ArticleMeta = { level?: number; isChallenge?: boolean }
+type ArticleMeta = { level?: number; isChallenge?: boolean; expectedMinutes?: number; isFree?: boolean; articleType?: string }
 const _meta = new Map<string, ArticleMeta>()
+
+const _listeners = new Set<() => void>()
+function notifyListeners() { for (const l of _listeners) l() }
+export function subscribeToUpdates(fn: () => void): () => void {
+  _listeners.add(fn)
+  return () => _listeners.delete(fn)
+}
 
 function buildIndexEntry(id: string): ArticleEntry | null {
   const article = _articles.get(id)
@@ -66,6 +73,9 @@ function buildIndexEntry(id: string): ArticleEntry | null {
     totalQuestions: quiz ? quiz.parts.reduce((s, p) => s + p.questions.length, 0) : 0,
     level: meta.level as ArticleEntry["level"],
     type: meta.isChallenge ? "challenge" : undefined,
+    expectedMinutes: meta.expectedMinutes,
+    isFree: meta.isFree,
+    articleType: meta.articleType,
   }
 }
 
@@ -86,7 +96,13 @@ function mapSupabaseRow(row: Record<string, unknown>): { article: Article; quiz:
     return {
       article,
       quiz: (row.quiz_json as Quiz | null) ?? null,
-      meta: { level: (row.level as number) ?? undefined, isChallenge: !!(row.is_challenge) },
+      meta: {
+        level: (row.level as number) ?? undefined,
+        isChallenge: !!(row.is_challenge),
+        expectedMinutes: (row.expected_minutes as number) ?? undefined,
+        isFree: !!(row.is_free),
+        articleType: (row.article_type as string) ?? "other",
+      },
     }
   } catch {
     return null
@@ -96,7 +112,7 @@ function mapSupabaseRow(row: Record<string, unknown>): { article: Article; quiz:
 async function fetchAndStore(lastSyncAt: string | null): Promise<{ updated: number; errors: number }> {
   let query = supabase
     .from("articles")
-    .select("id, title, source, title_footnote_id, segments, footnotes, modern_translation, level, is_challenge, quiz_json, updated_at")
+    .select("id, title, source, title_footnote_id, segments, footnotes, modern_translation, level, is_challenge, is_free, expected_minutes, quiz_json, updated_at, article_type")
     .eq("status", "published")
     .order("updated_at", { ascending: true })
   if (lastSyncAt) query = query.gt("updated_at", lastSyncAt)
@@ -115,6 +131,7 @@ async function fetchAndStore(lastSyncAt: string | null): Promise<{ updated: numb
     if (!ARTICLE_ORDER.includes(row.id)) ARTICLE_ORDER.push(row.id)
     updated++
   }
+  if (updated > 0) notifyListeners()
   return { updated, errors }
 }
 

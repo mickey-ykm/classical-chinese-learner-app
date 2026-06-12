@@ -37,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session?.user) {
         setUser(session.user)
         fetchProfile(session.user.id)
+        setLoading(false)
       } else {
         // Give every guest a real UUID so quiz attempts are always persisted
         const { data } = await supabase.auth.signInAnonymously()
@@ -44,8 +45,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(data.user)
           fetchProfile(data.user.id)
         }
+        setLoading(false)
       }
-      setLoading(false)
     })
 
     const {

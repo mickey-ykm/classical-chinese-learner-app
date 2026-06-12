@@ -197,6 +197,7 @@ export default function QuizShell({ questions: rawQuestions, partTitles, article
         />
       ) : currentQuestion.format === "sentence-order" ? (
         <SentenceOrderQuestion
+          key={currentQuestion.id}
           question={currentQuestion}
           partTitle={partTitles[currentQuestion.part] ?? ""}
           isFirstOfPart={isFirstOfPart}

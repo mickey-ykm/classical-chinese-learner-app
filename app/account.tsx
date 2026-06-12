@@ -87,10 +87,10 @@ function AttemptRow({ attempt, title, onPress }: { attempt: QuizAttempt; title: 
 
 export default function AccountScreen() {
   const router = useRouter()
-  const { user, profile, signOut, loading, isAnonymous } = useAuth()
+  const { user, profile, signOut, loading, isAnonymous: isAnonymousCtx } = useAuth()
+  const isAnonymous = isAnonymousCtx || !user?.email
   const [attempts, setAttempts] = useState<QuizAttempt[]>([])
   const [loadingAttempts, setLoadingAttempts] = useState(true)
-  const [settled, setSettled] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [syncMsg, setSyncMsg] = useState<string | null>(null)
   const [mistakeCount, setMistakeCount] = useState<number | null>(null)
@@ -100,16 +100,6 @@ export default function AccountScreen() {
 
   const articleIndex = getArticleIndex()
   const titleById = Object.fromEntries(articleIndex.map((a) => [a.id, a.title]))
-
-  // Give auth state 400ms to commit before deciding to redirect
-  useEffect(() => {
-    const t = setTimeout(() => setSettled(true), 400)
-    return () => clearTimeout(t)
-  }, [])
-
-  useEffect(() => {
-    if (settled && !loading && (!user || isAnonymous)) router.replace("/login")
-  }, [settled, loading, user, isAnonymous])
 
   useEffect(() => {
     if (!user) return
@@ -125,7 +115,7 @@ export default function AccountScreen() {
     countRevisionMistakes(user.id).then(setMistakeCount)
   }, [user])
 
-  if (!settled || loading || !user || isAnonymous) return (
+  if (loading) return (
     <SafeAreaView className="flex-1 bg-slate-50 items-center justify-center">
       <ActivityIndicator size="small" color="#d97706" />
     </SafeAreaView>
@@ -185,8 +175,8 @@ export default function AccountScreen() {
     )
   }
 
-  const displayName = profile?.display_name ?? user.email ?? "用戶"
-  const avatarUrl = profile?.avatar_url
+  const displayName = isAnonymous ? "訪客" : (profile?.display_name ?? user?.email ?? "用戶")
+  const avatarUrl = isAnonymous ? null : profile?.avatar_url
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50">
@@ -213,77 +203,88 @@ export default function AccountScreen() {
             </View>
           )}
           <Text className="text-base font-bold text-slate-800 mt-1">{displayName}</Text>
-          <Text className="text-xs text-slate-400">{user.email}</Text>
+          {!isAnonymous && <Text className="text-xs text-slate-400">{user?.email}</Text>}
+          {isAnonymous && (
+            <Pressable
+              onPress={() => router.push("/login")}
+              className="mt-1 bg-amber-500 rounded-xl px-5 py-2 active:opacity-80"
+            >
+              <Text className="text-white font-semibold text-sm">登入 / 建立帳戶</Text>
+            </Pressable>
+          )}
         </View>
 
-        {/* Completed exercises */}
-        <Text className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
-          完成的練習
-        </Text>
+        {/* Logged-in only: history + special features */}
+        {!isAnonymous && (
+          <>
+            <Text className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
+              完成的練習
+            </Text>
 
-        {loadingAttempts ? (
-          <ActivityIndicator size="small" color="#d97706" className="my-4" />
-        ) : attempts.length === 0 ? (
-          <View className="bg-white rounded-2xl border border-slate-100 px-4 py-6 items-center">
-            <Text className="text-slate-400 text-sm">尚未完成任何練習</Text>
-            <Pressable onPress={() => router.replace("/")} className="mt-3">
-              <Text className="text-amber-600 font-semibold text-sm">開始學習 →</Text>
+            {loadingAttempts ? (
+              <ActivityIndicator size="small" color="#d97706" className="my-4" />
+            ) : attempts.length === 0 ? (
+              <View className="bg-white rounded-2xl border border-slate-100 px-4 py-6 items-center">
+                <Text className="text-slate-400 text-sm">尚未完成任何練習</Text>
+                <Pressable onPress={() => router.replace("/")} className="mt-3">
+                  <Text className="text-amber-600 font-semibold text-sm">開始學習 →</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <View className="gap-2">
+                {attempts.map((attempt) => (
+                  <AttemptRow
+                    key={attempt.id}
+                    attempt={attempt}
+                    title={titleById[attempt.article_id] ?? attempt.article_id}
+                    onPress={() => router.push({ pathname: "/attempt", params: { id: attempt.id } })}
+                  />
+                ))}
+              </View>
+            )}
+
+            <Text className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 mt-8">
+              特別練習
+            </Text>
+
+            <Pressable
+              onPress={() => isPro ? router.push("/revision" as never) : setUpgradeVisible(true)}
+              className="bg-white rounded-2xl border border-slate-100 px-4 py-4 active:opacity-70 mb-2"
+            >
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center gap-3">
+                  <Text className="text-2xl">🔄</Text>
+                  <View>
+                    <Text className="text-sm font-bold text-slate-800">複習章節</Text>
+                    <Text className="text-xs text-slate-400 mt-0.5">
+                      {mistakeCount === null
+                        ? "載入中…"
+                        : mistakeCount === 0
+                        ? "尚無失誤記錄"
+                        : `${mistakeCount} 題可複習`}
+                    </Text>
+                  </View>
+                </View>
+                <Text className="text-slate-300 text-base">›</Text>
+              </View>
             </Pressable>
-          </View>
-        ) : (
-          <View className="gap-2">
-            {attempts.map((attempt) => (
-              <AttemptRow
-                key={attempt.id}
-                attempt={attempt}
-                title={titleById[attempt.article_id] ?? attempt.article_id}
-                onPress={() => router.push({ pathname: "/attempt", params: { id: attempt.id } })}
-              />
-            ))}
-          </View>
+
+            <View className="bg-white rounded-2xl border border-slate-100 px-4 py-4 opacity-50">
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center gap-3">
+                  <Text className="text-2xl">🏋️</Text>
+                  <View>
+                    <Text className="text-sm font-bold text-slate-800">重點訓練</Text>
+                    <Text className="text-xs text-slate-400 mt-0.5">即將推出 · Pro 功能</Text>
+                  </View>
+                </View>
+                <Text className="text-slate-300 text-base">🔒</Text>
+              </View>
+            </View>
+          </>
         )}
 
-        {/* Revision Chapter + Weight Training */}
-        <Text className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 mt-8">
-          特別練習
-        </Text>
-
-        <Pressable
-          onPress={() => isPro ? router.push("/revision" as never) : setUpgradeVisible(true)}
-          className="bg-white rounded-2xl border border-slate-100 px-4 py-4 active:opacity-70 mb-2"
-        >
-          <View className="flex-row items-center justify-between">
-            <View className="flex-row items-center gap-3">
-              <Text className="text-2xl">🔄</Text>
-              <View>
-                <Text className="text-sm font-bold text-slate-800">複習章節</Text>
-                <Text className="text-xs text-slate-400 mt-0.5">
-                  {mistakeCount === null
-                    ? "載入中…"
-                    : mistakeCount === 0
-                    ? "尚無失誤記錄"
-                    : `${mistakeCount} 題可複習`}
-                </Text>
-              </View>
-            </View>
-            <Text className="text-slate-300 text-base">›</Text>
-          </View>
-        </Pressable>
-
-        <View className="bg-white rounded-2xl border border-slate-100 px-4 py-4 opacity-50">
-          <View className="flex-row items-center justify-between">
-            <View className="flex-row items-center gap-3">
-              <Text className="text-2xl">🏋️</Text>
-              <View>
-                <Text className="text-sm font-bold text-slate-800">重點訓練</Text>
-                <Text className="text-xs text-slate-400 mt-0.5">即將推出 · Pro 功能</Text>
-              </View>
-            </View>
-            <Text className="text-slate-300 text-base">🔒</Text>
-          </View>
-        </View>
-
-        {/* Refresh content */}
+        {/* Refresh content — available to all */}
         <Pressable
           onPress={handleRefreshContent}
           disabled={syncing}
@@ -298,7 +299,7 @@ export default function AccountScreen() {
           )}
         </Pressable>
 
-        {/* Clear cache and resync */}
+        {/* Clear cache and resync — available to all */}
         <Pressable
           onPress={handleClearCacheAndResync}
           disabled={syncing}
@@ -307,13 +308,15 @@ export default function AccountScreen() {
           <Text className="text-red-500 font-semibold text-sm">清除快取並重新同步</Text>
         </Pressable>
 
-        {/* Sign out */}
-        <Pressable
-          onPress={handleSignOut}
-          className="border border-slate-200 rounded-2xl py-4 items-center active:opacity-70 bg-white mt-3"
-        >
-          <Text className="text-slate-500 font-semibold text-sm">登出</Text>
-        </Pressable>
+        {/* Sign out — logged-in only */}
+        {!isAnonymous && (
+          <Pressable
+            onPress={handleSignOut}
+            className="border border-slate-200 rounded-2xl py-4 items-center active:opacity-70 bg-white mt-3"
+          >
+            <Text className="text-slate-500 font-semibold text-sm">登出</Text>
+          </Pressable>
+        )}
       </ScrollView>
 
       <UpgradeModal visible={upgradeVisible} onClose={() => setUpgradeVisible(false)} />
