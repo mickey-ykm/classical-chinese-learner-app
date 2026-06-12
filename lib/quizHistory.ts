@@ -26,7 +26,10 @@ export async function saveQuizAttempt(
     .select("id")
     .single()
 
-  if (error || !attempt) return
+  if (error || !attempt) {
+    console.error("[saveQuizAttempt] attempt insert failed:", error?.message, "attempt:", attempt)
+    return
+  }
 
   const rows = questions.map((q) => {
     const answer = answers[q.id]
@@ -41,5 +44,8 @@ export async function saveQuizAttempt(
     }
   })
 
-  await supabase.from("quiz_answers").insert(rows)
+  const { error: answersError } = await supabase.from("quiz_answers").insert(rows)
+  if (answersError) {
+    console.error("[saveQuizAttempt] quiz_answers insert failed:", answersError.message)
+  }
 }
