@@ -1,7 +1,111 @@
-# Quiz Sampling Feature Design (Phase 2)
+# Quiz Sampling Feature Design
 
 _Created 2026-06-02 — Phase 2 planning for dynamic question sampling_
 _Revised 2026-06-12 — switched from type/format rules to part-based sampling_
+_Status: **COMPLETE** — implemented and deployed 2026-06-12_
+
+## Goal
+
+Enable dynamic question sampling from a large question pool (~50-100 questions) to deliver varied quiz experiences (~22 questions per attempt) with the following constraints:
+
+1. **Random sampling** — Each attempt should feel different
+2. **MC option shuffling** — Implemented client-side (Fisher-Yates in QuizShell); options re-keyed A,B,C,D after shuffle
+3. **Avoid repeats** — Same user + same article should get different questions on subsequent attempts
+4. **Part-based distribution** — Sample questions according to fixed part quotas
+5. **Authenticated users only** — Pool progress and repeat avoidance require a logged-in user; anonymous users get random sampling with no progress tracking
+
+## Architecture: Dynamic API Sampling
+
+Sampling happens server-side via API call at quiz start time:
+- `GET /api/quiz/:articleId/sample` — public endpoint (no admin session), mounted before auth guard in `server.js`
+- Mobile client: `lib/sampleQuiz.ts` fetches from `https://ccladmin.mickey-calligraphy.art`
+- Admin tester: `https://ccladmin.mickey-calligraphy.art/test-sampling.html`
+
+## Key Design Decisions
+
+### 1. Sampling Rules
+
+**Hardcoded part-based quotas (`admin/lib/sampling.js`):**
+
+| Part | Questions to sample |
+|------|-------------------|
+| 1    | 6                 |
+| 2    | 2                 |
+| 3    | 4                 |
+| 4    | 2                 |
+| 5    | 2                 |
+| 6    | 6                 |
+| **Total** | **22**       |
+
+### 2. Repeat Avoidance Algorithm (per part)
+
+1. Query seen questions with last-answered timestamp:
+   ```sql
+   SELECT qa.question_id, MAX(qat.completed_at) AS last_seen_at
+   FROM quiz_answers qa
+   JOIN quiz_attempts qat ON qa.attempt_id = qat.id
+   WHERE qat.user_id = ? AND qat.article_id = ?
+   GROUP BY qa.question_id
+   ORDER BY last_seen_at ASC
+   ```
+
+2. For each part:
+   - Take all unseen questions first (random order)
+   - If unseen < quota: fill remainder from seen, sorted by `last_seen_at ASC` (least recently seen first)
+   - Cap at `allForPart.length`
+
+3. Questions returned grouped by part (part 1 first), shuffled within each part
+
+**Key properties:**
+- Users always see unseen questions first
+- When a part cycles through, it fills seamlessly from least-recently-seen — no hard reset
+- Anonymous users: pure random sampling, no repeat avoidance, no pool progress shown
+
+### 3. API Response
+
+```json
+{
+  "articleId": "...",
+  "totalQuestions": 22,
+  "poolProgress": {
+    "totalInPool": 100,
+    "seenCount": 44,
+    "attemptNumber": 2,
+    "estimatedAttemptsToComplete": 3
+  },
+  "questions": [...]
+}
+```
+
+- `poolProgress` only meaningful for logged-in users; mobile app hides "已見過 X/Y 題" for anonymous users
+- `totalQuestions` is the actual count returned (may be < 22 if a part has fewer questions than quota)
+- Pool progress refreshes in `app/quiz.tsx` when user returns to the quiz entry screen after completing a quiz (`useFocusEffect` + `needsProgressRefresh` flag)
+
+### 4. Question.id type
+
+`Question.id` is typed as `string | number`:
+- Legacy bundled questions use numeric IDs
+- Supabase-sourced questions use UUID strings
+- `answers` state in `QuizShell` is `Record<string | number, QuizAnswer>`
+
+### 5. Database
+
+No new tables. Uses existing `quiz_attempts` + `quiz_answers`:
+- `quiz_attempts.completed_at` — populated by DB default (`DEFAULT now()`) at insert time
+- `quiz_answers.question_id` — `text` column; stores UUID strings for new questions
+
+## Files
+
+| File | Purpose |
+|------|---------|
+| `admin/lib/sampling.js` | Core sampling logic: `sampleByPart()`, `getSeenData()` |
+| `admin/routes/quiz.js` | `GET /api/quiz/:articleId/sample` route |
+| `admin/tests/sampling.test.js` | 5 unit tests for sampling algorithm |
+| `admin/public/test-sampling.html` | Admin tester UI |
+| `lib/sampleQuiz.ts` | Mobile fetch client |
+| `app/quiz.tsx` | Quiz entry screen — loads sampled questions, shows pool progress |
+| `components/quiz/QuizShell.tsx` | Shuffles + re-keys MC options; fires `onFinished` after save |
+
 
 ## Goal
 
