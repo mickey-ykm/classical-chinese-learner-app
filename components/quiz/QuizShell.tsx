@@ -220,14 +220,14 @@ export default function QuizShell({ questions: rawQuestions, partTitles, article
           correctAnswer={currentQuestion.correctAnswer}
           selectCount={currentQuestion.selectCount ?? 2}
           points={currentQuestion.points}
-          onAnswer={(correct, selected) => {
+          onAnswer={(correct, selected, pointsEarned) => {
             setAnswers((prev) => ({
               ...prev,
               [currentQuestion.id]: {
                 questionId: currentQuestion.id,
                 selectedOption: selected.join(","),
                 isCorrect: correct,
-                pointsEarned: correct ? (currentQuestion.points ?? 1) : 0,
+                pointsEarned,
               },
             }))
             setLastAnswerCorrect(correct)

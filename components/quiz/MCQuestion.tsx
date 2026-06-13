@@ -13,7 +13,7 @@ interface MCQuestionProps {
   correctAnswer: string // "A" for single/true-false; "A,C,E" for multi
   selectCount: number
   points?: number
-  onAnswer: (isCorrect: boolean, selected: string[]) => void
+  onAnswer: (isCorrect: boolean, selected: string[], pointsEarned: number) => void
   onNext: () => void
   isLastQuestion: boolean
 }
@@ -36,36 +36,49 @@ export default function MCQuestion({
 
   function toggleOption(key: string) {
     if (revealed) return
+    if (isDisabled(key)) return
     if (selectCount === 1) {
       // Single select — immediately reveal
       const correct = correctSet.has(key) && correctSet.size === 1
       setSelected([key])
       setRevealed(true)
       setIsCorrect(correct)
-      onAnswer(correct, [key])
+      onAnswer(correct, [key], correct ? 1 : 0)
     } else {
-      setSelected((prev) =>
-        prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
-      )
+      setSelected((prev) => {
+        if (prev.includes(key)) return prev.filter((k) => k !== key)
+        // Prevent selecting more than required
+        if (prev.length >= selectCount) return prev
+        return [...prev, key]
+      })
     }
   }
 
   function handleSubmit() {
     if (revealed || selected.length !== selectCount) return
     const selectedSet = new Set(selected)
-    const correct =
+    const allCorrect =
       selectedSet.size === correctSet.size &&
       [...selectedSet].every((k) => correctSet.has(k))
+    // Partial credit: 1 mark per correctly selected option
+    const correctlySelected = selected.filter((k) => correctSet.has(k)).length
     setRevealed(true)
-    setIsCorrect(correct)
-    onAnswer(correct, selected)
+    setIsCorrect(allCorrect)
+    onAnswer(allCorrect, selected, correctlySelected)
+  }
+
+  const maxSelected = !revealed && selected.length >= selectCount
+
+  function isDisabled(key: string): boolean {
+    if (revealed) return false
+    return maxSelected && !selected.includes(key)
   }
 
   function optionStyle(key: string): string {
     if (!revealed) {
-      return selected.includes(key)
-        ? "border-amber-500 bg-amber-50"
-        : "border-slate-200 bg-white"
+      if (selected.includes(key)) return "border-amber-500 bg-amber-50"
+      if (maxSelected) return "border-slate-100 bg-slate-50 opacity-40"
+      return "border-slate-200 bg-white"
     }
     if (correctSet.has(key)) return "border-green-500 bg-green-50"
     if (selected.includes(key)) return "border-red-400 bg-red-50"

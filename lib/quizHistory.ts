@@ -30,14 +30,19 @@ export async function saveQuizAttempt(
 
   const rows = questions.map((q) => {
     const answer = answers[q.id]
+    // user_choice: only meaningful for single-select mc (single letter key).
+    // For mc-multi, selectedOption is comma-separated — store null for user_choice
+    // since the DB column expects a single integer index.
+    const isSingleKey = answer?.selectedOption != null && !String(answer.selectedOption).includes(",")
     return {
       attempt_id: attempt.id,
       question_id: String(q.id),
       part_number: q.part,
-      user_choice: answer?.selectedOption != null ? OPTION_INDEX[answer.selectedOption] : null,
-      correct_choice: OPTION_INDEX[q.correctAnswer],
+      user_choice: isSingleKey ? (OPTION_INDEX[answer!.selectedOption!] ?? null) : null,
+      correct_choice: OPTION_INDEX[q.correctAnswer] ?? null,
       is_correct: answer?.isCorrect ?? false,
-      points_earned: answer?.isCorrect ? q.points : 0,
+      // Use pointsEarned if present (partial credit for mc-multi), else fall back
+      points_earned: answer?.pointsEarned ?? (answer?.isCorrect ? q.points : 0),
     }
   })
 

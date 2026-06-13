@@ -75,7 +75,11 @@ export function calculateScore(
   let total = 0
   for (const q of questions) {
     total += q.points
-    if (answers[q.id]?.isCorrect) earned += q.points
+    const ans = answers[q.id]
+    if (ans) {
+      // Use pointsEarned when present (supports partial credit for mc-multi)
+      earned += ans.pointsEarned != null ? ans.pointsEarned : (ans.isCorrect ? q.points : 0)
+    }
   }
   return { earned, total, percentage: total === 0 ? 0 : Math.round((earned / total) * 100) }
 }
@@ -90,7 +94,10 @@ export function getPartScore(
   let total = 0
   for (const q of partQuestions) {
     total += q.points
-    if (answers[q.id]?.isCorrect) earned += q.points
+    const ans = answers[q.id]
+    if (ans) {
+      earned += ans.pointsEarned != null ? ans.pointsEarned : (ans.isCorrect ? q.points : 0)
+    }
   }
   return { earned, total }
 }
