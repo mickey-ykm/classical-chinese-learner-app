@@ -6,7 +6,6 @@ import { useAuth } from "@/hooks/useAuth"
 import { supabase } from "@/lib/supabase"
 import { getArticleIndex } from "@/lib/data"
 import { refresh as refreshContent, clearCacheAndResync } from "@/lib/contentStore"
-import { countRevisionMistakes } from "@/lib/revisionSession"
 import UpgradeModal from "@/components/UpgradeModal"
 
 interface QuizAttempt {
@@ -93,10 +92,7 @@ export default function AccountScreen() {
   const [loadingAttempts, setLoadingAttempts] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [syncMsg, setSyncMsg] = useState<string | null>(null)
-  const [mistakeCount, setMistakeCount] = useState<number | null>(null)
   const [upgradeVisible, setUpgradeVisible] = useState(false)
-
-  const isPro = profile?.is_pro ?? false
 
   const articleIndex = getArticleIndex()
   const titleById = Object.fromEntries(articleIndex.map((a) => [a.id, a.title]))
@@ -112,7 +108,6 @@ export default function AccountScreen() {
         setAttempts((data as QuizAttempt[]) ?? [])
         setLoadingAttempts(false)
       })
-    countRevisionMistakes(user.id).then(setMistakeCount)
   }, [user])
 
   if (loading) return (
@@ -243,44 +238,6 @@ export default function AccountScreen() {
               </View>
             )}
 
-            <Text className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 mt-8">
-              特別練習
-            </Text>
-
-            <Pressable
-              onPress={() => isPro ? router.push("/revision" as never) : setUpgradeVisible(true)}
-              className="bg-white rounded-2xl border border-slate-100 px-4 py-4 active:opacity-70 mb-2"
-            >
-              <View className="flex-row items-center justify-between">
-                <View className="flex-row items-center gap-3">
-                  <Text className="text-2xl">🔄</Text>
-                  <View>
-                    <Text className="text-sm font-bold text-slate-800">複習章節</Text>
-                    <Text className="text-xs text-slate-400 mt-0.5">
-                      {mistakeCount === null
-                        ? "載入中…"
-                        : mistakeCount === 0
-                        ? "尚無失誤記錄"
-                        : `${mistakeCount} 題可複習`}
-                    </Text>
-                  </View>
-                </View>
-                <Text className="text-slate-300 text-base">›</Text>
-              </View>
-            </Pressable>
-
-            <View className="bg-white rounded-2xl border border-slate-100 px-4 py-4 opacity-50">
-              <View className="flex-row items-center justify-between">
-                <View className="flex-row items-center gap-3">
-                  <Text className="text-2xl">🏋️</Text>
-                  <View>
-                    <Text className="text-sm font-bold text-slate-800">重點訓練</Text>
-                    <Text className="text-xs text-slate-400 mt-0.5">即將推出 · Pro 功能</Text>
-                  </View>
-                </View>
-                <Text className="text-slate-300 text-base">🔒</Text>
-              </View>
-            </View>
           </>
         )}
 

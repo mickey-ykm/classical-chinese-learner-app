@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { View, Text, ActivityIndicator, ScrollView, LayoutAnimation, Platform, UIManager, Pressable } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
+import { useRouter } from "expo-router"
 import QuizShell from "@/components/quiz/QuizShell"
 import { useAuth } from "@/hooks/useAuth"
 import { supabase } from "@/lib/supabase"
@@ -69,6 +70,7 @@ function ArticleAccordion({ article, index }: { article: SelectedArticle; index:
 
 export default function DSETrainingTab() {
   const { user } = useAuth()
+  const router = useRouter()
   const [mode, setMode] = useState<"select" | "mock" | "tricky">("select")
   const [phase, setPhase] = useState<"lobby" | "quiz">("lobby")
   const [selectedArticles, setSelectedArticles] = useState<SelectedArticle[]>([])
@@ -179,6 +181,20 @@ export default function DSETrainingTab() {
             </View>
             <Text className="text-sm text-slate-500 leading-5">
               隨機抽選 2–3 篇 DSE 核心篇章，模擬考試作答。
+            </Text>
+          </Pressable>
+
+          {/* 溫故知新 — revision of past mistakes */}
+          <Pressable
+            onPress={() => router.push("/revision")}
+            className="bg-white border border-slate-200 rounded-2xl px-5 py-5 mb-4 shadow-sm active:opacity-80"
+          >
+            <View className="flex-row items-center mb-2">
+              <Text className="text-2xl mr-3">🔁</Text>
+              <Text className="text-base font-bold text-slate-800" style={{ fontFamily: "Georgia" }}>溫故知新</Text>
+            </View>
+            <Text className="text-sm text-slate-500 leading-5">
+              從你做錯的題目中抽選 15 條，重新練習加深記憶。
             </Text>
           </Pressable>
 

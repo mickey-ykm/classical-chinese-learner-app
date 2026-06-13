@@ -9,6 +9,8 @@ import { getArticleIndex } from "@/lib/data"
 import type { Question, QuizAnswer, OptionKey } from "@/lib/types"
 import QuizProgressBar from "@/components/quiz/QuizProgressBar"
 import QuizQuestion from "@/components/quiz/QuizQuestion"
+import FillBlankQuestion from "@/components/quiz/FillBlankQuestion"
+import SentenceOrderQuestion from "@/components/quiz/SentenceOrderQuestion"
 import ScoreScreen from "@/components/quiz/ScoreScreen"
 
 export default function RevisionScreen() {
@@ -20,7 +22,7 @@ export default function RevisionScreen() {
 
   // Quiz state
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [answers, setAnswers] = useState<Record<number, QuizAnswer>>({})
+  const [answers, setAnswers] = useState<Record<string | number, QuizAnswer>>({})
   const [selectedOption, setSelectedOption] = useState<OptionKey | null>(null)
   const [revealAnswer, setRevealAnswer] = useState(false)
   const [waitingForNext, setWaitingForNext] = useState(false)
@@ -87,7 +89,30 @@ export default function RevisionScreen() {
     setElapsedSeconds(0)
   }
 
-  if (!user) return null
+  if (!user || user.is_anonymous) {
+    return (
+      <SafeAreaView className="flex-1 bg-slate-50">
+        <View className="px-5 pt-4 pb-2">
+          <Pressable onPress={() => router.back()} hitSlop={12} className="self-start mb-6">
+            <Text className="text-amber-600 font-semibold text-sm">← 返回</Text>
+          </Pressable>
+        </View>
+        <View className="flex-1 items-center justify-center px-8">
+          <Text className="text-4xl mb-4">🔒</Text>
+          <Text className="text-lg font-bold text-slate-800 text-center mb-2">需要登入</Text>
+          <Text className="text-sm text-slate-500 text-center leading-relaxed">
+            溫故知新功能適用於已登入的用戶，讓你集中練習曾經答錯的題目。
+          </Text>
+          <Pressable
+            onPress={() => router.push("/login")}
+            className="mt-6 bg-amber-500 px-6 py-3 rounded-xl active:opacity-80"
+          >
+            <Text className="text-white font-semibold text-sm">立即登入</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    )
+  }
 
   if (loading) {
     return (
@@ -98,7 +123,8 @@ export default function RevisionScreen() {
     )
   }
 
-  if (questions.length === 0) {
+  if (questions.length < 15) {
+    const hasAny = questions.length > 0
     return (
       <SafeAreaView className="flex-1 bg-slate-50">
         <View className="px-5 pt-4 pb-2">
@@ -107,10 +133,14 @@ export default function RevisionScreen() {
           </Pressable>
         </View>
         <View className="flex-1 items-center justify-center px-8">
-          <Text className="text-4xl mb-4">🎉</Text>
-          <Text className="text-lg font-bold text-slate-800 text-center mb-2">尚無失誤記錄</Text>
+          <Text className="text-4xl mb-4">{hasAny ? "📚" : "🎉"}</Text>
+          <Text className="text-lg font-bold text-slate-800 text-center mb-2">
+            {hasAny ? "失誤題目不足 15 題" : "尚無失誤記錄"}
+          </Text>
           <Text className="text-sm text-slate-500 text-center leading-relaxed">
-            完成更多練習後，答錯的題目會在這裡出現，讓你集中溫習。
+            {hasAny
+              ? `目前累積了 ${questions.length} 題失誤記錄。繼續練習，累積至 15 題後即可開始溫故知新。`
+              : "先完成練習，累積足夠的失誤記錄後，即可開始溫故知新。"}
           </Text>
           <Pressable onPress={() => router.replace("/")} className="mt-6">
             <Text className="text-amber-600 font-semibold text-sm">開始練習 →</Text>
@@ -181,18 +211,55 @@ export default function RevisionScreen() {
           <QuizProgressBar current={currentIndex + 1} total={questions.length} />
         </View>
 
-        <QuizQuestion
-          question={currentQuestion}
-          partTitle=""
-          isFirstOfPart={false}
-          selectedOption={selectedOption}
-          revealAnswer={revealAnswer}
-          waitingForNext={waitingForNext}
-          isCorrect={lastAnswerCorrect}
-          isLastQuestion={isLastQuestion}
-          onSelect={handleSelect}
-          onNext={handleNext}
-        />
+        {currentQuestion.format === "fill-blank" ? (
+          <FillBlankQuestion
+            key={currentQuestion.id}
+            question={currentQuestion}
+            partTitle=""
+            isFirstOfPart={false}
+            isLastQuestion={isLastQuestion}
+            revealAnswer={revealAnswer}
+            isCorrect={lastAnswerCorrect}
+            onAnswer={(result) => {
+              setAnswers((prev) => ({ ...prev, [currentQuestion.id]: result }))
+              setLastAnswerCorrect(result.isCorrect)
+              setRevealAnswer(true)
+              setWaitingForNext(true)
+            }}
+            onNext={handleNext}
+          />
+        ) : currentQuestion.format === "sentence-order" ? (
+          <SentenceOrderQuestion
+            key={currentQuestion.id}
+            question={currentQuestion}
+            partTitle=""
+            isFirstOfPart={false}
+            isLastQuestion={isLastQuestion}
+            revealAnswer={revealAnswer}
+            isCorrect={lastAnswerCorrect}
+            onAnswer={(result) => {
+              setAnswers((prev) => ({ ...prev, [currentQuestion.id]: result }))
+              setLastAnswerCorrect(result.isCorrect)
+              setRevealAnswer(true)
+              setWaitingForNext(true)
+            }}
+            onNext={handleNext}
+          />
+        ) : (
+          <QuizQuestion
+            key={currentQuestion.id}
+            question={currentQuestion}
+            partTitle=""
+            isFirstOfPart={false}
+            selectedOption={selectedOption}
+            revealAnswer={revealAnswer}
+            waitingForNext={waitingForNext}
+            isCorrect={lastAnswerCorrect}
+            isLastQuestion={isLastQuestion}
+            onSelect={handleSelect}
+            onNext={handleNext}
+          />
+        )}
       </ScrollView>
     </SafeAreaView>
   )

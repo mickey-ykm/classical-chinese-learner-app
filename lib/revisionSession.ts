@@ -14,7 +14,7 @@ interface QuizAnswerRow {
   is_correct: boolean
 }
 
-const REVISION_SAMPLE_SIZE = 20
+const REVISION_SAMPLE_SIZE = 15
 
 export async function fetchRevisionQuestions(userId: string): Promise<WrongQuestion[]> {
   const { data, error } = await supabase
