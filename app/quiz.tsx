@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useFocusEffect } from "expo-router"
 import { getPartTitles, getArticleIndex, isArticleFree } from "@/lib/data"
 import { sampleQuiz } from "@/lib/sampleQuiz"
+import { invalidateArticleProgress } from "@/lib/articleProgress"
 import { useAuth } from "@/hooks/useAuth"
 import UpgradeModal from "@/components/UpgradeModal"
 import QuizShell from "@/components/quiz/QuizShell"
@@ -127,7 +128,10 @@ export default function QuizScreen() {
           partTitles={partTitles}
           articleId={id}
           expectedMinutes={expectedMinutes}
-          onFinished={() => setNeedsProgressRefresh(true)}
+          onFinished={() => {
+            invalidateArticleProgress()
+            setNeedsProgressRefresh(true)
+          }}
         />
       </ScrollView>
     </SafeAreaView>

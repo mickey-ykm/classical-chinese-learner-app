@@ -7,6 +7,7 @@ import { Logo } from "@/components/Logo"
 import { supabase } from "@/lib/supabase"
 import { getArticleIndex } from "@/lib/data"
 import { subscribeToUpdates } from "@/lib/contentStore"
+import { fetchArticleProgress, type ArticleProgressMap } from "@/lib/articleProgress"
 import type { ArticleEntry } from "@/lib/types"
 import Svg, { Circle, Ellipse, Path, Rect, Polygon, Line } from "react-native-svg"
 
@@ -55,7 +56,15 @@ interface RecentAttempt {
   total_seconds: number | null
 }
 
-function ArticlePreviewCard({ article, onStart }: { article: ArticleEntry; onStart: () => void }) {
+function ArticlePreviewCard({
+  article,
+  onStart,
+  progress,
+}: {
+  article: ArticleEntry
+  onStart: () => void
+  progress?: { seenCount: number; totalInPool: number }
+}) {
   return (
     <Pressable
       onPress={onStart}
@@ -72,9 +81,15 @@ function ArticlePreviewCard({ article, onStart }: { article: ArticleEntry; onSta
           </Text>
           <Text className="text-xs text-slate-400">{article.source}</Text>
         </View>
-        <View className="items-end">
-          <Text className="text-xs text-amber-600 font-semibold">{article.totalQuestions} 題</Text>
-          <Text className="text-slate-300 text-xs mt-0.5">開始 →</Text>
+        <View className="items-end gap-0.5">
+          {progress ? (
+            <Text className="text-xs text-amber-600 font-semibold">
+              已完成 {progress.seenCount} / {progress.totalInPool} 題
+            </Text>
+          ) : (
+            <Text className="text-xs text-amber-600 font-semibold">{article.totalQuestions} 題</Text>
+          )}
+          <Text className="text-slate-300 text-xs">開始 →</Text>
         </View>
       </View>
     </Pressable>
@@ -88,6 +103,7 @@ export default function HomeTab() {
   const [titleById, setTitleById] = useState<Record<string, string>>({})
   const [dseArticles, setDseArticles] = useState<ArticleEntry[]>([])
   const [otherArticles, setOtherArticles] = useState<ArticleEntry[]>([])
+  const [progressMap, setProgressMap] = useState<ArticleProgressMap>({})
 
   const loadArticles = useCallback(() => {
     const index = getArticleIndex()
@@ -115,6 +131,7 @@ export default function HomeTab() {
         .then(({ data }) => {
           if (data) setRecentAttempts(data as RecentAttempt[])
         })
+      fetchArticleProgress(user.id).then(setProgressMap).catch(() => {})
     }, [user, loadArticles])
   )
 
@@ -189,6 +206,7 @@ export default function HomeTab() {
               <ArticlePreviewCard
                 key={article.id}
                 article={article}
+                progress={progressMap[article.id]}
                 onStart={() => router.push(`/read?id=${article.id}`)}
               />
             ))
@@ -212,6 +230,7 @@ export default function HomeTab() {
               <ArticlePreviewCard
                 key={article.id}
                 article={article}
+                progress={progressMap[article.id]}
                 onStart={() => router.push(`/read?id=${article.id}`)}
               />
             ))
