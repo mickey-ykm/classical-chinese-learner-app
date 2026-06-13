@@ -114,6 +114,8 @@ All quiz state lives here. Routing by question format:
 - `selectCount > 1` (mc-multi) → `MCQuestion` (multi-select with explicit submit button)
 - everything else → `QuizQuestion` (single-choice, immediate reveal on tap)
 
+**Any quiz-rendering screen must dispatch on `question.format`** — there is no universal question component. `QuizQuestion` only renders MC options; fill-blank/sentence-order need their own components. `revision.tsx` and `QuizShell.tsx` must both branch by format, or non-MC questions render with no input field.
+
 **Styling: NativeWind v4**
 
 Uses `className` props on React Native primitives (imported directly from `react-native` — no special wrapper needed). Styles are compiled at bundle time via `metro.config.js` + `withNativeWind`. The JSX transform is handled by `babel.config.js`:
