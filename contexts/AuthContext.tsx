@@ -73,19 +73,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signInWithGoogle() {
-    const redirectTo = "classicalchineselearnerapp://"
+    const redirectTo = "classicalchineselearnerapp://oauth"
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo,
         skipBrowserRedirect: true,
+        queryParams: { prompt: "select_account" },
       },
     })
     if (error) throw error
     if (!data.url) throw new Error("Failed to get Google sign-in URL")
 
-    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo)
+    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo, {
+      showInRecents: true,
+    })
 
     if (result.type === "success") {
       const url = result.url
@@ -95,9 +98,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(decodeURIComponent((errorDesc ?? errorCode)!.replace(/\+/g, " ")))
       }
       const code = url.match(/[?&]code=([^&#]+)/)?.[1]
-      if (!code) throw new Error(`No auth code in callback: ${url}`)
+      if (!code) throw new Error("No authorization code received from Google")
+
       const { error: sessionError } = await supabase.auth.exchangeCodeForSession(code)
       if (sessionError) throw sessionError
+
+      // Confirm the exchange actually established a real (non-anonymous) session.
+      // exchangeCodeForSession can return no error yet leave an anonymous session in
+      // place if the PKCE exchange silently fails — catching that here prevents the
+      // "logged in" alert firing while the user is actually still anonymous.
+      const { data: { session: confirmedSession } } = await supabase.auth.getSession()
+      if (!confirmedSession?.user || confirmedSession.user.is_anonymous) {
+        throw new Error('無法完成登入，請再試一次')
+      }
     } else if (result.type !== "cancel" && result.type !== "dismiss") {
       throw new Error("Google sign-in failed")
     }

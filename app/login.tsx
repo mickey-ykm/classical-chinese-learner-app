@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { View, Text, Pressable, ActivityIndicator, Alert } from "react-native"
 import { useRouter } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
@@ -9,22 +9,30 @@ export default function LoginScreen() {
   const router = useRouter()
   const { signInWithGoogle, user, isAnonymous } = useAuth()
   const [signingIn, setSigningIn] = useState(false)
+  // Tracks whether we're in the middle of a fresh sign-in attempt,
+  // so the success alert only fires after the session is actually confirmed.
+  const justSignedIn = useRef(false)
 
-  // Navigate to account once onAuthStateChange has updated the user to a
-  // real (non-anonymous) account. This avoids the race condition where
-  // router.replace runs before the auth context reflects the new session.
+  // Navigate to account once onAuthStateChange has confirmed a real
+  // (non-anonymous) user. Show the success alert here — not in
+  // handleGoogleSignIn — so it only fires after the session is established.
   useEffect(() => {
     if (user && !isAnonymous) {
+      if (justSignedIn.current) {
+        justSignedIn.current = false
+        Alert.alert("登入成功！", "歡迎使用文言教室 📚", [{ text: "確定" }])
+      }
       router.replace("/account")
     }
   }, [user, isAnonymous])
 
   async function handleGoogleSignIn() {
     setSigningIn(true)
+    justSignedIn.current = true
     try {
       await signInWithGoogle()
-      Alert.alert("登入成功！", "歡迎使用文言教室 📚", [{ text: "確定" }])
     } catch (e: unknown) {
+      justSignedIn.current = false
       const message = e instanceof Error ? e.message : "登入失敗，請再試一次"
       if (!message.includes("cancelled")) {
         Alert.alert("登入錯誤", message)

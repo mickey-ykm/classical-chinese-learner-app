@@ -257,6 +257,16 @@ These must never be violated. Violating them causes silent data loss that only s
 - API response includes `poolProgress` (`totalInPool`, `seenCount`, `attemptNumber`, `estimatedAttemptsToComplete`) — used for the "已見過 X / Y 題" display in `app/quiz.tsx`
 - Test the sampling logic at `https://ccladmin.mickey-calligraphy.art/test-sampling.html`
 
+**Mobile OAuth setup (Google Sign-In via Supabase)**
+- Uses Supabase Auth with OAuth PKCE flow + `expo-web-browser` (not native Google Sign-In SDK)
+- **iOS**: Requires iOS OAuth client in Google Console; redirect URI uses reversed client ID scheme set in `app.json` `@react-native-google-signin/google-signin` plugin config
+- **Android**: Requires separate Android OAuth client with package name (`com.mickey_ykm.classicalchineselearnerapp`) + SHA-1 fingerprint from EAS keystore (`eas credentials`)
+- **Both platforms**: Client IDs must be added to Supabase Dashboard → Authentication → Providers → Google → "Authorized Client IDs (for OAuth PKCE flow)"
+- **Redirect URI format**: Must be well-formed deep link (`classicalchineselearnerapp://oauth`, not `classicalchineselearnerapp://`) — malformed URIs cause "invalid flow state" PKCE errors
+- **Supabase config**: Site URL and Redirect URLs must match the app scheme (not `localhost`)
+- **OAuth callback handling**: `app/oauth.tsx` route handles the callback and redirects to home; prevents "Unmatched Route" error screen
+- **Debugging**: Test on iOS simulator first (fast iteration, real-time logs) before burning EAS Android build quota — OAuth errors manifest identically on both platforms
+
 
 
 Before adding any new field or route to `admin/server.js`, read:

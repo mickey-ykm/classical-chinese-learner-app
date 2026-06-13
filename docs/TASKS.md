@@ -35,11 +35,6 @@ _Tasks currently being worked on. Add start date and assignee._
 
 _Finished by Claude, awaiting Mickey's validation. Once validated → move to **Done**. If issues found → move back to **In Progress** with notes._
 
-<!-- Example:
-- [ ] #005 — Bug: Fixed X (code verified + typecheck passed; needs device testing)
-  - **What to test:** Step-by-step validation instructions for Mickey
--->
-
 ---
 
 ## Done (Recent)
@@ -47,6 +42,24 @@ _Finished by Claude, awaiting Mickey's validation. Once validated → move to **
 _Completed tasks with summaries and lessons learned. Ordered by completion date (newest first)._
 
 ### 2026-06-13
+
+- [x] **#009 — Bug: Android app icon showing default Expo icon instead of custom icon**
+  - **Summary:** Android builds were using outdated Expo default icon files (`android-icon-*.png` dated October 1985) instead of the actual app icon (`icon.png`, 880KB). Updated `app.json` to point to the correct icon file and simplified the adaptive icon configuration to use only the foreground image with a white background.
+  - **Files changed:** `app.json`
+  - **Validated:** ✅ Correct icon now displays on Android home screen and app drawer
+
+- [x] **#008 — Bug: Google OAuth not working on Android devices**
+  - **Summary:** Google sign-in failed on Android with "invalid flow state" PKCE error. Root cause was missing Android OAuth client configuration in Google Console + malformed redirect URI (`classicalchineselearnerapp:?code=...` missing `//`). Created Android OAuth client with package name + SHA-1, added it to Supabase, and fixed redirect URI to `classicalchineselearnerapp://oauth`. Added `/oauth.tsx` route to handle callback gracefully.
+  - **Files changed:** `contexts/AuthContext.tsx`, `lib/supabase.ts`, `app/oauth.tsx` (new), `app/login.tsx`
+  - **External config:** Google Cloud Console (Android OAuth client), Supabase Dashboard (Site URL, Redirect URLs, Authorized Client IDs)
+  - **Validated:** ✅ iOS simulator and Android device both working
+  - **Lesson:** Mobile OAuth requires platform-specific configuration. Android needs its own OAuth client with package name + SHA-1 fingerprint. The redirect URI must be well-formed (`scheme://path`, not `scheme:?query`). PKCE "invalid flow state" errors often indicate redirect URI mismatch or missing client ID in the auth provider's authorized list.
+
+- [x] **#007 — Feature: Delete user account script for testing**
+  - **Summary:** Created `admin/delete-user.js` — wipes all data for a given email (quiz_answers → quiz_attempts → exercise_sessions → read_progress → profiles → auth.users). Uses `--confirm` flag instead of interactive prompts to avoid readline/dotenvx conflicts.
+  - **Files changed:** `admin/delete-user.js` (new)
+  - **Usage:** `node admin/delete-user.js <email>` (dry run) / `node admin/delete-user.js <email> --confirm` (actually delete)
+  - **Validated:** Successfully deleted test account rkmyip3@gmail.com.
 
 - [x] **#004 — UI: Question pool progress and DSE section info**
   - **Summary:** Homepage and DSE文章 tab now show per-article progress ("已完成 X / Y 題"), attempt count, and correct rate for logged-in users. New batch endpoint `GET /api/quiz/progress?userId=<uuid>` avoids N+1 queries. New `lib/articleProgress.ts` caches the result in-memory and is invalidated after quiz completion. DSE文章 tab gained an info banner explaining 12+8 articles, 22 questions per session, ~10 min.

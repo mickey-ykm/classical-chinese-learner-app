@@ -22,40 +22,57 @@ const CHUNK_SIZE = 1800
 
 const LargeSecureStore = {
   async getItem(key: string): Promise<string | null> {
-    const countStr = await SecureStore.getItemAsync(`${key}.__count`)
-    if (!countStr) return SecureStore.getItemAsync(key)
-    const count = parseInt(countStr, 10)
-    const chunks = await Promise.all(
-      Array.from({ length: count }, (_, i) => SecureStore.getItemAsync(`${key}.${i}`))
-    )
-    if (chunks.some((c) => c === null)) return null
-    return chunks.join("")
+    try {
+      const countStr = await SecureStore.getItemAsync(`${key}.__count`)
+      if (!countStr) {
+        return await SecureStore.getItemAsync(key)
+      }
+      const count = parseInt(countStr, 10)
+      const chunks = await Promise.all(
+        Array.from({ length: count }, (_, i) => SecureStore.getItemAsync(`${key}.${i}`))
+      )
+      if (chunks.some((c) => c === null)) return null
+      return chunks.join("")
+    } catch (e) {
+      console.error(`[Storage] getItem ${key} failed:`, e)
+      return null
+    }
   },
 
   async setItem(key: string, value: string): Promise<void> {
-    if (value.length <= CHUNK_SIZE) {
-      await SecureStore.setItemAsync(key, value)
-      return
+    try {
+      if (value.length <= CHUNK_SIZE) {
+        await SecureStore.setItemAsync(key, value)
+        return
+      }
+      const chunks: string[] = []
+      for (let i = 0; i < value.length; i += CHUNK_SIZE) {
+        chunks.push(value.slice(i, i + CHUNK_SIZE))
+      }
+      await Promise.all(chunks.map((chunk, i) => SecureStore.setItemAsync(`${key}.${i}`, chunk)))
+      await SecureStore.setItemAsync(`${key}.__count`, String(chunks.length))
+      await SecureStore.deleteItemAsync(key)
+    } catch (e) {
+      console.error(`[Storage] setItem ${key} failed:`, e)
+      throw e
     }
-    const chunks: string[] = []
-    for (let i = 0; i < value.length; i += CHUNK_SIZE) {
-      chunks.push(value.slice(i, i + CHUNK_SIZE))
-    }
-    await Promise.all(chunks.map((chunk, i) => SecureStore.setItemAsync(`${key}.${i}`, chunk)))
-    await SecureStore.setItemAsync(`${key}.__count`, String(chunks.length))
-    await SecureStore.deleteItemAsync(key)
   },
 
   async removeItem(key: string): Promise<void> {
-    const countStr = await SecureStore.getItemAsync(`${key}.__count`)
-    if (countStr) {
-      const count = parseInt(countStr, 10)
-      await Promise.all(
-        Array.from({ length: count }, (_, i) => SecureStore.deleteItemAsync(`${key}.${i}`))
-      )
-      await SecureStore.deleteItemAsync(`${key}.__count`)
+    try {
+      const countStr = await SecureStore.getItemAsync(`${key}.__count`)
+      if (countStr) {
+        const count = parseInt(countStr, 10)
+        await Promise.all(
+          Array.from({ length: count }, (_, i) => SecureStore.deleteItemAsync(`${key}.${i}`))
+        )
+        await SecureStore.deleteItemAsync(`${key}.__count`)
+      }
+      await SecureStore.deleteItemAsync(key)
+    } catch (e) {
+      console.error(`[Storage] removeItem ${key} failed:`, e)
+      throw e
     }
-    await SecureStore.deleteItemAsync(key)
   },
 }
 
