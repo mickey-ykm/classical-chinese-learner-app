@@ -1,3 +1,6 @@
+# Marked as completed on 13 June 2026
+
+
 1. For these 3 question types, the answer options should shuffle everytime when the user start taking the test:
 | `mc-single` | 選擇題（單選）| `mc` | 1 of 4 | Correct = full points |
 | `mc-multi` | 選擇題（多選）| `mc` | 2–5 of 4–8 options | All-or-nothing |

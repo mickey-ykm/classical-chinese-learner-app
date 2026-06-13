@@ -36,8 +36,8 @@ cd admin && node clear-supabase.js   # Clear all articles and questions (preserv
 
 **Supabase schema changes — manual SQL in dashboard**
 - All migrations run directly in the Supabase SQL editor (no CLI / migration files)
-- All SQL that has been run is documented in `docs/auth-membership-llm-plan.md`
-- Before running any SQL, add it to that doc first so there's a record
+- Historical SQL record is in `docs/archive/auth-membership-llm-plan.md`; current spec is `docs/project-specification.md`
+- Before running any SQL, add it to the spec doc first so there's a record
 
 ## Architecture
 
@@ -266,7 +266,7 @@ Before adding any new field or route to `admin/server.js`, read:
 
 ## Supabase schema notes
 
-All SQL migrations that have been run are documented in `docs/auth-membership-llm-plan.md`. Key non-obvious schema facts:
+All SQL migrations that have been run are documented in `docs/archive/auth-membership-llm-plan.md`. Key non-obvious schema facts:
 - `quiz_prompts.id` is `text` (altered from `uuid`)
 - `questions.select_count` and `questions.sequence_tokens` were added via ALTER TABLE
 - `articles.article_type` CHECK constraint: `('dse-exam', 'dse-non-exam', 'other')`

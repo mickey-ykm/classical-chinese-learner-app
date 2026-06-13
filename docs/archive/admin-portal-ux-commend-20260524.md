@@ -1,3 +1,5 @@
+# Marked as completed on 13 June 2026
+
 1. Quiz Prompts (Prompt management section), the new default prompt "phase7-multi-type" is gone after git deployment. I think these prompt version should be saved to supa base too.
 2. For "Add a new article", level field is not needed anymore.
 3. For "Add a new article", we need a drop down `article type` option to choose whether the acticle is "DSE 12 exam articles", "DSE non-exam articles" and "Other articles".

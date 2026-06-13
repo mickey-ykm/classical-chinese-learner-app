@@ -1,3 +1,6 @@
+# Marked as completed on 13 June 2026
+
+
 # Quiz Sampling Feature Design
 
 _Created 2026-06-02 — Phase 2 planning for dynamic question sampling_

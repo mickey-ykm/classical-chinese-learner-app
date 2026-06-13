@@ -1,3 +1,5 @@
+# Marked as completed on 13 June 2026
+
 # Implementation Plan — Phase 7 Unblock + New Exercise Modes
 _Date: 2026-05-24 | Extends: `auth-membership-llm-plan.md`_
 

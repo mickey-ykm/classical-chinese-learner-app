@@ -1,3 +1,6 @@
+# Marked as completed on 13 June 2026
+
+
 # UI
 1. Create a logo for the product. The app logo should be in square shape as for the app icon as well. Art direction is a "文言教室" characters in the square.
 2. Create a cute anime character for the animation in the app.
