@@ -25,28 +25,15 @@ _Add new tasks here. Format: `- [ ] #N — Type: Brief description`_
 
 _Tasks currently being worked on. Add start date and assignee._
 
-- [ ] **#005 — Bug: Fill-blank question answer field missing in revision exercise** (started 2026-06-13, @claude)
-  - **Root cause:** `revision.tsx` hardcoded `<QuizQuestion>` for every question regardless of `question.format`. Fill-blank questions have no `options` array, so `QuizQuestion` rendered nothing interactive. Same issue for `sentence-order`.
-  - **Fix applied:** Added format-dispatch in `revision.tsx` render — `fill-blank` → `FillBlankQuestion`, `sentence-order` → `SentenceOrderQuestion`, everything else → `QuizQuestion`. Matches the same pattern as `QuizShell.tsx`. Also fixed `answers` state type from `Record<number, QuizAnswer>` to `Record<string | number, QuizAnswer>`.
-  - **Files changed:** `app/revision.tsx`
-  - **Status:** Fix applied, needs device test with a real fill-blank question in wrong-answer pool
+<!-- Example:
+- [ ] #004 — Bug: Admin portal shows wrong question count (started 2026-06-13, @claude)
+-->
 
 ---
 
 ## Ready for QA
 
 _Finished by Claude, awaiting Mickey's validation. Once validated → move to **Done**. If issues found → move back to **In Progress** with notes._
-
-- [ ] **#004 — UI: Question pool progress and DSE section info**
-  - **Summary:** Homepage and DSE文章 tab now show per-article progress ("已完成 X / Y 題"), attempt count, and correct rate. Added info banner to DSE文章 tab.
-  - **Files changed:** `admin/routes/quiz.js`, `lib/articleProgress.ts` (new), `app/quiz.tsx`, `app/(tabs)/index.tsx`, `app/(tabs)/dse-learner.tsx`
-  - **Note on visibility (Issue #004):** If changes are not visible after `npx expo run:ios`, run `npx expo start --clear` to flush the Metro bundle cache, then re-run. NativeWind className changes especially need a fresh bundle. If still not visible after cache clear, try deleting the app from the simulator and re-running `npx expo run:ios`.
-  - **What to test:**
-    1. As logged-in user, check homepage shows "已完成 X / Y 題" for articles
-    2. Check DSE文章 tab shows info banner about 12+8 articles, 22 questions, 10 minutes
-    3. Verify article cards show: taken/total questions, attempt count, correct rate
-    4. Complete a quiz, verify progress updates on homepage
-    5. As guest user, verify simpler display (no progress stats)
 
 <!-- Example:
 - [ ] #005 — Bug: Fixed X (code verified + typecheck passed; needs device testing)
@@ -60,6 +47,18 @@ _Finished by Claude, awaiting Mickey's validation. Once validated → move to **
 _Completed tasks with summaries and lessons learned. Ordered by completion date (newest first)._
 
 ### 2026-06-13
+
+- [x] **#004 — UI: Question pool progress and DSE section info**
+  - **Summary:** Homepage and DSE文章 tab now show per-article progress ("已完成 X / Y 題"), attempt count, and correct rate for logged-in users. New batch endpoint `GET /api/quiz/progress?userId=<uuid>` avoids N+1 queries. New `lib/articleProgress.ts` caches the result in-memory and is invalidated after quiz completion. DSE文章 tab gained an info banner explaining 12+8 articles, 22 questions per session, ~10 min.
+  - **Files changed:** `admin/routes/quiz.js`, `lib/articleProgress.ts` (new), `app/quiz.tsx`, `app/(tabs)/index.tsx`, `app/(tabs)/dse-learner.tsx`
+  - **Validated:** Progress, attempt count, correct rate, and info banner all display correctly after Railway deploy.
+  - **Lesson:** The progress data comes from a **new live endpoint**, not the app bundle — the feature was invisible because `admin/routes/quiz.js` was committed but never pushed, so Railway still served the old code (endpoint returned 401). Rebuilding the iOS app can never surface a server-side feature. When a UI change depends on a new backend route, verify the live endpoint returns 200 (`curl`) before assuming a Metro/cache issue.
+
+- [x] **#005 — Bug: Fill-blank question answer field missing in revision exercise**
+  - **Summary:** `revision.tsx` hardcoded `<QuizQuestion>` for every question regardless of `question.format`. Fill-blank questions have no `options` array, so `QuizQuestion` rendered nothing interactive (same issue for `sentence-order`). Added format-dispatch in the render — `fill-blank` → `FillBlankQuestion`, `sentence-order` → `SentenceOrderQuestion`, everything else → `QuizQuestion` — matching the pattern in `QuizShell.tsx`. Also fixed `answers` state type from `Record<number, QuizAnswer>` to `Record<string | number, QuizAnswer>` and added `key={currentQuestion.id}` to reset component state per question.
+  - **Files changed:** `app/revision.tsx`
+  - **Validated:** Fill-blank input field now appears in revision; can advance through all question formats.
+  - **Lesson:** Any screen that renders quiz questions must dispatch on `question.format` — there is no single universal question component. Reuse the dispatch pattern from `QuizShell.tsx` rather than hardcoding one renderer.
 
 - [x] **#006 — Feature: User record cleaning script**
   - **Summary:** Created `admin/clean-user-records.js` — Node.js script that takes a userId as CLI argument and deletes all `quiz_answers` and `quiz_attempts` for that user.
