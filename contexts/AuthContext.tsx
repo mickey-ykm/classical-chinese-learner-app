@@ -105,6 +105,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signOut() {
     await supabase.auth.signOut()
+    // Restore a fresh anonymous session so the app always has a real UUID.
+    // onAuthStateChange will fire with the new anonymous user and update state.
+    const { data } = await supabase.auth.signInAnonymously()
+    if (data.user) {
+      fetchProfile(data.user.id)
+    }
   }
 
   return (

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { View, Text, Pressable, ActivityIndicator, Alert } from "react-native"
 import { useRouter } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
@@ -7,16 +7,23 @@ import { useAuth } from "@/hooks/useAuth"
 
 export default function LoginScreen() {
   const router = useRouter()
-  const { signInWithGoogle } = useAuth()
+  const { signInWithGoogle, user, isAnonymous } = useAuth()
   const [signingIn, setSigningIn] = useState(false)
+
+  // Navigate to account once onAuthStateChange has updated the user to a
+  // real (non-anonymous) account. This avoids the race condition where
+  // router.replace runs before the auth context reflects the new session.
+  useEffect(() => {
+    if (user && !isAnonymous) {
+      router.replace("/account")
+    }
+  }, [user, isAnonymous])
 
   async function handleGoogleSignIn() {
     setSigningIn(true)
     try {
       await signInWithGoogle()
-      Alert.alert("登入成功！", "歡迎使用文言教室 📚", [
-        { text: "確定", onPress: () => router.replace("/account") },
-      ])
+      Alert.alert("登入成功！", "歡迎使用文言教室 📚", [{ text: "確定" }])
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "登入失敗，請再試一次"
       if (!message.includes("cancelled")) {
