@@ -60,7 +60,7 @@ export default function ArticlePopup({ visible, article, onClose }: Props) {
                 </Text>
                 {article.footnotes.map((fn) => (
                   <View key={fn.id} className="flex-row gap-2">
-                    <Text className="text-amber-600 font-bold text-sm w-6">{fn.marker}</Text>
+                    <Text className="text-amber-600 font-bold text-sm min-w-[32px]">{fn.marker}</Text>
                     <View className="flex-1">
                       <Text className="text-sm font-semibold text-slate-700">{fn.term}</Text>
                       <Text className="text-xs text-slate-500 leading-relaxed">{fn.explanation}</Text>
