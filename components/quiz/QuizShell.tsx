@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react"
-import { View, Pressable, Text } from "react-native"
+import { View, Pressable, Text, ScrollView } from "react-native"
 import type { Question, QuizAnswer, OptionKey } from "@/lib/types"
 import { checkAnswer, calculateScore } from "@/lib/quiz"
 import { getArticle } from "@/lib/data"
@@ -164,40 +164,41 @@ export default function QuizShell({ questions: rawQuestions, partTitles, article
     currentIndex === 0 || questions[currentIndex - 1]?.part !== currentQuestion.part
 
   return (
-    <View className="gap-6">
-      <View className="flex-row items-center gap-3">
-        <View className="flex-1">
-          <QuizProgressBar current={currentIndex + 1} total={questions.length} />
+    <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
+      <View className="gap-6">
+        <View className="flex-row items-center gap-3">
+          <View className="flex-1">
+            <QuizProgressBar current={currentIndex + 1} total={questions.length} />
+          </View>
+          <Text className={`text-sm font-semibold tabular-nums ${timerColor}`}>
+            {formatTimer(elapsedSeconds)}
+          </Text>
+          {currentArticle && (
+            <Pressable
+              onPress={() => setShowArticle(true)}
+              hitSlop={8}
+              className="bg-amber-100 border border-amber-300 rounded-lg px-3 py-1.5 active:opacity-70"
+            >
+              <Text className="text-amber-700 font-semibold text-xs">📖 文章</Text>
+            </Pressable>
+          )}
         </View>
-        <Text className={`text-sm font-semibold tabular-nums ${timerColor}`}>
-          {formatTimer(elapsedSeconds)}
-        </Text>
-        {currentArticle && (
+
+        {/* Article badge for multi-article mode */}
+        {articles && currentArticleTitle && (
           <Pressable
             onPress={() => setShowArticle(true)}
-            hitSlop={8}
-            className="bg-amber-100 border border-amber-300 rounded-lg px-3 py-1.5 active:opacity-70"
+            className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 active:opacity-70"
           >
-            <Text className="text-amber-700 font-semibold text-xs">📖 文章</Text>
+            <View className="flex-row items-center">
+              <Text className="text-amber-600 text-base mr-2">📄</Text>
+              <Text className="text-slate-700 text-sm font-medium flex-1" style={{ fontFamily: "Georgia" }}>
+                {currentArticleTitle}
+              </Text>
+              <Text className="text-amber-500 text-xs">點擊查看</Text>
+            </View>
           </Pressable>
         )}
-      </View>
-
-      {/* Article badge for multi-article mode */}
-      {articles && currentArticleTitle && (
-        <Pressable
-          onPress={() => setShowArticle(true)}
-          className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 active:opacity-70"
-        >
-          <View className="flex-row items-center">
-            <Text className="text-amber-600 text-base mr-2">📄</Text>
-            <Text className="text-slate-700 text-sm font-medium flex-1" style={{ fontFamily: "Georgia" }}>
-              {currentArticleTitle}
-            </Text>
-            <Text className="text-amber-500 text-xs">點擊查看</Text>
-          </View>
-        </Pressable>
-      )}
 
       {currentQuestion.format === "fill-blank" ? (
         <FillBlankQuestion
@@ -277,5 +278,6 @@ export default function QuizShell({ questions: rawQuestions, partTitles, article
         onClose={() => setShowArticle(false)}
       />
     </View>
+    </ScrollView>
   )
 }
