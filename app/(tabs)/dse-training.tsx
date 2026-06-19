@@ -93,7 +93,7 @@ export default function DSETrainingTab() {
       setError(null)
 
       // Call the DSE mock sampling API
-      const endpoint = process.env.EXPO_PUBLIC_ADMIN_URL || "http://localhost:3001"
+      const endpoint = process.env.EXPO_PUBLIC_ADMIN_URL ?? "https://ccladmin.mickey-calligraphy.art"
       const url = new URL(`${endpoint}/api/quiz/dse-mock/sample`)
       if (user?.id) {
         url.searchParams.set("userId", user.id)
