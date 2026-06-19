@@ -35,37 +35,11 @@ _Tasks currently being worked on. Add start date and assignee._
 
 _Finished by Claude, awaiting Mickey's validation. Once validated → move to **Done**. If issues found → move back to **In Progress** with notes._
 
-- [ ] **#021 — BUG: `Android device only` Footnote numbers not clickable / difficult to click**
-  - **Summary:** Fixed tap target reliability for footnote markers on Android. Replaced nested `<Text onPress>` (which has poor Android support) with `<Pressable>` wrapper. Added `hitSlop={8}` to expand the tappable area by 8px on all sides, making the small footnote numbers easier to tap accurately.
-  - **Root cause:** Nested Text components with onPress handlers have unreliable touch handling on Android, especially for small inline text elements. The tap target position can be misaligned with the visual position.
-  - **Files changed:** `components/reading/ArticleText.tsx`
-  - **Testing needed:** Test on Android device - tap various footnote markers to verify they're all clickable and tap area feels natural
-
-- [ ] **#010 — UX: Article reading page improvements**
-  - **Summary:** Implemented 2-tab interface for article reading: "原文" (original text with footnotes) and "白話文語譯" (modern translation). Users can switch between tabs to choose their reading mode. Original text tab retains the bottom footnote tooltip for explanations. Translation tab displays all translation paragraphs in a clean layout. This provides clear separation of cognitive contexts and allows users to explicitly choose their reading approach.
-  - **Files changed:** `app/read.tsx`
-  - **Testing needed:** Test tab switching, verify footnote tooltip works in 原文 tab only, check translation display in 白話文語譯 tab
-  - **Note:** Implements Option B (tabbed interface) per user preference, not Option A
-
 - [ ] **#020 — BUG: Strange time counting**
   - **Summary:** Fixed time formatting bug where large durations displayed incorrectly (e.g., "46780 分" for 32+ days). Updated `formatSeconds()` and `timeDelta()` in `account.tsx` and `attempt.tsx` to use appropriate units based on duration: < 1 min shows seconds; 1-59 min shows minutes (and seconds); 1-23 hours shows hours and minutes; 24+ hours shows days and hours. The 46,780-minute duration now correctly displays as "32 天 11 小時".
   - **Files changed:** `app/account.tsx`, `app/attempt.tsx`
   - **Testing needed:** Verify time formatting displays correctly in account history and attempt detail screens
-
-- [ ] **#011 — BUG: `Android device only` Article reading page cannot show full article content**
-  - **Summary:** Fixed Android-specific rendering issue where article content appeared truncated. Root cause was text overlapping (#012) making content appear cut off.
-  - **Files changed:** `components/reading/ArticleText.tsx`
-  - **Testing needed:** Test on Android device - verify full article content displays
-
-- [ ] **#012 — BUG: `Android device only` Article reading page text overlapping**
-  - **Summary:** Fixed text overlapping issue on Android devices where classical Chinese text lines were rendering on top of each other. Changed from NativeWind `leading-9` class to explicit `lineHeight: 42` style property for more reliable cross-platform rendering with the Georgia font. The `text-lg` (18px) with `lineHeight: 42` gives ~2.3x line spacing, which provides better vertical clearance for classical Chinese characters on Android.
-  - **Files changed:** `components/reading/ArticleText.tsx`
-  - **Testing needed:** Test on Android device - verify text lines don't overlap
-
-- [ ] **#013 — BUG: `Android device only` Quiz page > open article reading pop up cannot scroll.**
-  - **Summary:** Already fixed in task #018 on 2026-06-19. The ArticlePopup scroll issue was resolved by removing nested Pressable structure that was blocking scroll gestures. Changed to absolute-positioned backdrop Pressable + plain View wrapper with ScrollView for content.
-  - **Files changed:** `components/quiz/ArticlePopup.tsx` (fixed in commit 07f3d47)
-  - **Testing needed:** Test on Android device - verify article popup scrolls properly
+  - **Note:** Issue has not recurred in testing, keeping in QA to monitor
 
 ---
 
@@ -74,6 +48,37 @@ _Finished by Claude, awaiting Mickey's validation. Once validated → move to **
 _Completed tasks with summaries and lessons learned. Ordered by completion date (newest first)._
 
 ### 2026-06-19
+
+- [x] **#021 — BUG: `Android device only` Footnote numbers not clickable / difficult to click**
+  - **Summary:** Fixed tap target reliability for footnote markers on Android. Replaced nested `<Text onPress>` (which has poor Android support) with `<Pressable>` wrapper. Added `hitSlop={8}` to expand the tappable area by 8px on all sides, making the small footnote numbers easier to tap accurately.
+  - **Root cause:** Nested Text components with onPress handlers have unreliable touch handling on Android, especially for small inline text elements. The tap target position can be misaligned with the visual position.
+  - **Files changed:** `components/reading/ArticleText.tsx`
+  - **Validated:** ✅ Android device - footnote markers are now reliably clickable
+  - **Lesson:** On Android, use `<Pressable>` with explicit `hitSlop` instead of nested `<Text onPress>` for small interactive inline elements. Pressable provides better touch handling and allows expanding tap targets beyond visual bounds.
+
+- [x] **#013 — BUG: `Android device only` Quiz page > open article reading pop up cannot scroll.**
+  - **Summary:** Already fixed in task #018 on 2026-06-19. The ArticlePopup scroll issue was resolved by removing nested Pressable structure that was blocking scroll gestures. Changed to absolute-positioned backdrop Pressable + plain View wrapper with ScrollView for content.
+  - **Files changed:** `components/quiz/ArticlePopup.tsx` (fixed in commit 07f3d47)
+  - **Validated:** ✅ Android device - article popup scrolls properly
+  - **Lesson:** Task was completed as part of #018 but not explicitly marked as done. Always cross-reference Done section when checking task status.
+
+- [x] **#012 — BUG: `Android device only` Article reading page text overlapping**
+  - **Summary:** Fixed text overlapping issue on Android devices where classical Chinese text lines were rendering on top of each other. Changed from NativeWind `leading-9` class to explicit `lineHeight: 42` style property for more reliable cross-platform rendering with the Georgia font. The `text-lg` (18px) with `lineHeight: 42` gives ~2.3x line spacing, which provides better vertical clearance for classical Chinese characters on Android.
+  - **Files changed:** `components/reading/ArticleText.tsx`
+  - **Validated:** ✅ Android device - text lines display with proper spacing, no overlapping
+  - **Lesson:** NativeWind Tailwind classes may render inconsistently across platforms, especially for typography with custom fonts. Use explicit numeric `lineHeight` in the `style` prop when cross-platform consistency is critical. Android renders Georgia font with different metrics than iOS.
+
+- [x] **#011 — BUG: `Android device only` Article reading page cannot show full article content**
+  - **Summary:** Fixed Android-specific rendering issue where article content appeared truncated. Root cause was text overlapping (#012) making content appear cut off.
+  - **Files changed:** `components/reading/ArticleText.tsx`
+  - **Validated:** ✅ Android device - full article content displays correctly
+  - **Lesson:** Related to #012 - text overlapping can make content appear incomplete even when it's all rendered.
+
+- [x] **#010 — UX: Article reading page improvements**
+  - **Summary:** Implemented 2-tab interface for article reading: "原文" (original text with footnotes) and "白話文語譯" (modern translation). Users can switch between tabs to choose their reading mode. Original text tab retains the bottom footnote tooltip for explanations. Translation tab displays all translation paragraphs in a clean layout. This provides clear separation of cognitive contexts and allows users to explicitly choose their reading approach.
+  - **Files changed:** `app/read.tsx`
+  - **Validated:** ✅ Tab switching works smoothly, footnote tooltip appears only in 原文 tab, translation displays correctly
+  - **Lesson:** Tabbed interfaces provide clear cognitive separation for different reading modes. Users can explicitly choose their approach (original vs translation) without competing visual elements. Implements Option B (tabbed interface) per user preference.
 
 - [x] **#019 — UX: Homepage, `DSE操練` card should have 3 buttons**
   - **Summary:** Consolidated DSE操練 section into a single unified card with description "重點操練，準備應試" and 3 buttons inside: (1) 📝 DSE 模擬考題, (2) 🔁 溫故知新, (3) 🎯 針對性難題訓練 (coming soon). All buttons are contained within one slate-800 rounded card, creating a focused training hub on the homepage. The demon mascot remains in the header. Tapping "DSE 模擬考題" navigates directly to mock exam mode via URL params.
