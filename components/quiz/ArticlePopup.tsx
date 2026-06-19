@@ -16,12 +16,12 @@ export default function ArticlePopup({ visible, article, onClose }: Props) {
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable
-        className="flex-1 bg-black/40 justify-end"
-        onPress={onClose}
-      >
+      <View className="flex-1 bg-black/40 justify-end">
         <Pressable
-          onPress={(e) => e.stopPropagation()}
+          onPress={onClose}
+          className="absolute inset-0"
+        />
+        <View
           style={{ paddingBottom: insets.bottom + 8 }}
           className="bg-white rounded-t-2xl max-h-[85%]"
         >
@@ -70,8 +70,8 @@ export default function ArticlePopup({ visible, article, onClose }: Props) {
               </View>
             )}
           </ScrollView>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   )
 }

@@ -58,23 +58,25 @@ _Finished by Claude, awaiting Mickey's validation. Once validated → move to **
   - **Testing:** Verify DSE mock loads 2-3 articles with 44-66 questions total, mix of parts 1-6 per article. Logged-in users should see repeat avoidance.
   - **Status:** Backend deployed to Railway ✅, iOS app rebuilt ✅
 
-- [ ] **#017 — BUG: DSE mock exam article accordion shows wrong content**
-  - **Summary:** Article accordion in DSE mock lobby now displays both raw article text with footnote markers AND footnote explanations below (matching `ArticlePopup` pattern). Previously only showed segments without footnotes. Fixed line break issue where each segment created a new line — now all segments render inside a single parent `<Text>` so footnote markers appear inline. Also widened footnote marker from `w-6` to `min-w-[32px]` to prevent wrapping.
-  - **Files changed:** `app/(tabs)/dse-training.tsx` (added footnotes display section, fixed segment rendering to match `ArticleText.tsx`)
-  - **Testing:** Expand article in DSE mock lobby → verify text flows continuously with inline footnote markers, and footnote explanations display below.
-  - **Status:** iOS app rebuilt with all fixes ✅
-
 - [ ] **#018 — FEATURE: DSE mock exam questions show article labels**
   - **Summary:** DSE mock exam questions now display an article label badge above each question stem. The badge shows "📄 {article title} · 點擊查看" and is tappable to open the article popup for reference while answering. QuizShell now supports multi-article mode via the `articles` prop — when provided, it dynamically loads the correct article for each question based on `question.articleId` and displays the badge. Single-article quizzes remain unchanged and don't show the badge.
-  - **Files changed:** `lib/types.ts` (added `articleId?: string` to Question type), `app/(tabs)/dse-training.tsx` (map `article_id` from Supabase, pass `articles` prop to QuizShell), `components/quiz/QuizShell.tsx` (added multi-article support with dynamic article loading and badge UI)
-  - **Testing:** Start DSE mock quiz → verify each question shows article badge, tap badge → correct article opens in popup, verify badge updates across questions from different articles. Verify single-article quizzes still work.
-  - **Status:** iOS app rebuilt ✅
+  - **Files changed:** `lib/types.ts` (added `articleId?: string` to Question type), `app/(tabs)/dse-training.tsx` (map `article_id` from Supabase, pass `articles` prop to QuizShell), `components/quiz/QuizShell.tsx` (added multi-article support with dynamic article loading and badge UI), `components/quiz/ArticlePopup.tsx` (fixed scroll issue by removing nested Pressable)
+  - **Testing:** Start DSE mock quiz → verify each question shows article badge, tap badge → verify article popup opens and scrolls properly, verify badge updates across questions from different articles. Verify single-article quizzes still work.
+  - **Status:** iOS app rebuilt with scroll fix ✅
 
 ---
 
 ## Done (Recent)
 
 _Completed tasks with summaries and lessons learned. Ordered by completion date (newest first)._
+
+### 2026-06-19
+
+- [x] **#017 — BUG: DSE mock exam article accordion shows wrong content**
+  - **Summary:** Article accordion in DSE mock lobby now displays both raw article text with footnote markers AND footnote explanations below (matching `ArticlePopup` pattern). Previously only showed segments without footnotes. Fixed line break issue where each segment created a new line — now all segments render inside a single parent `<Text>` so footnote markers appear inline. Also widened footnote marker from `w-6` to `min-w-[32px]` to prevent wrapping.
+  - **Files changed:** `app/(tabs)/dse-training.tsx`
+  - **Validated:** ✅ Text flows continuously with inline footnote markers, footnote explanations display properly below
+  - **Lesson:** When rendering article text, all segments must be nested inside a single parent `<Text>` component (not separate `<Text>` per segment) to avoid unwanted line breaks. Match the pattern from `ArticleText.tsx` for consistency.
 
 ### 2026-06-13
 
