@@ -16,12 +16,16 @@ export default function ArticleText({ segments, footnotes, onFootnoteTap }: Prop
       >
         {segments.map((seg, i) =>
           seg.footnoteId ? (
-            <Text
-              key={i}
-              onPress={() => onFootnoteTap(seg.footnoteId!)}
-              className="text-amber-600 font-bold text-sm"
-            >
-              {seg.text}
+            <Text key={i}>
+              <Pressable
+                onPress={() => onFootnoteTap(seg.footnoteId!)}
+                hitSlop={8}
+                style={{ display: "inline" }}
+              >
+                <Text className="text-amber-600 font-bold text-sm">
+                  {seg.text}
+                </Text>
+              </Pressable>
             </Text>
           ) : (
             <Text key={i}>{seg.text}</Text>
