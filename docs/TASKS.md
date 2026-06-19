@@ -52,18 +52,6 @@ _Tasks currently being worked on. Add start date and assignee._
 
 _Finished by Claude, awaiting Mickey's validation. Once validated → move to **Done**. If issues found → move back to **In Progress** with notes._
 
-- [ ] **#016 — FEATURE: DSE mock exam should use sampling logic (22 questions per article)**
-  - **Summary:** DSE mock exam now uses backend sampling logic instead of loading all questions from the pool. New endpoint `GET /api/quiz/dse-mock/sample?userId=<uuid>` randomly picks 2-3 DSE core articles and samples 22 questions per article (6+2+4+2+2+6 across parts 1-6). With `userId`, implements cross-article repeat avoidance (prefers unseen questions across all DSE articles). Total: 44 questions for 2 articles, 66 for 3 articles. Questions include `articleId` field for cross-article context display.
-  - **Files changed:** `admin/routes/quiz.js` (new `/dse-mock/sample` endpoint, moved before `/:articleId/sample` to fix route matching), `app/(tabs)/dse-training.tsx` (replaced client-side queries with API call, fixed fallback URL to production Railway)
-  - **Testing:** Verify DSE mock loads 2-3 articles with 44-66 questions total, mix of parts 1-6 per article. Logged-in users should see repeat avoidance.
-  - **Status:** Backend deployed to Railway ✅, iOS app rebuilt ✅
-
-- [ ] **#018 — FEATURE: DSE mock exam questions show article labels**
-  - **Summary:** DSE mock exam questions now display an article label badge above each question stem. The badge shows "📄 {article title} · 點擊查看" and is tappable to open the article popup for reference while answering. QuizShell now supports multi-article mode via the `articles` prop — when provided, it dynamically loads the correct article for each question based on `question.articleId` and displays the badge. Single-article quizzes remain unchanged and don't show the badge.
-  - **Files changed:** `lib/types.ts` (added `articleId?: string` to Question type), `app/(tabs)/dse-training.tsx` (map `article_id` from Supabase, pass `articles` prop to QuizShell), `components/quiz/QuizShell.tsx` (added multi-article support with dynamic article loading and badge UI), `components/quiz/ArticlePopup.tsx` (fixed scroll issue by removing nested Pressable)
-  - **Testing:** Start DSE mock quiz → verify each question shows article badge, tap badge → verify article popup opens and scrolls properly, verify badge updates across questions from different articles. Verify single-article quizzes still work.
-  - **Status:** iOS app rebuilt with scroll fix ✅
-
 ---
 
 ## Done (Recent)
@@ -71,6 +59,18 @@ _Finished by Claude, awaiting Mickey's validation. Once validated → move to **
 _Completed tasks with summaries and lessons learned. Ordered by completion date (newest first)._
 
 ### 2026-06-19
+
+- [x] **#018 — FEATURE: DSE mock exam questions show article labels**
+  - **Summary:** DSE mock exam questions now display an article label badge above each question stem. The badge shows "📄 {article title} · 點擊查看" and is tappable to open the article popup for reference while answering. QuizShell now supports multi-article mode via the `articles` prop — when provided, it dynamically loads the correct article for each question based on `question.articleId` and displays the badge. Single-article quizzes show the "📖 文章" button instead. Fixed multiple UI issues: ArticlePopup scroll (removed nested Pressable), footnote marker width (min-w-[32px]), and QuizShell scrollability (wrapped in ScrollView).
+  - **Files changed:** `lib/types.ts` (added `articleId?: string`), `app/(tabs)/dse-training.tsx` (map `article_id`, pass `articles` prop), `components/quiz/QuizShell.tsx` (multi-article support, made scrollable, hide "文章" button in multi-article mode), `components/quiz/ArticlePopup.tsx` (fixed scroll + footnote width)
+  - **Validated:** ✅ Badge displays correctly, popup scrolls, footnote markers fit, question screen scrolls to Next button
+  - **Lesson:** Adding new UI elements can push content off-screen. Always wrap quiz/form content in ScrollView to ensure all interactive elements remain accessible. Nested Pressables can block scroll gestures — use absolute positioned backdrop instead.
+
+- [x] **#016 — FEATURE: DSE mock exam sampling logic (22 questions per article)**
+  - **Summary:** DSE mock exam now uses backend sampling logic instead of loading all questions. New endpoint `GET /api/quiz/dse-mock/sample?userId=<uuid>` randomly picks 2-3 DSE core articles and samples 22 questions per article (6+2+4+2+2+6 across parts 1-6). Implements cross-article repeat avoidance for logged-in users. Total: 44 questions for 2 articles, 66 for 3 articles. Route order matters: specific `/dse-mock/sample` must come before parameterized `/:articleId/sample` to avoid Express matching "dse-mock" as an articleId.
+  - **Files changed:** `admin/routes/quiz.js` (new endpoint, route reordering), `app/(tabs)/dse-training.tsx` (API call, fixed fallback URL to production)
+  - **Validated:** ✅ Loads 2-3 articles with 44-66 questions, proper part distribution
+  - **Lesson:** Express route order matters — specific paths must be defined before parameterized ones. Production fallback URLs must use production domains, not localhost. Test backend endpoints with `curl` after Railway deploy to verify they're live.
 
 - [x] **#017 — BUG: DSE mock exam article accordion shows wrong content**
   - **Summary:** Article accordion in DSE mock lobby now displays both raw article text with footnote markers AND footnote explanations below (matching `ArticlePopup` pattern). Previously only showed segments without footnotes. Fixed line break issue where each segment created a new line — now all segments render inside a single parent `<Text>` so footnote markers appear inline. Also widened footnote marker from `w-6` to `min-w-[32px]` to prevent wrapping.

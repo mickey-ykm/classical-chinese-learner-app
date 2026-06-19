@@ -173,7 +173,7 @@ export default function QuizShell({ questions: rawQuestions, partTitles, article
           <Text className={`text-sm font-semibold tabular-nums ${timerColor}`}>
             {formatTimer(elapsedSeconds)}
           </Text>
-          {currentArticle && (
+          {currentArticle && !articles && (
             <Pressable
               onPress={() => setShowArticle(true)}
               hitSlop={8}
