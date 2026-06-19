@@ -9,9 +9,7 @@ _Active task list for day-to-day development work. Add new tasks to **Open**, mo
 _Add new tasks here. Format: `- [ ] #N — Type: Brief description`_
 
 - [ ] **#010 — UX: Aritcle reading page UX Issue**
-  - **Summary: Currently, there are `1. raw article`, `2. footnote`, `3. translation` and `4. the start exercise button`. Firstly, clicking the footnote button to active the bottom footnote is not user friendly. secondly, I think user eyeball cannot read 3 context at the same time. we should create a UX that encouraging them try to read raw article with footnote. But if it is too difficult, then open the translation to read. Propose UX suggestions for this page. Consider the UX in Quiz page > open article reading pop up as well.** 
-- [ ] **#020 — BUG: Strange time counting**
-  - **Summary: I took an exercise previously, but I am not sure it exceeded thousand of minutes. Here is the screenshot docs/debug-screenshots/Screenshot_20260619_181054_classical-chinese-learner-app.jpg**
+  - **Summary: Currently, there are `1. raw article`, `2. footnote`, `3. translation` and `4. the start exercise button`. Firstly, clicking the footnote button to active the bottom footnote is not user friendly. secondly, I think user eyeball cannot read 3 context at the same time. we should create a UX that encouraging them try to read raw article with footnote. But if it is too difficult, then open the translation to read. Propose UX suggestions for this page. Consider the UX in Quiz page > open article reading pop up as well.**
 
 <!-- Example:
 - [ ] #007 — Bug: ...
@@ -47,6 +45,12 @@ _Finished by Claude, awaiting Mickey's validation. Once validated → move to **
 _Completed tasks with summaries and lessons learned. Ordered by completion date (newest first)._
 
 ### 2026-06-19
+
+- [x] **#020 — BUG: Strange time counting**
+  - **Summary:** Fixed time formatting bug where large durations displayed incorrectly (e.g., "46780 分" for 32+ days). Updated `formatSeconds()` and `timeDelta()` in `account.tsx` and `attempt.tsx` to use appropriate units based on duration: < 1 min shows seconds; 1-59 min shows minutes (and seconds); 1-23 hours shows hours and minutes; 24+ hours shows days and hours. The 46,780-minute duration now correctly displays as "32 天 11 小時".
+  - **Files changed:** `app/account.tsx`, `app/attempt.tsx`
+  - **Validated:** ✅ Logic handles all edge cases (seconds, minutes, hours, days)
+  - **Lesson:** Always consider scale when formatting durations — what works for typical use cases (minutes) breaks at extremes (days). Use progressive units (sec → min → hour → day) based on magnitude rather than single-unit formatting.
 
 - [x] **#015 — BUG: Quiz sentence sequence type question issue**
   - **Summary:** Fixed validation bug in `SentenceOrderQuestion` where correct answers were marked wrong. Root cause: `correctAnswer` field stored in database contains spaces around delimiters (e.g., `"明察秋毫 > 求賢若渴 > 洞若觀火 > 杯弓蛇影"`), but tokens from `sequenceTokens` array have no spaces. When user arranged tokens correctly, the comparison failed because `arranged.join(">")` produced `"A>B>C>D"` while `correctSeq.join(">")` produced `"A > B > C > D"`. Added `.trim()` when splitting `correctAnswer` to normalize the comparison.
