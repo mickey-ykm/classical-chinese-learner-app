@@ -166,68 +166,58 @@ export default function HomeTab() {
 
         {/* DSE 操練 section */}
         <View className="mb-6">
-          <View className="bg-slate-800 rounded-2xl px-5 py-4 mb-3">
-            <View className="flex-row items-center gap-2">
-              <Text className="text-amber-400 text-2xl">⚡</Text>
-              <Text className="text-white font-bold text-lg">DSE 操練</Text>
-            </View>
-            <View className="flex-row items-center justify-between mt-2">
-              <Text className="text-slate-400 text-xs leading-5 flex-1">
-                模擬考試、重溫錯題、針對訓練
-              </Text>
+          <View className="bg-slate-800 rounded-2xl px-5 py-4 shadow-sm">
+            {/* Header */}
+            <View className="flex-row items-center justify-between mb-3">
+              <View className="flex-row items-center gap-2">
+                <Text className="text-amber-400 text-2xl">⚡</Text>
+                <Text className="text-white font-bold text-lg">DSE 操練</Text>
+              </View>
               <View className="ml-2">
                 <DemonMascot size={56} />
               </View>
             </View>
-          </View>
+            <Text className="text-slate-400 text-sm mb-4">重點操練，準備應試</Text>
 
-          {/* DSE Mock Exam */}
-          <Pressable
-            onPress={() => router.push({ pathname: "/(tabs)/dse-training", params: { mode: "mock" } })}
-            className="bg-white rounded-2xl border border-slate-100 px-4 py-3 mb-2 active:opacity-70 flex-row items-center justify-between"
-          >
-            <View className="flex-row items-center flex-1">
-              <Text className="text-2xl mr-3">📝</Text>
-              <View className="flex-1">
-                <Text className="text-sm font-bold text-slate-800 leading-snug" style={{ fontFamily: "Georgia" }}>
+            {/* DSE Mock Exam Button */}
+            <Pressable
+              onPress={() => router.push({ pathname: "/(tabs)/dse-training", params: { mode: "mock" } })}
+              className="bg-white rounded-xl px-4 py-3 mb-2 active:opacity-70 flex-row items-center justify-between"
+            >
+              <View className="flex-row items-center flex-1">
+                <Text className="text-xl mr-3">📝</Text>
+                <Text className="text-sm font-semibold text-slate-800" style={{ fontFamily: "Georgia" }}>
                   DSE 模擬考題
                 </Text>
-                <Text className="text-xs text-slate-400">隨機抽選核心篇章模擬考試</Text>
               </View>
-            </View>
-            <Text className="text-slate-300 text-xs ml-2">開始 →</Text>
-          </Pressable>
+              <Text className="text-slate-400 text-xs">→</Text>
+            </Pressable>
 
-          {/* Revision */}
-          <Pressable
-            onPress={() => router.push("/revision")}
-            className="bg-white rounded-2xl border border-slate-100 px-4 py-3 mb-2 active:opacity-70 flex-row items-center justify-between"
-          >
-            <View className="flex-row items-center flex-1">
-              <Text className="text-2xl mr-3">🔁</Text>
-              <View className="flex-1">
-                <Text className="text-sm font-bold text-slate-800 leading-snug" style={{ fontFamily: "Georgia" }}>
+            {/* Revision Button */}
+            <Pressable
+              onPress={() => router.push("/revision")}
+              className="bg-white rounded-xl px-4 py-3 mb-2 active:opacity-70 flex-row items-center justify-between"
+            >
+              <View className="flex-row items-center flex-1">
+                <Text className="text-xl mr-3">🔁</Text>
+                <Text className="text-sm font-semibold text-slate-800" style={{ fontFamily: "Georgia" }}>
                   溫故知新
                 </Text>
-                <Text className="text-xs text-slate-400">重溫做錯的題目加深記憶</Text>
               </View>
-            </View>
-            <Text className="text-slate-300 text-xs ml-2">開始 →</Text>
-          </Pressable>
+              <Text className="text-slate-400 text-xs">→</Text>
+            </Pressable>
 
-          {/* Tricky Questions — coming soon */}
-          <View className="bg-white rounded-2xl border border-slate-100 px-4 py-3 opacity-60 flex-row items-center justify-between">
-            <View className="flex-row items-center flex-1">
-              <Text className="text-2xl mr-3">🎯</Text>
-              <View className="flex-1">
-                <Text className="text-sm font-bold text-slate-800 leading-snug" style={{ fontFamily: "Georgia" }}>
+            {/* Tricky Questions Button — coming soon */}
+            <View className="bg-white/40 rounded-xl px-4 py-3 flex-row items-center justify-between">
+              <View className="flex-row items-center flex-1">
+                <Text className="text-xl mr-3 opacity-60">🎯</Text>
+                <Text className="text-sm font-semibold text-white/80" style={{ fontFamily: "Georgia" }}>
                   針對性難題訓練
                 </Text>
-                <Text className="text-xs text-slate-400">針對弱項強化訓練</Text>
               </View>
-            </View>
-            <View className="bg-amber-100 rounded-full px-2 py-0.5">
-              <Text className="text-amber-700 text-xs font-semibold">即將推出</Text>
+              <View className="bg-amber-400/90 rounded-full px-2 py-0.5">
+                <Text className="text-slate-800 text-xs font-semibold">即將推出</Text>
+              </View>
             </View>
           </View>
         </View>
