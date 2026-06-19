@@ -43,21 +43,6 @@ _Finished by Claude, awaiting Mickey's validation. Once validated → move to **
   - **Files changed:** `app/account.tsx`, `app/attempt.tsx`
   - **Testing needed:** Verify time formatting displays correctly in account history and attempt detail screens
 
-- [ ] **#015 — BUG: Quiz sentence sequence type question issue**
-  - **Summary:** Fixed validation bug in `SentenceOrderQuestion` where correct answers were marked wrong. Two fixes applied: (1) Added `.trim()` when splitting delimiters to handle spaces around `>` characters, and (2) Added support for comma-separated `correctAnswer` format (some questions use `,` instead of `>`). The component now handles both formats correctly.
-  - **Files changed:** `components/quiz/SentenceOrderQuestion.tsx`
-  - **Testing needed:** Test sentence-order questions with both comma and > delimited correct answers
-
-- [ ] **#014 — UX: 2 similar buttons on account page**
-  - **Summary:** Reviewed both sync buttons — they serve **different purposes** and both should be kept. "更新內容" (`refresh()`) performs incremental sync (only fetches changed articles since last sync), while "清除快取並重新同步" (`clearCacheAndResync()`) performs a full reset (clears cache + re-fetches everything). Per CLAUDE.md, incremental sync doesn't detect deletions, so the full resync is needed after Supabase data purges. Improved UX by clarifying their purposes: renamed "更新內容" to "檢查更新 (增量同步)" and added subtitle "完整重新下載 (修復用)" to the clear cache button. Grouped both under "內容同步" section header.
-  - **Files changed:** `app/account.tsx`
-  - **Testing needed:** Verify button labels are clear and both sync operations work correctly
-
-- [ ] **#019 — UX: Homepage, `DSE操練` card should have 3 buttons**
-  - **Summary:** Consolidated DSE操練 section into a single unified card with description "重點操練，準備應試" and 3 buttons inside: (1) 📝 DSE 模擬考題, (2) 🔁 溫故知新, (3) 🎯 針對性難題訓練 (coming soon). All buttons are contained within one slate-800 rounded card, creating a focused training hub on the homepage. The demon mascot remains in the header. Tapping "DSE 模擬考題" navigates directly to mock exam mode via URL params.
-  - **Files changed:** `app/(tabs)/index.tsx`, `app/(tabs)/dse-training.tsx`
-  - **Testing needed:** Verify single card displays with 3 buttons and navigation works
-
 - [ ] **#011 — BUG: `Android device only` Article reading page cannot show full article content**
   - **Summary:** Fixed Android-specific rendering issue where article content appeared truncated. Root cause was text overlapping (#012) making content appear cut off.
   - **Files changed:** `components/reading/ArticleText.tsx`
@@ -80,6 +65,24 @@ _Finished by Claude, awaiting Mickey's validation. Once validated → move to **
 _Completed tasks with summaries and lessons learned. Ordered by completion date (newest first)._
 
 ### 2026-06-19
+
+- [x] **#019 — UX: Homepage, `DSE操練` card should have 3 buttons**
+  - **Summary:** Consolidated DSE操練 section into a single unified card with description "重點操練，準備應試" and 3 buttons inside: (1) 📝 DSE 模擬考題, (2) 🔁 溫故知新, (3) 🎯 針對性難題訓練 (coming soon). All buttons are contained within one slate-800 rounded card, creating a focused training hub on the homepage. The demon mascot remains in the header. Tapping "DSE 模擬考題" navigates directly to mock exam mode via URL params.
+  - **Files changed:** `app/(tabs)/index.tsx`, `app/(tabs)/dse-training.tsx`
+  - **Validated:** ✅ Single card with 3 buttons displays correctly, navigation works
+  - **Lesson:** Grouping related actions in a single visual container (card) improves information hierarchy and reduces visual noise compared to multiple separate cards. Users can immediately see all available training options without scrolling.
+
+- [x] **#015 — BUG: Quiz sentence sequence type question issue**
+  - **Summary:** Fixed validation bug in `SentenceOrderQuestion` where correct answers were marked wrong. Two fixes applied: (1) Added `.trim()` when splitting delimiters to handle spaces around `>` characters, and (2) Added support for comma-separated `correctAnswer` format (some questions use `,` instead of `>`). The component now correctly handles both delimiter formats.
+  - **Files changed:** `components/quiz/SentenceOrderQuestion.tsx`
+  - **Validated:** ✅ Sentence-order questions now validate correctly with both comma and > delimiters
+  - **Lesson:** When splitting delimited strings from a database, always trim whitespace and support multiple delimiter formats. Database fields may use different human-readable formatting (commas vs arrows, spaces around delimiters) that must be normalized before comparison.
+
+- [x] **#014 — UX: 2 similar buttons on account page**
+  - **Summary:** Reviewed both sync buttons — they serve **different purposes** and both should be kept. "更新內容" (`refresh()`) performs incremental sync (only fetches changed articles since last sync), while "清除快取並重新同步" (`clearCacheAndResync()`) performs a full reset (clears cache + re-fetches everything). Per CLAUDE.md, incremental sync doesn't detect deletions, so the full resync is needed after Supabase data purges. Improved UX by clarifying their purposes: renamed "更新內容" to "檢查更新 (增量同步)" and added subtitle "完整重新下載 (修復用)" to the clear cache button. Grouped both under "內容同步" section header.
+  - **Files changed:** `app/account.tsx`
+  - **Validated:** ✅ Button labels are clear and both sync operations work correctly
+  - **Lesson:** Two buttons that look similar may serve fundamentally different purposes — incremental vs full sync is a valid distinction. Clarifying purpose via labels/subtitles improves UX without removing functionality.
 
 - [x] **#018 — FEATURE: DSE mock exam questions show article labels**
   - **Summary:** DSE mock exam questions now display an article label badge above each question stem. The badge shows "📄 {article title} · 點擊查看" and is tappable to open the article popup for reference while answering. QuizShell now supports multi-article mode via the `articles` prop — when provided, it dynamically loads the correct article for each question based on `question.articleId` and displays the badge. Single-article quizzes show the "📖 文章" button instead. Fixed multiple UI issues: ArticlePopup scroll (removed nested Pressable), footnote marker width (min-w-[32px]), and QuizShell scrollability (wrapped in ScrollView).
