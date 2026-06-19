@@ -100,6 +100,117 @@ router.get("/:articleId/sample", async (req, res) => {
 })
 
 /**
+ * GET /api/quiz/dse-mock/sample
+ *
+ * Query params:
+ *   userId  (optional) — UUID of the authenticated mobile user
+ *
+ * Randomly picks 2-3 DSE core articles and samples 22 questions per article.
+ * Response: { articles: [...], questions: [...], totalQuestions, totalPoints }
+ * Public (no admin session required).
+ */
+router.get("/dse-mock/sample", async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return
+
+    const { userId } = req.query
+
+    // 1. Fetch all DSE core articles
+    const { data: articles, error: artErr } = await supabase
+      .from("articles")
+      .select("id, title")
+      .eq("is_dse_core", true)
+      .eq("status", "published")
+
+    if (artErr) throw new Error(artErr.message)
+
+    if (!articles || articles.length === 0) {
+      return res.status(404).json({ error: "No DSE core articles found" })
+    }
+
+    // 2. Randomly pick 2 or 3 articles
+    const count = articles.length >= 3 ? (Math.random() < 0.5 ? 2 : 3) : Math.min(2, articles.length)
+    const shuffled = articles.sort(() => Math.random() - 0.5)
+    const pickedArticles = shuffled.slice(0, count)
+
+    // 3. For each article, fetch all published questions and sample 22
+    const allSampledQuestions = []
+    const seenAcrossArticles = new Map() // For cross-article repeat avoidance
+
+    // If userId provided, get all seen questions across ALL DSE articles first
+    if (userId) {
+      const { data: dseAttempts, error: dseAttErr } = await supabase
+        .from("quiz_attempts")
+        .select("id, article_id, completed_at")
+        .eq("user_id", userId)
+        .in("article_id", pickedArticles.map(a => a.id))
+
+      if (!dseAttErr && dseAttempts && dseAttempts.length > 0) {
+        const attemptIds = dseAttempts.map(a => a.id)
+        const { data: answers, error: ansErr } = await supabase
+          .from("quiz_answers")
+          .select("question_id, attempt_id")
+          .in("attempt_id", attemptIds)
+
+        if (!ansErr && answers) {
+          // Build map: question_id -> max(completed_at)
+          const attemptToCompletedAt = {}
+          for (const att of dseAttempts) {
+            attemptToCompletedAt[att.id] = att.completed_at
+          }
+
+          for (const ans of answers) {
+            const qid = String(ans.question_id)
+            const completedAt = attemptToCompletedAt[ans.attempt_id]
+            if (!seenAcrossArticles.has(qid) || completedAt > seenAcrossArticles.get(qid)) {
+              seenAcrossArticles.set(qid, completedAt)
+            }
+          }
+        }
+      }
+    }
+
+    // 4. Sample questions from each article
+    for (const article of pickedArticles) {
+      const { data: questions, error: qErr } = await supabase
+        .from("questions")
+        .select("*")
+        .eq("article_id", article.id)
+        .eq("status", "published")
+        .order("part", { ascending: true })
+
+      if (qErr) throw new Error(qErr.message)
+      if (!questions || questions.length === 0) continue
+
+      // Sample 22 questions using the sampling logic
+      const sampled = sampleByPart(questions, seenAcrossArticles)
+
+      // Add articleId to each question for cross-article context
+      const withArticleId = sampled.map(q => ({ ...q, articleId: article.id }))
+      allSampledQuestions.push(...withArticleId)
+    }
+
+    // 5. Calculate total points
+    const totalPoints = allSampledQuestions.reduce((sum, q) => sum + (q.points ?? 1), 0)
+
+    // 6. Convert to camelCase response format
+    const responseQuestions = allSampledQuestions.map(q => ({
+      ...rowToQuestion(q),
+      articleId: q.articleId,
+    }))
+
+    res.json({
+      articles: pickedArticles,
+      questions: responseQuestions,
+      totalQuestions: responseQuestions.length,
+      totalPoints,
+    })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
+/**
  * GET /api/quiz/progress?userId=<uuid>
  *
  * Returns per-article progress for all articles where the user has quiz data.

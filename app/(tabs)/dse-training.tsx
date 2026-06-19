@@ -6,7 +6,7 @@ import QuizShell from "@/components/quiz/QuizShell"
 import { useAuth } from "@/hooks/useAuth"
 import { supabase } from "@/lib/supabase"
 import { getArticle } from "@/lib/data"
-import type { Question, Article, QuizOption } from "@/lib/types"
+import type { Question, Article } from "@/lib/types"
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true)
@@ -18,19 +18,6 @@ interface SelectedArticle {
   article: Article
 }
 
-function pickRandom<T>(arr: T[], n: number): T[] {
-  const shuffled = [...arr].sort(() => Math.random() - 0.5)
-  return shuffled.slice(0, n)
-}
-
-function normalizeOptions(opts: any): QuizOption[] {
-  if (Array.isArray(opts)) return opts as QuizOption[]
-  if (opts && typeof opts === "object") {
-    return Object.entries(opts).map(([key, text]) => ({ key: key as QuizOption["key"], text: String(text) }))
-  }
-  return []
-}
-
 function ArticleAccordion({ article, index }: { article: SelectedArticle; index: number }) {
   const [expanded, setExpanded] = useState(false)
 
@@ -40,6 +27,7 @@ function ArticleAccordion({ article, index }: { article: SelectedArticle; index:
   }
 
   const segments = article.article.segments ?? []
+  const footnotes = article.article.footnotes ?? []
 
   return (
     <View className="bg-white rounded-2xl border border-slate-200 mb-3 overflow-hidden shadow-sm">
@@ -61,6 +49,23 @@ function ArticleAccordion({ article, index }: { article: SelectedArticle; index:
           ))}
           {segments.length === 0 && (
             <Text className="text-sm text-slate-400 italic">（未有文章內容）</Text>
+          )}
+
+          {footnotes.length > 0 && (
+            <View className="mt-6 gap-2">
+              <Text className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                註釋
+              </Text>
+              {footnotes.map((fn) => (
+                <View key={fn.id} className="flex-row gap-2">
+                  <Text className="text-amber-600 font-bold text-sm w-6">{fn.marker}</Text>
+                  <View className="flex-1">
+                    <Text className="text-sm font-semibold text-slate-700">{fn.term}</Text>
+                    <Text className="text-xs text-slate-500 leading-relaxed">{fn.explanation}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
           )}
         </View>
       )}
@@ -87,56 +92,41 @@ export default function DSETrainingTab() {
       setLoading(true)
       setError(null)
 
-      const { data: articles, error: artErr } = await supabase
-        .from("articles")
-        .select("id, title")
-        .eq("is_dse_core", true)
+      // Call the DSE mock sampling API
+      const endpoint = process.env.EXPO_PUBLIC_ADMIN_URL || "http://localhost:3001"
+      const url = new URL(`${endpoint}/api/quiz/dse-mock/sample`)
+      if (user?.id) {
+        url.searchParams.set("userId", user.id)
+      }
 
-      if (artErr) throw artErr
-      if (!articles || articles.length === 0) {
+      const response = await fetch(url.toString())
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Network error" }))
+        throw new Error(errorData.error || `HTTP ${response.status}`)
+      }
+
+      const data = await response.json()
+
+      if (!data.articles || data.articles.length === 0) {
         setError("未有 DSE 核心篇章。請稍後再試。")
         return
       }
 
-      const count = articles.length >= 3 ? (Math.random() < 0.5 ? 2 : 3) : Math.min(2, articles.length)
-      const picked = pickRandom(articles, count)
+      if (!data.questions || data.questions.length === 0) {
+        setError("未有可用的問題。請稍後再試。")
+        return
+      }
 
-      const withContent: SelectedArticle[] = picked.map((a) => ({
+      // Load article content for each selected article
+      const withContent: SelectedArticle[] = data.articles.map((a: { id: string; title: string }) => ({
         id: a.id,
         title: a.title,
         article: getArticle(a.id),
       }))
       setSelectedArticles(withContent)
 
-      const articleIds = picked.map((a) => a.id)
-
-      const { data: rows, error: qErr } = await supabase
-        .from("questions")
-        .select("*")
-        .in("article_id", articleIds)
-        .eq("status", "published")
-
-      if (qErr) throw qErr
-      if (!rows || rows.length === 0) {
-        setError("未有可用的問題。請稍後再試。")
-        return
-      }
-
-      const mapped: Question[] = rows.map((r: any) => ({
-        id: r.id,
-        part: r.part ?? 1,
-        points: r.points ?? 1,
-        stem: r.stem,
-        format: r.format ?? "mc",
-        type: r.type ?? "mc-single",
-        options: normalizeOptions(r.options),
-        correctAnswer: r.correct_answer ?? "",
-        explanation: r.explanation,
-        selectCount: r.select_count ?? 1,
-        sequenceTokens: r.sequence_tokens ?? undefined,
-      }))
-
-      setQuestions(mapped)
+      // Questions are already sampled and formatted by the backend
+      setQuestions(data.questions)
     } catch (e: any) {
       setError(e.message ?? "發生錯誤，請稍後再試。")
     } finally {
@@ -238,6 +228,9 @@ export default function DSETrainingTab() {
   }
 
   if (phase === "quiz") {
+    // Build article info for multi-article mode
+    const articles = selectedArticles.map(a => ({ id: a.id, title: a.title }))
+
     return (
       <SafeAreaView className="flex-1 bg-slate-50">
         <View className="px-5 pt-4 pb-2 flex-row items-center">
@@ -251,6 +244,7 @@ export default function DSETrainingTab() {
         <View className="flex-1 px-5 pt-2">
           <QuizShell
             questions={questions}
+            articles={articles}
             partTitles={{ 1: "DSE 模擬考題" }}
             onSave={handleSave}
           />

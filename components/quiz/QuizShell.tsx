@@ -18,6 +18,7 @@ interface Props {
   questions: Question[]
   partTitles: Record<number, string>
   articleId?: string
+  articles?: Array<{ id: string; title: string }>  // Multi-article mode
   expectedMinutes?: number
   onSave?: (score: number, total: number, totalSeconds: number) => void
   onFinished?: () => void
@@ -38,7 +39,7 @@ function shuffleArray<T>(arr: T[]): T[] {
   return a
 }
 
-export default function QuizShell({ questions: rawQuestions, partTitles, articleId, expectedMinutes, onSave, onFinished }: Props) {
+export default function QuizShell({ questions: rawQuestions, partTitles, articleId, articles, expectedMinutes, onSave, onFinished }: Props) {
   const [questions] = useState<Question[]>(() =>
     rawQuestions.map((q) => {
       if (q.format === "mc" && q.options && q.options.length > 0) {
@@ -73,7 +74,12 @@ export default function QuizShell({ questions: rawQuestions, partTitles, article
 
   const startedAtRef = useRef(Date.now())
   const { user } = useAuth()
-  const article: Article | null = articleId ? getArticle(articleId) : null
+
+  // Multi-article mode: load article dynamically based on current question
+  const currentQuestion = questions[currentIndex]
+  const currentArticleId = articles && currentQuestion?.articleId ? currentQuestion.articleId : articleId
+  const currentArticle: Article | null = currentArticleId ? getArticle(currentArticleId) : null
+  const currentArticleTitle = articles?.find(a => a.id === currentArticleId)?.title || currentArticle?.title
 
   useEffect(() => {
     if (isFinished) return
@@ -98,7 +104,6 @@ export default function QuizShell({ questions: rawQuestions, partTitles, article
     }
   }, [isFinished])
 
-  const currentQuestion = questions[currentIndex]
   const isLastQuestion = currentIndex + 1 >= questions.length
 
   const timerColor =
@@ -167,7 +172,7 @@ export default function QuizShell({ questions: rawQuestions, partTitles, article
         <Text className={`text-sm font-semibold tabular-nums ${timerColor}`}>
           {formatTimer(elapsedSeconds)}
         </Text>
-        {article && (
+        {currentArticle && (
           <Pressable
             onPress={() => setShowArticle(true)}
             hitSlop={8}
@@ -177,6 +182,22 @@ export default function QuizShell({ questions: rawQuestions, partTitles, article
           </Pressable>
         )}
       </View>
+
+      {/* Article badge for multi-article mode */}
+      {articles && currentArticleTitle && (
+        <Pressable
+          onPress={() => setShowArticle(true)}
+          className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 active:opacity-70"
+        >
+          <View className="flex-row items-center">
+            <Text className="text-amber-600 text-base mr-2">📄</Text>
+            <Text className="text-slate-700 text-sm font-medium flex-1" style={{ fontFamily: "Georgia" }}>
+              {currentArticleTitle}
+            </Text>
+            <Text className="text-amber-500 text-xs">點擊查看</Text>
+          </View>
+        </Pressable>
+      )}
 
       {currentQuestion.format === "fill-blank" ? (
         <FillBlankQuestion
@@ -252,7 +273,7 @@ export default function QuizShell({ questions: rawQuestions, partTitles, article
 
       <ArticlePopup
         visible={showArticle}
-        article={article}
+        article={currentArticle}
         onClose={() => setShowArticle(false)}
       />
     </View>

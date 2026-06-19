@@ -31,6 +31,7 @@ export interface QuizOption {
 
 export interface Question {
   id: string | number  // UUID string for Supabase-sourced questions; number for legacy bundled data
+  articleId?: string  // Article this question belongs to (for multi-article quizzes)
   part: 1 | 2 | 3 | 4 | 5 | 6
   points: number
   stem: string
