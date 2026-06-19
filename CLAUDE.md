@@ -257,6 +257,29 @@ These must never be violated. Violating them causes silent data loss that only s
 - API response includes `poolProgress` (`totalInPool`, `seenCount`, `attemptNumber`, `estimatedAttemptsToComplete`) — used for the "已見過 X / Y 題" display in `app/quiz.tsx`
 - Test the sampling logic at `https://ccladmin.mickey-calligraphy.art/test-sampling.html`
 
+**DSE mock exam (`app/(tabs)/dse-training.tsx` + `admin/routes/quiz.js`)**
+- DSE mock exam endpoint: `GET /api/quiz/dse-mock/sample?userId=<uuid>` — randomly picks 2-3 DSE core articles (`is_dse_core = true`) and samples 22 questions per article
+- Returns 44 questions (2 articles) or 66 questions (3 articles) with cross-article repeat avoidance
+- Each question includes `articleId` field for multi-article context in `QuizShell`
+- `QuizShell` supports multi-article mode via `articles` prop — dynamically loads correct article per question and displays article badge above question stem
+- Single-article quizzes show "📖 文章" button; multi-article quizzes show article title badge instead
+
+**Express route order matters**
+- Express matches routes top-to-bottom — specific paths must be defined BEFORE parameterized routes
+- Example conflict: `GET /dse-mock/sample` defined after `GET /:articleId/sample` → Express treats "dse-mock" as the `articleId` parameter
+- Fix: move specific route (`/dse-mock/sample`) before parameterized route (`/:articleId/sample`)
+- Always check existing routes in a file before adding new ones to identify potential conflicts
+
+**Quiz/form content must be scrollable**
+- Wrap quiz content in `ScrollView` to ensure all interactive elements remain accessible when content exceeds screen height
+- Adding new UI elements (badges, headers) can push buttons off-screen — `QuizShell` uses `ScrollView` wrapper to prevent this
+- Modal content should also be scrollable — `ArticlePopup` uses `ScrollView` for article text + footnotes
+
+**Nested Pressables block scroll gestures**
+- Avoid wrapping `ScrollView` in a `Pressable` — the Pressable captures touch events and blocks scrolling
+- For modal backdrops: use absolute positioned `Pressable` outside the content container, not wrapping it
+- Pattern: `<View><Pressable onPress={onClose} className="absolute inset-0" /><View>{content}</View></View>`
+
 **Mobile OAuth setup (Google Sign-In via Supabase)**
 - Uses Supabase Auth with OAuth PKCE flow + `expo-web-browser` (not native Google Sign-In SDK)
 - **iOS**: Requires iOS OAuth client in Google Console; redirect URI uses reversed client ID scheme set in `app.json` `@react-native-google-signin/google-signin` plugin config
