@@ -8,6 +8,20 @@ _Active task list for day-to-day development work. Add new tasks to **Open**, mo
 
 _Add new tasks here. Format: `- [ ] #N — Type: Brief description`_
 
+- [ ] **#021 — BUG: `Android device only` Footnote numbers not clickable / difficult to click**
+  - **Summary: On Android device, footnote numbers (e.g., ⁽¹⁾) are sometimes not clickable, difficult to click, or the clicking area is shifted from the visual position. The tap target may not align with where the number appears on screen.**
+  - **Investigation findings:**
+    - Current implementation uses nested `<Text onPress={...}>` for footnote markers in `ArticleText.tsx`
+    - Nested Text with `onPress` is known to have poor tap target reliability on Android
+    - Small inline text (text-sm) makes the tap target even smaller
+    - No explicit `hitSlop` defined to expand the tappable area
+  - **Proposed fixes to test:**
+    1. Replace `<Text onPress>` with `<Pressable>` wrapper around footnote text
+    2. Add `hitSlop={8}` to expand tap area
+    3. Consider using `suppressHighlighting={false}` on parent Text for better visual feedback
+    4. Alternative: Use absolute positioned touchable overlay if inline approach fails
+  - **Files to modify:** `components/reading/ArticleText.tsx`
+
 <!-- Example:
 - [ ] #007 — Bug: ...
 -->
