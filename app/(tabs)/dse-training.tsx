@@ -42,11 +42,17 @@ function ArticleAccordion({ article, index }: { article: SelectedArticle; index:
       </Pressable>
       {expanded && (
         <View className="border-t border-slate-100 px-5 py-4 bg-amber-50">
-          {segments.map((seg, i) => (
-            <Text key={i} className="text-sm text-slate-700 leading-7 mb-1" style={{ fontFamily: "Georgia" }}>
-              {seg.text}
-            </Text>
-          ))}
+          <Text className="text-base text-slate-700 leading-9 tracking-wide mb-4" style={{ fontFamily: "Georgia" }}>
+            {segments.map((seg, i) =>
+              seg.footnoteId ? (
+                <Text key={i} className="text-amber-600 font-bold text-sm">
+                  {seg.text}
+                </Text>
+              ) : (
+                <Text key={i}>{seg.text}</Text>
+              )
+            )}
+          </Text>
           {segments.length === 0 && (
             <Text className="text-sm text-slate-400 italic">（未有文章內容）</Text>
           )}
