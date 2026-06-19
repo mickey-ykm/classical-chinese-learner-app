@@ -24,19 +24,58 @@ function formatDate(iso: string): string {
 }
 
 function formatSeconds(s: number): string {
-  const m = Math.floor(s / 60)
+  const totalMinutes = Math.floor(s / 60)
   const sec = s % 60
-  if (m === 0) return `${sec} 秒`
-  if (sec === 0) return `${m} 分`
-  return `${m} 分 ${sec} 秒`
+
+  // Less than 1 minute: show seconds only
+  if (totalMinutes === 0) return `${sec} 秒`
+
+  // Less than 1 hour: show minutes (and seconds if non-zero)
+  if (totalMinutes < 60) {
+    if (sec === 0) return `${totalMinutes} 分`
+    return `${totalMinutes} 分 ${sec} 秒`
+  }
+
+  // 1 hour or more: show hours and minutes
+  const hours = Math.floor(totalMinutes / 60)
+  const mins = totalMinutes % 60
+
+  // Less than 24 hours
+  if (hours < 24) {
+    if (mins === 0) return `${hours} 小時`
+    return `${hours} 小時 ${mins} 分`
+  }
+
+  // 24 hours or more: show days and hours
+  const days = Math.floor(hours / 24)
+  const remainingHours = hours % 24
+  if (remainingHours === 0) return `${days} 天`
+  return `${days} 天 ${remainingHours} 小時`
 }
 
 function timeDelta(totalSeconds: number, expectedSeconds: number): { label: string; color: string } {
   const diff = totalSeconds - expectedSeconds
-  const diffMin = Math.round(Math.abs(diff) / 60)
-  if (diffMin === 0) return { label: "準時完成", color: "text-slate-400" }
-  if (diff > 0) return { label: `超時 ${diffMin} 分`, color: "text-red-500" }
-  return { label: `快 ${diffMin} 分`, color: "text-amber-600" }
+  const absDiff = Math.abs(diff)
+
+  // Less than 1 minute difference: on time
+  if (absDiff < 60) return { label: "準時完成", color: "text-slate-400" }
+
+  // Format the difference appropriately
+  const diffMinutes = Math.floor(absDiff / 60)
+
+  if (diffMinutes < 60) {
+    // Less than 1 hour: show in minutes
+    if (diff > 0) return { label: `超時 ${diffMinutes} 分`, color: "text-red-500" }
+    return { label: `快 ${diffMinutes} 分`, color: "text-amber-600" }
+  }
+
+  // 1 hour or more: show in hours
+  const diffHours = Math.floor(diffMinutes / 60)
+  const remainingMins = diffMinutes % 60
+  const hourLabel = remainingMins > 0 ? `${diffHours} 小時 ${remainingMins} 分` : `${diffHours} 小時`
+
+  if (diff > 0) return { label: `超時 ${hourLabel}`, color: "text-red-500" }
+  return { label: `快 ${hourLabel}`, color: "text-amber-600" }
 }
 
 function AttemptRow({ attempt, title, onPress }: { attempt: QuizAttempt; title: string; onPress: () => void }) {
