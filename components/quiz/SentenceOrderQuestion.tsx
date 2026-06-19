@@ -32,7 +32,9 @@ export default function SentenceOrderQuestion({
   const [remaining, setRemaining] = useState<string[]>(shuffled)
   const [submitted, setSubmitted] = useState(false)
 
-  const correctSeq = correctAnswer.split(">").map(t => t.trim())
+  const correctSeq = correctAnswer.includes(",")
+    ? correctAnswer.split(",").map(t => t.trim())
+    : correctAnswer.split(">").map(t => t.trim())
 
   const handlePickToken = useCallback(
     (token: string, index: number) => {
