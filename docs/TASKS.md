@@ -10,12 +10,8 @@ _Add new tasks here. Format: `- [ ] #N — Type: Brief description`_
 
 - [ ] **#010 — UX: Aritcle reading page UX Issue**
   - **Summary: Currently, there are `1. raw article`, `2. footnote`, `3. translation` and `4. the start exercise button`. Firstly, clicking the footnote button to active the bottom footnote is not user friendly. secondly, I think user eyeball cannot read 3 context at the same time. we should create a UX that encouraging them try to read raw article with footnote. But if it is too difficult, then open the translation to read. Propose UX suggestions for this page. Consider the UX in Quiz page > open article reading pop up as well.** 
-- [ ] **#014 — UX: 2 similar buttons on account page**
-  - **Summary: In account page, there are "更新內容" and "清除快取並重新同步". these 2 buttons serve the same purpose, I think just keeping "清除快取並重新同步" should be alright. but review the functions of 2 buttons and see if it makes senses.**
 - [ ] **#015 — BUG: Quiz sentence sequence type question issue**
   - **Summary: I get the answer correct answer, but the app still treat me wrong. Here is the screenshot /docs/debug-screenshots/Screenshot_20260619_174954_classical-chinese-learner-app.jpg**
-- [ ] **#019 — UX: Homepage, `DSE操練` card should have 3 buttons**
-  - **Summary: Under `DSE操練` card, we should display all 3 types of exercises under `DSE操練`.**
 - [ ] **#020 — BUG: Strange time counting**
   - **Summary: I took an exercise previously, but I am not sure it exceeded thousand of minutes. Here is the screenshot docs/debug-screenshots/Screenshot_20260619_181054_classical-chinese-learner-app.jpg**
 
@@ -53,6 +49,18 @@ _Finished by Claude, awaiting Mickey's validation. Once validated → move to **
 _Completed tasks with summaries and lessons learned. Ordered by completion date (newest first)._
 
 ### 2026-06-19
+
+- [x] **#014 — UX: 2 similar buttons on account page**
+  - **Summary:** Reviewed both sync buttons — they serve **different purposes** and both should be kept. "更新內容" (`refresh()`) performs incremental sync (only fetches changed articles since last sync), while "清除快取並重新同步" (`clearCacheAndResync()`) performs a full reset (clears cache + re-fetches everything). Per CLAUDE.md, incremental sync doesn't detect deletions, so the full resync is needed after Supabase data purges. Improved UX by clarifying their purposes: renamed "更新內容" to "檢查更新 (增量同步 推薦)" and added subtitle "完整重新下載 (修復用)" to the clear cache button. Grouped both under "內容同步" section header.
+  - **Files changed:** `app/account.tsx`
+  - **Validated:** ✅ Both buttons kept with clearer labels explaining their different use cases
+  - **Lesson:** Two buttons that look similar may serve fundamentally different purposes — incremental vs full sync is a valid distinction. Clarifying purpose via labels/subtitles improves UX without removing functionality.
+
+- [x] **#019 — UX: Homepage, `DSE操練` card should have 3 buttons**
+  - **Summary:** Expanded DSE操練 section on homepage to show all 3 exercise types instead of a single banner: (1) DSE 模擬考題 (mock exam with randomly selected core articles), (2) 溫故知新 (revision of past mistakes), (3) 針對性難題訓練 (tricky questions, coming soon). Each exercise type now has its own card with icon, title, description, and action button. The section header retains the demon mascot. Added URL param support to `dse-training.tsx` so tapping "DSE 模擬考題" navigates directly to mock exam mode.
+  - **Files changed:** `app/(tabs)/index.tsx`, `app/(tabs)/dse-training.tsx`
+  - **Validated:** ✅ All 3 exercise types visible, direct navigation to mock exam works
+  - **Lesson:** Homepage should surface all available training modes rather than requiring users to navigate through a secondary menu. URL params enable deep linking into specific modes within a tab.
 
 - [x] **#011 — BUG: `Android device only` Article reading page cannot show full article content**
   - **Summary:** Fixed Android-specific rendering issue where article content appeared truncated. Root cause was text overlapping (#012) making content appear cut off.
