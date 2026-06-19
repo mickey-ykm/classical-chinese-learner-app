@@ -38,6 +38,41 @@ _Tasks currently being worked on. Add start date and assignee._
 
 _Finished by Claude, awaiting Mickey's validation. Once validated → move to **Done**. If issues found → move back to **In Progress** with notes._
 
+- [ ] **#020 — BUG: Strange time counting**
+  - **Summary:** Fixed time formatting bug where large durations displayed incorrectly (e.g., "46780 分" for 32+ days). Updated `formatSeconds()` and `timeDelta()` in `account.tsx` and `attempt.tsx` to use appropriate units based on duration: < 1 min shows seconds; 1-59 min shows minutes (and seconds); 1-23 hours shows hours and minutes; 24+ hours shows days and hours. The 46,780-minute duration now correctly displays as "32 天 11 小時".
+  - **Files changed:** `app/account.tsx`, `app/attempt.tsx`
+  - **Testing needed:** Verify time formatting displays correctly in account history and attempt detail screens
+
+- [ ] **#015 — BUG: Quiz sentence sequence type question issue**
+  - **Summary:** Fixed validation bug in `SentenceOrderQuestion` where correct answers were marked wrong. Two fixes applied: (1) Added `.trim()` when splitting delimiters to handle spaces around `>` characters, and (2) Added support for comma-separated `correctAnswer` format (some questions use `,` instead of `>`). The component now handles both formats correctly.
+  - **Files changed:** `components/quiz/SentenceOrderQuestion.tsx`
+  - **Testing needed:** Test sentence-order questions with both comma and > delimited correct answers
+
+- [ ] **#014 — UX: 2 similar buttons on account page**
+  - **Summary:** Reviewed both sync buttons — they serve **different purposes** and both should be kept. "更新內容" (`refresh()`) performs incremental sync (only fetches changed articles since last sync), while "清除快取並重新同步" (`clearCacheAndResync()`) performs a full reset (clears cache + re-fetches everything). Per CLAUDE.md, incremental sync doesn't detect deletions, so the full resync is needed after Supabase data purges. Improved UX by clarifying their purposes: renamed "更新內容" to "檢查更新 (增量同步)" and added subtitle "完整重新下載 (修復用)" to the clear cache button. Grouped both under "內容同步" section header.
+  - **Files changed:** `app/account.tsx`
+  - **Testing needed:** Verify button labels are clear and both sync operations work correctly
+
+- [ ] **#019 — UX: Homepage, `DSE操練` card should have 3 buttons**
+  - **Summary:** Consolidated DSE操練 section into a single unified card with description "重點操練，準備應試" and 3 buttons inside: (1) 📝 DSE 模擬考題, (2) 🔁 溫故知新, (3) 🎯 針對性難題訓練 (coming soon). All buttons are contained within one slate-800 rounded card, creating a focused training hub on the homepage. The demon mascot remains in the header. Tapping "DSE 模擬考題" navigates directly to mock exam mode via URL params.
+  - **Files changed:** `app/(tabs)/index.tsx`, `app/(tabs)/dse-training.tsx`
+  - **Testing needed:** Verify single card displays with 3 buttons and navigation works
+
+- [ ] **#011 — BUG: `Android device only` Article reading page cannot show full article content**
+  - **Summary:** Fixed Android-specific rendering issue where article content appeared truncated. Root cause was text overlapping (#012) making content appear cut off.
+  - **Files changed:** `components/reading/ArticleText.tsx`
+  - **Testing needed:** Test on Android device - verify full article content displays
+
+- [ ] **#012 — BUG: `Android device only` Article reading page text overlapping**
+  - **Summary:** Fixed text overlapping issue on Android devices where classical Chinese text lines were rendering on top of each other. Changed from NativeWind `leading-9` class to explicit `lineHeight: 42` style property for more reliable cross-platform rendering with the Georgia font. The `text-lg` (18px) with `lineHeight: 42` gives ~2.3x line spacing, which provides better vertical clearance for classical Chinese characters on Android.
+  - **Files changed:** `components/reading/ArticleText.tsx`
+  - **Testing needed:** Test on Android device - verify text lines don't overlap
+
+- [ ] **#013 — BUG: `Android device only` Quiz page > open article reading pop up cannot scroll.**
+  - **Summary:** Already fixed in task #018 on 2026-06-19. The ArticlePopup scroll issue was resolved by removing nested Pressable structure that was blocking scroll gestures. Changed to absolute-positioned backdrop Pressable + plain View wrapper with ScrollView for content.
+  - **Files changed:** `components/quiz/ArticlePopup.tsx` (fixed in commit 07f3d47)
+  - **Testing needed:** Test on Android device - verify article popup scrolls properly
+
 ---
 
 ## Done (Recent)
@@ -45,48 +80,6 @@ _Finished by Claude, awaiting Mickey's validation. Once validated → move to **
 _Completed tasks with summaries and lessons learned. Ordered by completion date (newest first)._
 
 ### 2026-06-19
-
-- [x] **#020 — BUG: Strange time counting**
-  - **Summary:** Fixed time formatting bug where large durations displayed incorrectly (e.g., "46780 分" for 32+ days). Updated `formatSeconds()` and `timeDelta()` in `account.tsx` and `attempt.tsx` to use appropriate units based on duration: < 1 min shows seconds; 1-59 min shows minutes (and seconds); 1-23 hours shows hours and minutes; 24+ hours shows days and hours. The 46,780-minute duration now correctly displays as "32 天 11 小時".
-  - **Files changed:** `app/account.tsx`, `app/attempt.tsx`
-  - **Validated:** ✅ Logic handles all edge cases (seconds, minutes, hours, days)
-  - **Lesson:** Always consider scale when formatting durations — what works for typical use cases (minutes) breaks at extremes (days). Use progressive units (sec → min → hour → day) based on magnitude rather than single-unit formatting.
-
-- [x] **#015 — BUG: Quiz sentence sequence type question issue**
-  - **Summary:** Fixed validation bug in `SentenceOrderQuestion` where correct answers were marked wrong. Root cause: `correctAnswer` field stored in database contains spaces around delimiters (e.g., `"明察秋毫 > 求賢若渴 > 洞若觀火 > 杯弓蛇影"`), but tokens from `sequenceTokens` array have no spaces. When user arranged tokens correctly, the comparison failed because `arranged.join(">")` produced `"A>B>C>D"` while `correctSeq.join(">")` produced `"A > B > C > D"`. Added `.trim()` when splitting `correctAnswer` to normalize the comparison.
-  - **Files changed:** `components/quiz/SentenceOrderQuestion.tsx`
-  - **Validated:** ✅ Logic verified — trimming removes whitespace from both position-based and overall validation
-  - **Lesson:** When splitting delimited strings from a database, always trim whitespace to handle inconsistent storage formats. Database fields may have human-readable formatting (spaces around delimiters) that must be normalized before comparison with programmatically generated arrays.
-
-- [x] **#014 — UX: 2 similar buttons on account page**
-  - **Summary:** Reviewed both sync buttons — they serve **different purposes** and both should be kept. "更新內容" (`refresh()`) performs incremental sync (only fetches changed articles since last sync), while "清除快取並重新同步" (`clearCacheAndResync()`) performs a full reset (clears cache + re-fetches everything). Per CLAUDE.md, incremental sync doesn't detect deletions, so the full resync is needed after Supabase data purges. Improved UX by clarifying their purposes: renamed "更新內容" to "檢查更新 (增量同步 推薦)" and added subtitle "完整重新下載 (修復用)" to the clear cache button. Grouped both under "內容同步" section header.
-  - **Files changed:** `app/account.tsx`
-  - **Validated:** ✅ Both buttons kept with clearer labels explaining their different use cases
-  - **Lesson:** Two buttons that look similar may serve fundamentally different purposes — incremental vs full sync is a valid distinction. Clarifying purpose via labels/subtitles improves UX without removing functionality.
-
-- [x] **#019 — UX: Homepage, `DSE操練` card should have 3 buttons**
-  - **Summary:** Consolidated DSE操練 section into a single unified card with description "重點操練，準備應試" and 3 buttons inside: (1) 📝 DSE 模擬考題, (2) 🔁 溫故知新, (3) 🎯 針對性難題訓練 (coming soon). All buttons are contained within one slate-800 rounded card, creating a focused training hub on the homepage. The demon mascot remains in the header. Tapping "DSE 模擬考題" navigates directly to mock exam mode via URL params.
-  - **Files changed:** `app/(tabs)/index.tsx`, `app/(tabs)/dse-training.tsx`
-  - **Validated:** ✅ Single card with 3 buttons, description displays correctly
-  - **Lesson:** Grouping related actions in a single visual container (card) improves information hierarchy and reduces visual noise compared to multiple separate cards. Users can immediately see all available training options without scrolling.
-
-- [x] **#011 — BUG: `Android device only` Article reading page cannot show full article content**
-  - **Summary:** Fixed Android-specific rendering issue where article content appeared truncated. Root cause was text overlapping (#012) making content appear cut off.
-  - **Files changed:** `components/reading/ArticleText.tsx`
-  - **Validated:** ✅ Awaiting Android device testing
-  - **Lesson:** Related to #012 - text overlapping can make content appear incomplete even when it's all rendered.
-
-- [x] **#012 — BUG: `Android device only` Article reading page text overlapping**
-  - **Summary:** Fixed text overlapping issue on Android devices where classical Chinese text lines were rendering on top of each other. Changed from NativeWind `leading-9` class to explicit `lineHeight: 42` style property for more reliable cross-platform rendering with the Georgia font. The `text-lg` (18px) with `lineHeight: 42` gives ~2.3x line spacing, which provides better vertical clearance for classical Chinese characters on Android.
-  - **Files changed:** `components/reading/ArticleText.tsx`
-  - **Validated:** ✅ Awaiting Android device testing
-  - **Lesson:** NativeWind Tailwind classes may render inconsistently across platforms, especially for typography with custom fonts. Use explicit numeric `lineHeight` in the `style` prop when cross-platform consistency is critical. Android renders Georgia font with different metrics than iOS.
-
-- [x] **#013 — BUG: `Android device only` Quiz page > open article reading pop up cannot scroll.**
-  - **Summary:** Already fixed in task #018 on 2026-06-19. The ArticlePopup scroll issue was resolved by removing nested Pressable structure that was blocking scroll gestures. Changed to absolute-positioned backdrop Pressable + plain View wrapper with ScrollView for content.
-  - **Files changed:** `components/quiz/ArticlePopup.tsx` (fixed in commit 07f3d47)
-  - **Validated:** ✅ Confirmed fixed in previous commit
-  - **Lesson:** Task was completed as part of #018 but not explicitly marked as done. Always cross-reference Done section when checking task status.
 
 - [x] **#018 — FEATURE: DSE mock exam questions show article labels**
   - **Summary:** DSE mock exam questions now display an article label badge above each question stem. The badge shows "📄 {article title} · 點擊查看" and is tappable to open the article popup for reference while answering. QuizShell now supports multi-article mode via the `articles` prop — when provided, it dynamically loads the correct article for each question based on `question.articleId` and displays the badge. Single-article quizzes show the "📖 文章" button instead. Fixed multiple UI issues: ArticlePopup scroll (removed nested Pressable), footnote marker width (min-w-[32px]), and QuizShell scrollability (wrapped in ScrollView).
