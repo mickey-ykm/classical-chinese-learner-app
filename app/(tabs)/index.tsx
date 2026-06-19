@@ -164,30 +164,73 @@ export default function HomeTab() {
           <Text className="text-sm text-slate-500">歡迎回到文言文練習平台</Text>
         </View>
 
-        {/* DSE 操練 — big banner */}
-        <Pressable
-          onPress={() => router.push("/(tabs)/dse-training")}
-          className="bg-slate-800 rounded-2xl px-5 py-5 mb-6 active:opacity-80 overflow-hidden"
-        >
-          <View className="flex-row items-center justify-between">
-            <View className="flex-1">
-              <View className="flex-row items-center gap-2 mb-1">
-                <Text className="text-amber-400 text-2xl">⚡</Text>
-                <Text className="text-white font-bold text-lg">DSE 操練</Text>
-              </View>
-              <Text className="text-slate-400 text-xs leading-5">
-                隨機抽選 DSE 核心篇章，模擬考試練習
+        {/* DSE 操練 section */}
+        <View className="mb-6">
+          <View className="bg-slate-800 rounded-2xl px-5 py-4 mb-3">
+            <View className="flex-row items-center gap-2">
+              <Text className="text-amber-400 text-2xl">⚡</Text>
+              <Text className="text-white font-bold text-lg">DSE 操練</Text>
+            </View>
+            <View className="flex-row items-center justify-between mt-2">
+              <Text className="text-slate-400 text-xs leading-5 flex-1">
+                模擬考試、重溫錯題、針對訓練
               </Text>
-            </View>
-            {/* Demon mascot */}
-            <View className="items-center justify-center mx-2">
-              <DemonMascot size={64} />
-            </View>
-            <View className="bg-amber-500 rounded-xl px-4 py-2">
-              <Text className="text-white font-bold text-sm">開始 →</Text>
+              <View className="ml-2">
+                <DemonMascot size={56} />
+              </View>
             </View>
           </View>
-        </Pressable>
+
+          {/* DSE Mock Exam */}
+          <Pressable
+            onPress={() => router.push({ pathname: "/(tabs)/dse-training", params: { mode: "mock" } })}
+            className="bg-white rounded-2xl border border-slate-100 px-4 py-3 mb-2 active:opacity-70 flex-row items-center justify-between"
+          >
+            <View className="flex-row items-center flex-1">
+              <Text className="text-2xl mr-3">📝</Text>
+              <View className="flex-1">
+                <Text className="text-sm font-bold text-slate-800 leading-snug" style={{ fontFamily: "Georgia" }}>
+                  DSE 模擬考題
+                </Text>
+                <Text className="text-xs text-slate-400">隨機抽選核心篇章模擬考試</Text>
+              </View>
+            </View>
+            <Text className="text-slate-300 text-xs ml-2">開始 →</Text>
+          </Pressable>
+
+          {/* Revision */}
+          <Pressable
+            onPress={() => router.push("/revision")}
+            className="bg-white rounded-2xl border border-slate-100 px-4 py-3 mb-2 active:opacity-70 flex-row items-center justify-between"
+          >
+            <View className="flex-row items-center flex-1">
+              <Text className="text-2xl mr-3">🔁</Text>
+              <View className="flex-1">
+                <Text className="text-sm font-bold text-slate-800 leading-snug" style={{ fontFamily: "Georgia" }}>
+                  溫故知新
+                </Text>
+                <Text className="text-xs text-slate-400">重溫做錯的題目加深記憶</Text>
+              </View>
+            </View>
+            <Text className="text-slate-300 text-xs ml-2">開始 →</Text>
+          </Pressable>
+
+          {/* Tricky Questions — coming soon */}
+          <View className="bg-white rounded-2xl border border-slate-100 px-4 py-3 opacity-60 flex-row items-center justify-between">
+            <View className="flex-row items-center flex-1">
+              <Text className="text-2xl mr-3">🎯</Text>
+              <View className="flex-1">
+                <Text className="text-sm font-bold text-slate-800 leading-snug" style={{ fontFamily: "Georgia" }}>
+                  針對性難題訓練
+                </Text>
+                <Text className="text-xs text-slate-400">針對弱項強化訓練</Text>
+              </View>
+            </View>
+            <View className="bg-amber-100 rounded-full px-2 py-0.5">
+              <Text className="text-amber-700 text-xs font-semibold">即將推出</Text>
+            </View>
+          </View>
+        </View>
 
         {/* DSE 文章 preview */}
         <View className="mb-6">

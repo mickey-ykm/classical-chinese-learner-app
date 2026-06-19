@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { View, Text, ActivityIndicator, ScrollView, LayoutAnimation, Platform, UIManager, Pressable } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
-import { useRouter } from "expo-router"
+import { useRouter, useLocalSearchParams } from "expo-router"
 import QuizShell from "@/components/quiz/QuizShell"
 import { useAuth } from "@/hooks/useAuth"
 import { supabase } from "@/lib/supabase"
@@ -82,12 +82,20 @@ function ArticleAccordion({ article, index }: { article: SelectedArticle; index:
 export default function DSETrainingTab() {
   const { user } = useAuth()
   const router = useRouter()
+  const params = useLocalSearchParams()
   const [mode, setMode] = useState<"select" | "mock" | "tricky">("select")
   const [phase, setPhase] = useState<"lobby" | "quiz">("lobby")
   const [selectedArticles, setSelectedArticles] = useState<SelectedArticle[]>([])
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Handle initial mode from URL params
+  useEffect(() => {
+    if (params.mode === "mock") {
+      setMode("mock")
+    }
+  }, [params.mode])
 
   useEffect(() => {
     if (mode === "mock") loadDSEQuestions()

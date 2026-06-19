@@ -241,29 +241,42 @@ export default function AccountScreen() {
           </>
         )}
 
-        {/* Refresh content — available to all */}
-        <Pressable
-          onPress={handleRefreshContent}
-          disabled={syncing}
-          className="border border-slate-200 rounded-2xl py-4 items-center active:opacity-70 bg-white mt-8"
-        >
-          {syncing ? (
-            <ActivityIndicator size="small" color="#d97706" />
-          ) : (
-            <Text className="text-amber-600 font-semibold text-sm">
-              {syncMsg ?? "更新內容"}
-            </Text>
-          )}
-        </Pressable>
+        {/* Sync actions */}
+        <View className="mt-8">
+          <Text className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
+            內容同步
+          </Text>
 
-        {/* Clear cache and resync — available to all */}
-        <Pressable
-          onPress={handleClearCacheAndResync}
-          disabled={syncing}
-          className="border border-slate-200 rounded-2xl py-4 items-center active:opacity-70 bg-white mt-3"
-        >
-          <Text className="text-red-500 font-semibold text-sm">清除快取並重新同步</Text>
-        </Pressable>
+          {/* Incremental refresh */}
+          <Pressable
+            onPress={handleRefreshContent}
+            disabled={syncing}
+            className="border border-slate-200 rounded-2xl py-4 items-center active:opacity-70 bg-white mb-3"
+          >
+            {syncing ? (
+              <ActivityIndicator size="small" color="#d97706" />
+            ) : (
+              <View className="items-center">
+                <Text className="text-amber-600 font-semibold text-sm mb-0.5">
+                  {syncMsg ?? "檢查更新"}
+                </Text>
+                <Text className="text-slate-400 text-xs">增量同步（推薦）</Text>
+              </View>
+            )}
+          </Pressable>
+
+          {/* Full resync */}
+          <Pressable
+            onPress={handleClearCacheAndResync}
+            disabled={syncing}
+            className="border border-slate-200 rounded-2xl py-4 items-center active:opacity-70 bg-white"
+          >
+            <View className="items-center">
+              <Text className="text-red-500 font-semibold text-sm mb-0.5">清除快取並重新同步</Text>
+              <Text className="text-slate-400 text-xs">完整重新下載（修復用）</Text>
+            </View>
+          </Pressable>
+        </View>
 
         {/* Sign out — logged-in only */}
         {!isAnonymous && (
