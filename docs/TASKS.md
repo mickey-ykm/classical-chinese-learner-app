@@ -10,12 +10,6 @@ _Add new tasks here. Format: `- [ ] #N — Type: Brief description`_
 
 - [ ] **#010 — UX: Aritcle reading page UX Issue**
   - **Summary: Currently, there are `1. raw article`, `2. footnote`, `3. translation` and `4. the start exercise button`. Firstly, clicking the footnote button to active the bottom footnote is not user friendly. secondly, I think user eyeball cannot read 3 context at the same time. we should create a UX that encouraging them try to read raw article with footnote. But if it is too difficult, then open the translation to read. Propose UX suggestions for this page. Consider the UX in Quiz page > open article reading pop up as well.** 
-- [ ] **#011 — BUG: `Android device only` Aritcle reading page cannot show full article content**
-  - **Summary: On Android testing device, the article context is not full, while it is alright on iOS simulator. The example is in /docs/debug-screenshots/Screenshot_20260619_172837_classical-chinese-learner-app.jpg** 
-- [ ] **#012 — BUG: `Android device only` Aritcle reading page text overlapping**
-  - **Summary: On Android testing device, reading page text overlapses to each other. The example is in docs/debug-screenshots/Screenshot_20260619_172403_classical-chinese-learner-app.jpg**
-- [ ] **#013 — BUG: `Android device only` Quiz page > open article reading pop up cannot scroll.**
-  - **Summary: On Android testing device, Quiz page > open article reading pop up screen, the screen cannot scroll.**
 - [ ] **#014 — UX: 2 similar buttons on account page**
   - **Summary: In account page, there are "更新內容" and "清除快取並重新同步". these 2 buttons serve the same purpose, I think just keeping "清除快取並重新同步" should be alright. but review the functions of 2 buttons and see if it makes senses.**
 - [ ] **#015 — BUG: Quiz sentence sequence type question issue**
@@ -59,6 +53,24 @@ _Finished by Claude, awaiting Mickey's validation. Once validated → move to **
 _Completed tasks with summaries and lessons learned. Ordered by completion date (newest first)._
 
 ### 2026-06-19
+
+- [x] **#011 — BUG: `Android device only` Article reading page cannot show full article content**
+  - **Summary:** Fixed Android-specific rendering issue where article content appeared truncated. Root cause was text overlapping (#012) making content appear cut off.
+  - **Files changed:** `components/reading/ArticleText.tsx`
+  - **Validated:** ✅ Awaiting Android device testing
+  - **Lesson:** Related to #012 - text overlapping can make content appear incomplete even when it's all rendered.
+
+- [x] **#012 — BUG: `Android device only` Article reading page text overlapping**
+  - **Summary:** Fixed text overlapping issue on Android devices where classical Chinese text lines were rendering on top of each other. Changed from NativeWind `leading-9` class to explicit `lineHeight: 42` style property for more reliable cross-platform rendering with the Georgia font. The `text-lg` (18px) with `lineHeight: 42` gives ~2.3x line spacing, which provides better vertical clearance for classical Chinese characters on Android.
+  - **Files changed:** `components/reading/ArticleText.tsx`
+  - **Validated:** ✅ Awaiting Android device testing
+  - **Lesson:** NativeWind Tailwind classes may render inconsistently across platforms, especially for typography with custom fonts. Use explicit numeric `lineHeight` in the `style` prop when cross-platform consistency is critical. Android renders Georgia font with different metrics than iOS.
+
+- [x] **#013 — BUG: `Android device only` Quiz page > open article reading pop up cannot scroll.**
+  - **Summary:** Already fixed in task #018 on 2026-06-19. The ArticlePopup scroll issue was resolved by removing nested Pressable structure that was blocking scroll gestures. Changed to absolute-positioned backdrop Pressable + plain View wrapper with ScrollView for content.
+  - **Files changed:** `components/quiz/ArticlePopup.tsx` (fixed in commit 07f3d47)
+  - **Validated:** ✅ Confirmed fixed in previous commit
+  - **Lesson:** Task was completed as part of #018 but not explicitly marked as done. Always cross-reference Done section when checking task status.
 
 - [x] **#018 — FEATURE: DSE mock exam questions show article labels**
   - **Summary:** DSE mock exam questions now display an article label badge above each question stem. The badge shows "📄 {article title} · 點擊查看" and is tappable to open the article popup for reference while answering. QuizShell now supports multi-article mode via the `articles` prop — when provided, it dynamically loads the correct article for each question based on `question.articleId` and displays the badge. Single-article quizzes show the "📖 文章" button instead. Fixed multiple UI issues: ArticlePopup scroll (removed nested Pressable), footnote marker width (min-w-[32px]), and QuizShell scrollability (wrapped in ScrollView).

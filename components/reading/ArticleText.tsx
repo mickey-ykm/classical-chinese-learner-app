@@ -10,7 +10,10 @@ interface Props {
 export default function ArticleText({ segments, footnotes, onFootnoteTap }: Props) {
   return (
     <View>
-      <Text className="text-lg leading-9 tracking-wide text-slate-800" style={{ fontFamily: "Georgia" }}>
+      <Text
+        className="text-lg tracking-wide text-slate-800"
+        style={{ fontFamily: "Georgia", lineHeight: 42 }}
+      >
         {segments.map((seg, i) =>
           seg.footnoteId ? (
             <Text
