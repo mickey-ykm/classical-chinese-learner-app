@@ -20,8 +20,6 @@ _Add new tasks here. Format: `- [ ] #N — Type: Brief description`_
   - **Summary: In account page, there are "更新內容" and "清除快取並重新同步". these 2 buttons serve the same purpose, I think just keeping "清除快取並重新同步" should be alright. but review the functions of 2 buttons and see if it makes senses.**
 - [ ] **#015 — BUG: Quiz sentence sequence type question issue**
   - **Summary: I get the answer correct answer, but the app still treat me wrong. Here is the screenshot /docs/debug-screenshots/Screenshot_20260619_174954_classical-chinese-learner-app.jpg**
-- [ ] **#017 — BUG: For DSE mock exam, the article reading accordian shows wrong content.**
-  - **Summary: In DSE mock exam, the article reading accordian is now shoing footnote only. it should show the raw article with footnote.**
 - [ ] **#019 — UX: Homepage, `DSE操練` card should have 3 buttons**
   - **Summary: Under `DSE操練` card, we should display all 3 types of exercises under `DSE操練`.**
 - [ ] **#020 — BUG: Strange time counting**
@@ -54,15 +52,23 @@ _Tasks currently being worked on. Add start date and assignee._
 
 _Finished by Claude, awaiting Mickey's validation. Once validated → move to **Done**. If issues found → move back to **In Progress** with notes._
 
-- [ ] **#018 — FEATURE: DSE mock exam question should have a label of which article it is from.**
-  - **Summary:** DSE mock exam questions now display an article label badge above each question stem. The badge shows the article title and is tappable to open the article popup for reference while answering. QuizShell now supports multi-article mode via the `articles` prop — when provided, it dynamically loads the correct article for each question based on `question.articleId` and displays the badge. Single-article quizzes (regular article quizzes) remain unchanged and don't show the badge.
-  - **Files changed:** `lib/types.ts` (added `articleId?: string` to Question interface), `app/(tabs)/dse-training.tsx` (map `article_id` from Supabase, pass `articles` prop to QuizShell), `components/quiz/QuizShell.tsx` (added multi-article support with dynamic article loading and badge UI)
-  - **Testing:** Start DSE mock exam with multiple articles. Each question should show an amber badge above the stem with the article title. Tap the badge → correct article opens in popup. Verify existing single-article quizzes still work without the badge.
-
 - [ ] **#016 — FEATURE: DSE mock exam should use sampling logic (22 questions per article)**
-  - **Summary:** DSE mock exam now uses backend sampling logic instead of loading all questions from the pool. New endpoint `GET /api/quiz/dse-mock/sample?userId=<uuid>` randomly picks 2-3 DSE core articles and samples 22 questions per article (6+2+4+2+2+6 across parts 1-6). With `userId`, implements cross-article repeat avoidance (prefers unseen questions across all DSE articles). Total: 44 questions for 2 articles, 66 for 3 articles. Questions include `articleId` field for future cross-article context display (#018).
-  - **Files changed:** `admin/routes/quiz.js` (new `/api/quiz/dse-mock/sample` endpoint), `app/(tabs)/dse-training.tsx` (replaced client-side Supabase queries with API call), `components/quiz/QuizShell.tsx` (added `articles` prop to destructuring)
-  - **Testing:** Verify in DSE操練 that mock exam loads 2-3 articles with 44-66 questions total, mix of parts 1-6 per article. Logged-in users should see repeat avoidance across sessions.
+  - **Summary:** DSE mock exam now uses backend sampling logic instead of loading all questions from the pool. New endpoint `GET /api/quiz/dse-mock/sample?userId=<uuid>` randomly picks 2-3 DSE core articles and samples 22 questions per article (6+2+4+2+2+6 across parts 1-6). With `userId`, implements cross-article repeat avoidance (prefers unseen questions across all DSE articles). Total: 44 questions for 2 articles, 66 for 3 articles. Questions include `articleId` field for cross-article context display.
+  - **Files changed:** `admin/routes/quiz.js` (new `/dse-mock/sample` endpoint, moved before `/:articleId/sample` to fix route matching), `app/(tabs)/dse-training.tsx` (replaced client-side queries with API call, fixed fallback URL to production Railway)
+  - **Testing:** Verify DSE mock loads 2-3 articles with 44-66 questions total, mix of parts 1-6 per article. Logged-in users should see repeat avoidance.
+  - **Status:** Backend deployed to Railway ✅, iOS app rebuilt ✅
+
+- [ ] **#017 — BUG: DSE mock exam article accordion shows wrong content**
+  - **Summary:** Article accordion in DSE mock lobby now displays both raw article text with footnote markers AND footnote explanations below (matching `ArticlePopup` pattern). Previously only showed segments without footnotes. Fixed line break issue where each segment created a new line — now all segments render inside a single parent `<Text>` so footnote markers appear inline. Also widened footnote marker from `w-6` to `min-w-[32px]` to prevent wrapping.
+  - **Files changed:** `app/(tabs)/dse-training.tsx` (added footnotes display section, fixed segment rendering to match `ArticleText.tsx`)
+  - **Testing:** Expand article in DSE mock lobby → verify text flows continuously with inline footnote markers, and footnote explanations display below.
+  - **Status:** iOS app rebuilt with all fixes ✅
+
+- [ ] **#018 — FEATURE: DSE mock exam questions show article labels**
+  - **Summary:** DSE mock exam questions now display an article label badge above each question stem. The badge shows "📄 {article title} · 點擊查看" and is tappable to open the article popup for reference while answering. QuizShell now supports multi-article mode via the `articles` prop — when provided, it dynamically loads the correct article for each question based on `question.articleId` and displays the badge. Single-article quizzes remain unchanged and don't show the badge.
+  - **Files changed:** `lib/types.ts` (added `articleId?: string` to Question type), `app/(tabs)/dse-training.tsx` (map `article_id` from Supabase, pass `articles` prop to QuizShell), `components/quiz/QuizShell.tsx` (added multi-article support with dynamic article loading and badge UI)
+  - **Testing:** Start DSE mock quiz → verify each question shows article badge, tap badge → correct article opens in popup, verify badge updates across questions from different articles. Verify single-article quizzes still work.
+  - **Status:** iOS app rebuilt ✅
 
 ---
 
