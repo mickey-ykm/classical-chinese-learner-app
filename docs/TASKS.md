@@ -8,9 +8,6 @@ _Active task list for day-to-day development work. Add new tasks to **Open**, mo
 
 _Add new tasks here. Format: `- [ ] #N — Type: Brief description`_
 
-- [ ] **#010 — UX: Aritcle reading page UX Issue**
-  - **Summary: Currently, there are `1. raw article`, `2. footnote`, `3. translation` and `4. the start exercise button`. Firstly, clicking the footnote button to active the bottom footnote is not user friendly. secondly, I think user eyeball cannot read 3 context at the same time. we should create a UX that encouraging them try to read raw article with footnote. But if it is too difficult, then open the translation to read. Propose UX suggestions for this page. Consider the UX in Quiz page > open article reading pop up as well.**
-
 <!-- Example:
 - [ ] #007 — Bug: ...
 -->
@@ -37,6 +34,12 @@ _Tasks currently being worked on. Add start date and assignee._
 ## Ready for QA
 
 _Finished by Claude, awaiting Mickey's validation. Once validated → move to **Done**. If issues found → move back to **In Progress** with notes._
+
+- [ ] **#010 — UX: Article reading page improvements**
+  - **Summary:** Implemented 2-tab interface for article reading: "原文" (original text with footnotes) and "白話文語譯" (modern translation). Users can switch between tabs to choose their reading mode. Original text tab retains the bottom footnote tooltip for explanations. Translation tab displays all translation paragraphs in a clean layout. This provides clear separation of cognitive contexts and allows users to explicitly choose their reading approach.
+  - **Files changed:** `app/read.tsx`
+  - **Testing needed:** Test tab switching, verify footnote tooltip works in 原文 tab only, check translation display in 白話文語譯 tab
+  - **Note:** Implements Option B (tabbed interface) per user preference, not Option A
 
 - [ ] **#020 — BUG: Strange time counting**
   - **Summary:** Fixed time formatting bug where large durations displayed incorrectly (e.g., "46780 分" for 32+ days). Updated `formatSeconds()` and `timeDelta()` in `account.tsx` and `attempt.tsx` to use appropriate units based on duration: < 1 min shows seconds; 1-59 min shows minutes (and seconds); 1-23 hours shows hours and minutes; 24+ hours shows days and hours. The 46,780-minute duration now correctly displays as "32 天 11 小時".
