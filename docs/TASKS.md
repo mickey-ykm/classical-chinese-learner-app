@@ -57,10 +57,10 @@ _Completed tasks with summaries and lessons learned. Ordered by completion date 
   - **Lesson:** Two buttons that look similar may serve fundamentally different purposes — incremental vs full sync is a valid distinction. Clarifying purpose via labels/subtitles improves UX without removing functionality.
 
 - [x] **#019 — UX: Homepage, `DSE操練` card should have 3 buttons**
-  - **Summary:** Expanded DSE操練 section on homepage to show all 3 exercise types instead of a single banner: (1) DSE 模擬考題 (mock exam with randomly selected core articles), (2) 溫故知新 (revision of past mistakes), (3) 針對性難題訓練 (tricky questions, coming soon). Each exercise type now has its own card with icon, title, description, and action button. The section header retains the demon mascot. Added URL param support to `dse-training.tsx` so tapping "DSE 模擬考題" navigates directly to mock exam mode.
+  - **Summary:** Consolidated DSE操練 section into a single unified card with description "重點操練，準備應試" and 3 buttons inside: (1) 📝 DSE 模擬考題, (2) 🔁 溫故知新, (3) 🎯 針對性難題訓練 (coming soon). All buttons are contained within one slate-800 rounded card, creating a focused training hub on the homepage. The demon mascot remains in the header. Tapping "DSE 模擬考題" navigates directly to mock exam mode via URL params.
   - **Files changed:** `app/(tabs)/index.tsx`, `app/(tabs)/dse-training.tsx`
-  - **Validated:** ✅ All 3 exercise types visible, direct navigation to mock exam works
-  - **Lesson:** Homepage should surface all available training modes rather than requiring users to navigate through a secondary menu. URL params enable deep linking into specific modes within a tab.
+  - **Validated:** ✅ Single card with 3 buttons, description displays correctly
+  - **Lesson:** Grouping related actions in a single visual container (card) improves information hierarchy and reduces visual noise compared to multiple separate cards. Users can immediately see all available training options without scrolling.
 
 - [x] **#011 — BUG: `Android device only` Article reading page cannot show full article content**
   - **Summary:** Fixed Android-specific rendering issue where article content appeared truncated. Root cause was text overlapping (#012) making content appear cut off.
