@@ -9,7 +9,8 @@ import UpgradeModal from "@/components/UpgradeModal"
 import type { Footnote } from "@/lib/types"
 import ArticleText from "@/components/reading/ArticleText"
 import FootnotePanel from "@/components/reading/FootnotePanel"
-import TranslationToggle from "@/components/reading/TranslationToggle"
+
+type TabMode = "original" | "translation"
 
 export default function ReadScreen() {
   const router = useRouter()
@@ -17,6 +18,7 @@ export default function ReadScreen() {
   const article = getArticle(id)
   const { user, profile, isAnonymous } = useAuth()
   const [activeFootnote, setActiveFootnote] = useState<Footnote | null>(null)
+  const [tabMode, setTabMode] = useState<TabMode>("original")
   const markedRead = useRef(false)
 
   const isPro = profile?.is_pro ?? false
@@ -73,21 +75,66 @@ export default function ReadScreen() {
           </View>
           <Text className="text-xs text-slate-400 mb-6">{article.source ?? ""}</Text>
 
-          <View className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-            <ArticleText
-              segments={article.segments}
-              footnotes={article.footnotes}
-              onFootnoteTap={handleFootnoteTap}
-            />
+          {/* Tab Selector */}
+          <View className="flex-row gap-2 mb-4">
+            <Pressable
+              onPress={() => setTabMode("original")}
+              className={`flex-1 py-3 rounded-xl items-center ${
+                tabMode === "original" ? "bg-amber-500" : "bg-white border border-slate-200"
+              }`}
+            >
+              <Text
+                className={`font-semibold text-base ${
+                  tabMode === "original" ? "text-white" : "text-slate-600"
+                }`}
+                style={{ fontFamily: "Georgia" }}
+              >
+                原文
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setTabMode("translation")}
+              className={`flex-1 py-3 rounded-xl items-center ${
+                tabMode === "translation" ? "bg-amber-500" : "bg-white border border-slate-200"
+              }`}
+            >
+              <Text
+                className={`font-semibold text-base ${
+                  tabMode === "translation" ? "text-white" : "text-slate-600"
+                }`}
+                style={{ fontFamily: "Georgia" }}
+              >
+                白話文語譯
+              </Text>
+            </Pressable>
           </View>
 
-          {article.footnotes.length > 0 && (
-            <Text className="text-xs text-slate-400 text-center mt-4">
-              點擊 <Text className="text-amber-600 font-bold">(1)</Text> 查看注釋
-            </Text>
-          )}
+          {/* Tab Content */}
+          {tabMode === "original" ? (
+            <>
+              <View className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                <ArticleText
+                  segments={article.segments}
+                  footnotes={article.footnotes}
+                  onFootnoteTap={handleFootnoteTap}
+                />
+              </View>
 
-          <TranslationToggle paragraphs={article.modernTranslation} />
+              {article.footnotes.length > 0 && (
+                <Text className="text-xs text-slate-400 text-center mt-4">
+                  點擊 <Text className="text-amber-600 font-bold">(1)</Text> 查看注釋
+                </Text>
+              )}
+            </>
+          ) : (
+            <View className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 gap-3">
+              {article.modernTranslation.map((p, i) => (
+                <Text key={i} className="text-slate-700 text-sm leading-7">
+                  {p}
+                </Text>
+              ))}
+            </View>
+          )}
 
           <Pressable
             onPress={() => router.push({ pathname: "/quiz", params: { id } })}
@@ -97,7 +144,9 @@ export default function ReadScreen() {
           </Pressable>
         </ScrollView>
 
-        <FootnotePanel footnote={activeFootnote} onClose={() => setActiveFootnote(null)} />
+        {tabMode === "original" && (
+          <FootnotePanel footnote={activeFootnote} onClose={() => setActiveFootnote(null)} />
+        )}
       </View>
     </SafeAreaView>
   )
