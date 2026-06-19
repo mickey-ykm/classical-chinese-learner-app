@@ -10,8 +10,6 @@ _Add new tasks here. Format: `- [ ] #N — Type: Brief description`_
 
 - [ ] **#010 — UX: Aritcle reading page UX Issue**
   - **Summary: Currently, there are `1. raw article`, `2. footnote`, `3. translation` and `4. the start exercise button`. Firstly, clicking the footnote button to active the bottom footnote is not user friendly. secondly, I think user eyeball cannot read 3 context at the same time. we should create a UX that encouraging them try to read raw article with footnote. But if it is too difficult, then open the translation to read. Propose UX suggestions for this page. Consider the UX in Quiz page > open article reading pop up as well.** 
-- [ ] **#015 — BUG: Quiz sentence sequence type question issue**
-  - **Summary: I get the answer correct answer, but the app still treat me wrong. Here is the screenshot /docs/debug-screenshots/Screenshot_20260619_174954_classical-chinese-learner-app.jpg**
 - [ ] **#020 — BUG: Strange time counting**
   - **Summary: I took an exercise previously, but I am not sure it exceeded thousand of minutes. Here is the screenshot docs/debug-screenshots/Screenshot_20260619_181054_classical-chinese-learner-app.jpg**
 
@@ -49,6 +47,12 @@ _Finished by Claude, awaiting Mickey's validation. Once validated → move to **
 _Completed tasks with summaries and lessons learned. Ordered by completion date (newest first)._
 
 ### 2026-06-19
+
+- [x] **#015 — BUG: Quiz sentence sequence type question issue**
+  - **Summary:** Fixed validation bug in `SentenceOrderQuestion` where correct answers were marked wrong. Root cause: `correctAnswer` field stored in database contains spaces around delimiters (e.g., `"明察秋毫 > 求賢若渴 > 洞若觀火 > 杯弓蛇影"`), but tokens from `sequenceTokens` array have no spaces. When user arranged tokens correctly, the comparison failed because `arranged.join(">")` produced `"A>B>C>D"` while `correctSeq.join(">")` produced `"A > B > C > D"`. Added `.trim()` when splitting `correctAnswer` to normalize the comparison.
+  - **Files changed:** `components/quiz/SentenceOrderQuestion.tsx`
+  - **Validated:** ✅ Logic verified — trimming removes whitespace from both position-based and overall validation
+  - **Lesson:** When splitting delimited strings from a database, always trim whitespace to handle inconsistent storage formats. Database fields may have human-readable formatting (spaces around delimiters) that must be normalized before comparison with programmatically generated arrays.
 
 - [x] **#014 — UX: 2 similar buttons on account page**
   - **Summary:** Reviewed both sync buttons — they serve **different purposes** and both should be kept. "更新內容" (`refresh()`) performs incremental sync (only fetches changed articles since last sync), while "清除快取並重新同步" (`clearCacheAndResync()`) performs a full reset (clears cache + re-fetches everything). Per CLAUDE.md, incremental sync doesn't detect deletions, so the full resync is needed after Supabase data purges. Improved UX by clarifying their purposes: renamed "更新內容" to "檢查更新 (增量同步 推薦)" and added subtitle "完整重新下載 (修復用)" to the clear cache button. Grouped both under "內容同步" section header.
