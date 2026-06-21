@@ -19,6 +19,7 @@ cd admin && node server.js  # Run admin portal locally (port 3001)
 # Supabase data management
 cd admin && node backup-supabase.js  # Backup articles, questions, quiz_prompts to admin/backups/
 cd admin && node clear-supabase.js   # Clear all articles and questions (preserves quiz_prompts)
+cd admin && node rebuild-all-quizzes.js  # Rebuild quiz_json for all articles (applies normalization logic)
 ```
 
 ## Deployment
@@ -135,6 +136,7 @@ presets: [
 - Georgia font (`style={{ fontFamily: "Georgia" }}`) is applied to classical Chinese text throughout.
 - Amber is the primary accent colour (`amber-500` / `amber-600`); slate-50 is the background.
 - `hitSlop={12}` is used on small touch targets like back buttons.
+- **CJK full-width characters**: When writing regex patterns for user-generated content, account for both half-width `()` and full-width `（）` parentheses (and similar punctuation). Use character classes like `[(\(]` and `[\))]` to match both variants.
 
 ## Data flow invariants
 

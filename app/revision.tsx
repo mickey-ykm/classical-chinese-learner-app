@@ -5,13 +5,14 @@ import { SafeAreaView } from "react-native-safe-area-context"
 import { useAuth } from "@/hooks/useAuth"
 import { fetchRevisionQuestions, saveRevisionSession, type WrongQuestion } from "@/lib/revisionSession"
 import { calculateScore, checkAnswer } from "@/lib/quiz"
-import { getArticleIndex } from "@/lib/data"
-import type { Question, QuizAnswer, OptionKey } from "@/lib/types"
+import { getArticleIndex, getArticle, STANDARD_PART_TITLES } from "@/lib/data"
+import type { Question, QuizAnswer, OptionKey, Article } from "@/lib/types"
 import QuizProgressBar from "@/components/quiz/QuizProgressBar"
 import QuizQuestion from "@/components/quiz/QuizQuestion"
 import FillBlankQuestion from "@/components/quiz/FillBlankQuestion"
 import SentenceOrderQuestion from "@/components/quiz/SentenceOrderQuestion"
 import ScoreScreen from "@/components/quiz/ScoreScreen"
+import ArticlePopup from "@/components/quiz/ArticlePopup"
 
 export default function RevisionScreen() {
   const router = useRouter()
@@ -29,6 +30,7 @@ export default function RevisionScreen() {
   const [lastAnswerCorrect, setLastAnswerCorrect] = useState(false)
   const [isFinished, setIsFinished] = useState(false)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  const [showArticle, setShowArticle] = useState(false)
 
   const startedAtRef = useRef(Date.now())
 
@@ -161,7 +163,7 @@ export default function RevisionScreen() {
         <ScoreScreen
           questions={questions}
           answers={answers}
-          partTitles={{}}
+          partTitles={STANDARD_PART_TITLES}
           articleId=""
           onRestart={handleRestart}
         />
@@ -175,6 +177,7 @@ export default function RevisionScreen() {
   const articleTitle = articleId
     ? (getArticleIndex().find((a) => a.id === articleId)?.title ?? articleId)
     : null
+  const article: Article | null = articleId ? getArticle(articleId) : null
 
   function formatTimer(s: number): string {
     const m = Math.floor(s / 60)
@@ -202,9 +205,19 @@ export default function RevisionScreen() {
         </View>
 
         {articleTitle && (
-          <Text className="text-xs text-amber-600 font-medium mb-3" style={{ fontFamily: "Georgia" }}>
-            {articleTitle}
-          </Text>
+          <View className="flex-row items-center justify-between mb-3">
+            <Text className="text-xs text-amber-600 font-medium flex-1" style={{ fontFamily: "Georgia" }}>
+              {articleTitle}
+            </Text>
+            {article && (
+              <Pressable
+                onPress={() => setShowArticle(true)}
+                className="ml-2 bg-amber-500 px-3 py-1.5 rounded-lg active:opacity-80"
+              >
+                <Text className="text-white text-xs font-semibold">📖 文章</Text>
+              </Pressable>
+            )}
+          </View>
         )}
 
         <View className="mb-6">
@@ -261,6 +274,12 @@ export default function RevisionScreen() {
           />
         )}
       </ScrollView>
+
+      <ArticlePopup
+        visible={showArticle}
+        article={article}
+        onClose={() => setShowArticle(false)}
+      />
     </SafeAreaView>
   )
 }

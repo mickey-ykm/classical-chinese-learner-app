@@ -202,7 +202,16 @@ async function rebuildQuizJson(articleId) {
         format: q.format || "mc",
         type: q.type || "mc-single",
         options: q.options
-          ? Object.entries(q.options).map(([key, text]) => ({ key, text }))
+          ? Object.entries(q.options).map(([key, text]) => {
+              // Normalize bilingual True/False labels to Chinese
+              // Handle both half-width () and full-width （） parentheses
+              let normalizedText = text
+                .replace(/是\s*[(\(]True[\))]/gi, '正確')
+                .replace(/否\s*[(\(]False[\))]/gi, '錯誤')
+                .replace(/True/gi, '正確')
+                .replace(/False/gi, '錯誤')
+              return { key, text: normalizedText }
+            })
           : [],
         correctAnswer: q.correct_answer,
         explanation: q.explanation || null,

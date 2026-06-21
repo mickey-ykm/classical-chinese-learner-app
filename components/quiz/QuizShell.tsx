@@ -43,6 +43,16 @@ export default function QuizShell({ questions: rawQuestions, partTitles, article
   const [questions] = useState<Question[]>(() =>
     rawQuestions.map((q) => {
       if (q.format === "mc" && q.options && q.options.length > 0) {
+        // Don't shuffle True/False questions (2 options with 正確/錯誤)
+        const isTrueFalse = q.options.length === 2 &&
+          q.options.some(opt => opt.text.includes('正確')) &&
+          q.options.some(opt => opt.text.includes('錯誤'))
+
+        if (isTrueFalse) {
+          return q // Keep True/False in original order
+        }
+
+        // Shuffle other MC questions
         const shuffled = shuffleArray(q.options)
         // Re-assign keys A, B, C... in alphabetical order after shuffle
         const keys = ["A", "B", "C", "D", "E", "F", "G", "H"] as const

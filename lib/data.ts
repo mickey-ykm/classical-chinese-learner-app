@@ -17,8 +17,22 @@ export function getAllQuestions(id: string): Question[] {
   return getQuiz(id).parts.flatMap((p) => p.questions)
 }
 
+// Standard part titles for all exercises
+export const STANDARD_PART_TITLES: Record<number, string> = {
+  1: "第1部分：字詞句譯",
+  2: "第2部分：範文原文填充",
+  3: "第3部分：文意理解（選二）",
+  4: "第4部分：是非題",
+  5: "第5部分：範文原文重組句子",
+  6: "第6部分：文意理解（選四）",
+  7: "第7部分︰一詞多義辨認",
+  8: "第8部分︰文言句式辨認",
+}
+
 export function getPartTitles(id: string): Record<number, string> {
-  return Object.fromEntries(getQuiz(id).parts.map((p) => [p.part, p.title]))
+  // Always use standard titles instead of quiz data
+  // (quiz data may have outdated labels)
+  return STANDARD_PART_TITLES
 }
 
 export const FREE_ARTICLE_IDS: readonly string[] = [

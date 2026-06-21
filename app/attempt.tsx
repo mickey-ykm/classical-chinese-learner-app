@@ -3,7 +3,7 @@ import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-nati
 import { useRouter, useLocalSearchParams } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { supabase } from "@/lib/supabase"
-import { getArticle, getPartTitles, getAllQuestions } from "@/lib/data"
+import { getArticle, getPartTitles, getAllQuestions, STANDARD_PART_TITLES } from "@/lib/data"
 
 interface AttemptDetail {
   article_id: string
@@ -138,7 +138,7 @@ export default function AttemptScreen() {
           .map(Number)
           .sort()
           .map((part) => ({
-            title: titles[part] ?? `第 ${part} 部分`,
+            title: titles[part] ?? STANDARD_PART_TITLES[part] ?? `第 ${part} 部分`,
             ...grouped[part],
             possible: partPossible[part] ?? grouped[part].total,
           }))

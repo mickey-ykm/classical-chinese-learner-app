@@ -2,7 +2,7 @@ import { View, Text, Pressable, ScrollView } from "react-native"
 import { useRouter } from "expo-router"
 import type { Question, QuizAnswer } from "@/lib/types"
 import { calculateScore, getPartScore } from "@/lib/quiz"
-import { getNextQuizId, getArticleIndex } from "@/lib/data"
+import { getNextQuizId, getArticleIndex, STANDARD_PART_TITLES } from "@/lib/data"
 import { Mascot } from "@/components/Mascot"
 
 interface Props {
@@ -33,10 +33,6 @@ export default function ScoreScreen({ questions, answers, partTitles, articleId,
 
   const parts = [...new Set(questions.map((q) => q.part))].sort() as (1 | 2 | 3 | 4)[]
 
-  function shortTitle(full: string) {
-    return full.replace(/^第.部分：/, "")
-  }
-
   return (
     <ScrollView className="flex-1" contentContainerClassName="items-center gap-6 py-6 px-5">
       <Mascot mood={percentage >= 60 ? "happy" : "sad"} size={110} />
@@ -59,7 +55,7 @@ export default function ScoreScreen({ questions, answers, partTitles, articleId,
           return (
             <View key={part} className="flex-row px-4 py-2 border-t border-slate-100">
               <Text className="flex-1 text-slate-700 text-sm">
-                {shortTitle(partTitles[part] ?? `第${part}部分`)}
+                {partTitles[part] ?? STANDARD_PART_TITLES[part] ?? `第${part}部分`}
               </Text>
               <Text className="font-medium text-slate-800 text-sm">{pe} / {pt}</Text>
             </View>

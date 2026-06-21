@@ -7,6 +7,22 @@ _Active task list for day-to-day development work. Add new tasks to **Open**, mo
 ## Open
 
 _Add new tasks here. Format: `- [ ] #N — Type: Brief description`_
+- [ ] **#022 — BUG: legacy article data exist while the cache is not clear**
+  - **Summary:** Some legacy, deleted article data still exist in the app. They should no long exist in the app. Screen: docs/debug-screenshots/legacy_articles.png
+- [ ] **#023 — BUG: Multiple choice questions did not display explanation**
+  - **Summary:** For multiple choice questions that can pick more than 1 options, upon answered, the explanation box only shows the correct option A/B/C without showing the content of explanation. Screen: docs/debug-screenshots/multiMC_no_explanation.png
+- [ ] **#024 — FEATURE: Log anonymous user quiz answer**
+  - **Summary:** Currently the database (Supabase setup) only log logged-in-users' `quiz_answer` data because it is linked to the `attempt_id`. However we would like to analyze non-logged-in-users' `quiz_attempts` and `quiz_answers` data for user behavior analysis.
+- [ ] **#025 — FEATURE: Log all exercise attempt data**
+  - **Summary:** Currently the database (Supabase setup) only log single article attempt records in `quiz_attempts`. But the app now have `revision exercises` and `DSE training exercise`. We should log the records for user behavior analysis. *Beware of sampling logic*: The quiz answers should have been used for sampoling usage. So think deep about this data logic to sugggest proposals.
+- [ ] **#026 — FEATURE: Weight training Exercise Logic**
+  - **Summary:** The `weight training exercise` is currently to be released. The feature logic is:
+   - we need a new section in admin portal named `DSE跨文章題題`, the CRUD is similar to the existing edit question feature. 
+   - For product logic of question part, we will add part 7 `一詞多義辨認` and part 8 `文言句式辨認`. 
+   - For `weight training exercise`, `part` will only be part 7 and part 8. The existing number field of `part` should be enough to cater. 
+   - A new multi-selection drop-down will allow the users to select `Related DSE exam articles` for article type = `DSE Exam`. The admin can pick more than 1 `DSE exam` articles per 1 question.
+   - We expect the admin to create 80-100 questions manually in the admin portal section. In the app, when user click `weight training exercise`, random 10 questions will be picked from this independent question pool. 
+   - In the app, the question page should have buttons to open the related article to view for user to answer the question. We can reuse the one in `DSE training exercise`, just 1 button per 1 related article.
 
 <!-- Example:
 - [ ] #007 — Bug: ...
@@ -46,6 +62,19 @@ _Finished by Claude, awaiting Mickey's validation. Once validated → move to **
 ## Done (Recent)
 
 _Completed tasks with summaries and lessons learned. Ordered by completion date (newest first)._
+
+### 2026-06-21
+
+- [x] **#028 — FEATURE: Wordings update for exercise result page**
+  - **Summary:** Added standardized part titles (parts 1-8) for all exercise result screens. Created `STANDARD_PART_TITLES` constant in `lib/data.ts` with the 8 part labels. Updated `getPartTitles()` to always return standard titles (ignoring outdated quiz data). Removed `shortTitle()` function from `ScoreScreen` so full labels display (e.g., "第1部分：字詞句譯" instead of just "字詞句譯"). Also added normalization in `rebuildQuizJson()` to fix bilingual True/False labels ("是 (True)" → "正確", "否 (False)" → "錯誤"). Fixed True/False questions to not shuffle - they now always display "正確" first, "錯誤" second. Ran rebuild script to update all quiz_json in database.
+  - **Files changed:** `lib/data.ts`, `components/quiz/ScoreScreen.tsx`, `app/attempt.tsx`, `app/revision.tsx`, `admin/lib/article-helpers.js`, `components/quiz/QuizShell.tsx`, `admin/rebuild-all-quizzes.js` (new)
+  - **Part labels:** 第1部分：字詞句譯, 第2部分：範文原文填充, 第3部分：文意理解（選二）, 第4部分：是非題, 第5部分：範文原文重組句子, 第6部分：文意理解（選四）, 第7部分︰一詞多義辨認, 第8部分︰文言句式辨認
+  - **Completed:** ✅ Rebuild script executed successfully (8 articles updated)
+
+- [x] **#027 — FEATURE: Add article view button to revision exercise**
+  - **Summary:** Added article popup functionality to revision exercise screen. Users can now tap "📖 文章" button to view the full article text with footnotes while reviewing wrong questions. Reused the existing `ArticlePopup` component from DSE training. The button appears next to the article title when article data is available.
+  - **Files changed:** `app/revision.tsx`
+  - **Lesson:** The ArticlePopup component is now used in three places: QuizShell (single-article quiz), DSE training (multi-article quiz), and revision exercise. The pattern is consistent: load article with `getArticle(articleId)`, manage `showArticle` state, and render the modal.
 
 ### 2026-06-19
 
