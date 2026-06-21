@@ -280,6 +280,11 @@ These must never be violated. Violating them causes silent data loss that only s
 - For modal backdrops: use absolute positioned `Pressable` outside the content container, not wrapping it
 - Pattern: `<View><Pressable onPress={onClose} className="absolute inset-0" /><View>{content}</View></View>`
 
+**Android-specific UI patterns**
+- **Typography**: Use explicit numeric `lineHeight` in `style` prop instead of NativeWind classes (e.g., `leading-9`) for cross-platform consistency with custom fonts. Android renders Georgia font with different metrics than iOS.
+- **Interactive inline text**: Use `<Pressable>` with `hitSlop` instead of nested `<Text onPress>` for small inline elements like footnote markers. Nested Text with onPress has poor touch handling reliability on Android — tap targets can misalign with visual position.
+- **Example**: `<Pressable onPress={handler} hitSlop={8}><Text>⁽¹⁾</Text></Pressable>` expands tappable area by 8px on all sides.
+
 **Mobile OAuth setup (Google Sign-In via Supabase)**
 - Uses Supabase Auth with OAuth PKCE flow + `expo-web-browser` (not native Google Sign-In SDK)
 - **iOS**: Requires iOS OAuth client in Google Console; redirect URI uses reversed client ID scheme set in `app.json` `@react-native-google-signin/google-signin` plugin config
