@@ -207,18 +207,19 @@ export default function HomeTab() {
               <Text className="text-slate-400 text-xs">→</Text>
             </Pressable>
 
-            {/* Tricky Questions Button — coming soon */}
-            <View className="bg-white/40 rounded-xl px-4 py-3 flex-row items-center justify-between">
+            {/* Weight Training Button (針對性難題訓練) */}
+            <Pressable
+              onPress={() => router.push("/weight-training")}
+              className="bg-white rounded-xl px-4 py-3 flex-row items-center justify-between active:opacity-70"
+            >
               <View className="flex-row items-center flex-1">
-                <Text className="text-xl mr-3 opacity-60">🎯</Text>
-                <Text className="text-sm font-semibold text-white/80" style={{ fontFamily: "Georgia" }}>
+                <Text className="text-xl mr-3">🎯</Text>
+                <Text className="text-sm font-semibold text-slate-800" style={{ fontFamily: "Georgia" }}>
                   針對性難題訓練
                 </Text>
               </View>
-              <View className="bg-amber-400/90 rounded-full px-2 py-0.5">
-                <Text className="text-slate-800 text-xs font-semibold">即將推出</Text>
-              </View>
-            </View>
+              <Text className="text-slate-400 text-xs">→</Text>
+            </Pressable>
           </View>
         </View>
 

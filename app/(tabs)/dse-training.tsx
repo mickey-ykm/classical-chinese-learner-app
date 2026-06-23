@@ -202,19 +202,19 @@ export default function DSETrainingTab() {
             </Text>
           </Pressable>
 
-          {/* Tricky Questions — coming soon */}
-          <View className="bg-white border border-slate-200 rounded-2xl px-5 py-5 mb-4 opacity-60">
+          {/* Weight Training (針對性難題訓練) */}
+          <Pressable
+            onPress={() => router.push("/weight-training")}
+            className="bg-white border border-slate-200 rounded-2xl px-5 py-5 mb-4 shadow-sm active:opacity-80"
+          >
             <View className="flex-row items-center mb-2">
               <Text className="text-2xl mr-3">🎯</Text>
               <Text className="text-base font-bold text-slate-800" style={{ fontFamily: "Georgia" }}>針對性難題訓練</Text>
-              <View className="ml-3 bg-amber-100 rounded-full px-2.5 py-0.5">
-                <Text className="text-amber-700 text-xs font-semibold">即將推出</Text>
-              </View>
             </View>
             <Text className="text-sm text-slate-500 leading-5">
-              隨機抽選 15 條特定類型難題，針對弱項強化訓練。
+              跨文章一詞多義 & 文言句式專項訓練 (Part 7 & 8)
             </Text>
-          </View>
+          </Pressable>
         </ScrollView>
       </SafeAreaView>
     )
