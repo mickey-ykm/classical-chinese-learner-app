@@ -103,6 +103,12 @@ export default function WeightTrainingScreen() {
     if (!user?.id) return
 
     try {
+      // Check if answers is actually an object
+      if (typeof answers !== 'object' || answers === null || Array.isArray(answers)) {
+        console.warn("Invalid answers format:", typeof answers, answers)
+        return
+      }
+
       console.log("handleSave called with:", { score, total, answersCount: Object.keys(answers).length })
 
       // Convert answers to ExerciseAnswer format
