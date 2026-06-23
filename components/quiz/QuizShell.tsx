@@ -133,7 +133,8 @@ export default function QuizShell({
       }
       setHasSaved(true)
     }
-  }, [isFinished, hasSaved, onSave, exerciseType, questions, answers])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFinished, hasSaved, onSave, exerciseType, questions])
 
   useEffect(() => {
     if (!isFinished || !user) return
