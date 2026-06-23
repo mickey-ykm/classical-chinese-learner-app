@@ -13,7 +13,7 @@ export async function sampleWeightTraining(userId?: string): Promise<CrossArticl
   const response = await fetch(url)
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Failed to sample questions' }))
-    throw new Error(error.error || 'Failed to sample weight training questions')
+    throw new Error(`${error.error || 'Failed to sample weight training questions'} (URL: ${url})`)
   }
 
   return response.json()
@@ -23,13 +23,13 @@ export async function sampleWeightTraining(userId?: string): Promise<CrossArticl
  * Get weight training progress for a user
  */
 export async function getWeightTrainingProgress(userId: string): Promise<WeightTrainingProgress> {
-  const response = await fetch(
-    `${API_URL}/api/quiz/weight-training/progress?userId=${encodeURIComponent(userId)}`
-  )
+  const url = `${API_URL}/api/quiz/weight-training/progress?userId=${encodeURIComponent(userId)}`
+
+  const response = await fetch(url)
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Failed to get progress' }))
-    throw new Error(error.error || 'Failed to get weight training progress')
+    throw new Error(`${error.error || 'Failed to get weight training progress'} (URL: ${url})`)
   }
 
   return response.json()
