@@ -17,52 +17,22 @@ export function checkAnswer(question: Question, selected: OptionKey): QuizAnswer
 }
 
 /**
- * Check mc-multi answer with partial credit.
+ * Check mc-multi answer: all-or-nothing.
  * selectedKeys: array of selected option keys e.g. ["A", "C"]
  * correctAnswer: comma-separated string e.g. "A,C,E"
- * Returns pointsEarned = number of correct selections (1 point per correct answer)
  */
 export function checkMultiAnswer(
   question: Question,
   selectedKeys: OptionKey[]
-): { questionId: string | number; selectedOptions: OptionKey[]; isCorrect: boolean; pointsEarned: number } {
+): { questionId: string | number; selectedOptions: OptionKey[]; isCorrect: boolean } {
   const correctSet = new Set(
     (question.correctAnswer as string).split(",").map((k) => k.trim())
   )
   const selectedSet = new Set(selectedKeys.map((k) => k.trim()))
-
-  // Count how many correct answers were selected
-  let correctSelections = 0
-  for (const key of selectedSet) {
-    if (correctSet.has(key)) {
-      correctSelections++
-    }
-  }
-
-  // Deduct points for wrong selections (but don't go below 0)
-  const wrongSelections = selectedSet.size - correctSelections
-  const pointsEarned = Math.max(0, correctSelections - wrongSelections)
-
-  // Fully correct = all correct answers selected and no wrong answers
   const isCorrect =
     correctSet.size === selectedSet.size &&
     [...correctSet].every((k) => selectedSet.has(k))
-
-  console.log("Multi-select scoring:", {
-    correct: Array.from(correctSet),
-    selected: Array.from(selectedSet),
-    correctSelections,
-    wrongSelections,
-    pointsEarned,
-    isCorrect
-  })
-
-  return {
-    questionId: question.id,
-    selectedOptions: selectedKeys,
-    isCorrect,
-    pointsEarned
-  }
+  return { questionId: question.id, selectedOptions: selectedKeys, isCorrect }
 }
 
 /**
