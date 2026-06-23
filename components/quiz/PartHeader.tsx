@@ -24,10 +24,9 @@ const DEFAULT_TEXT_COLOR = "text-slate-800"
 interface Props {
   partNumber?: 1 | 2 | 3 | 4 | 5 | 6
   title: string
-  pointsPerQuestion?: number
 }
 
-export default function PartHeader({ partNumber, title, pointsPerQuestion }: Props) {
+export default function PartHeader({ partNumber, title }: Props) {
   const partColor = partNumber != null ? (PART_COLORS[partNumber] ?? DEFAULT_PART_COLOR) : DEFAULT_PART_COLOR
   const textColor = partNumber != null ? (TEXT_COLORS[partNumber] ?? DEFAULT_TEXT_COLOR) : DEFAULT_TEXT_COLOR
   return (
@@ -38,11 +37,6 @@ export default function PartHeader({ partNumber, title, pointsPerQuestion }: Pro
         </Text>
       )}
       <Text className={`font-medium text-sm mt-0.5 ${textColor}`}>{title}</Text>
-      {pointsPerQuestion != null && (
-        <Text className={`text-xs opacity-60 mt-0.5 ${textColor}`}>
-          每題 {pointsPerQuestion} 分
-        </Text>
-      )}
     </View>
   )
 }

@@ -72,7 +72,7 @@ export default function WeightTrainingScreen() {
         const question: Question = {
           id: q.id,
           part: q.part as 7 | 8,
-          points: 1,
+          points: q.points || 1,  // Use points from API response
           stem: q.questionText,
           format: q.format,
           options: q.options
