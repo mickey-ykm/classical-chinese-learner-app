@@ -71,6 +71,12 @@ function rowToCrossArticleQuestion(row, relatedArticles = []) {
     })),
   }
 
+  // Debug: log first conversion to verify points are being read
+  if (!rowToCrossArticleQuestion._logged) {
+    console.log("Sample row conversion:", { id: row.id, row_points: row.points, question_points: question.points })
+    rowToCrossArticleQuestion._logged = true
+  }
+
   // Format-specific fields
   if (row.format === 'mc' && row.options) {
     // Convert JSONB {A: "text", B: "text"} back to array ["text", "text"]
