@@ -30,6 +30,12 @@ function crossArticleQuestionToRow(question) {
     }
     row.options = optionsObj
     row.select_count = question.selectCount || 1
+
+    // Auto-calculate points based on number of correct answers
+    // For multi-select: points = number of correct answers (each correct answer = 1 mark)
+    // For single-select: points = 1
+    const correctAnswers = question.correctAnswer.split(',').map(a => a.trim()).filter(a => a)
+    row.points = correctAnswers.length
   }
 
   if (question.format === 'sentence-order') {
