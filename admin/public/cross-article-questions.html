@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DSE跨文章題目 - 文言教室 Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; }
+    textarea { resize: vertical; }
+    #toast {
+      position: fixed; bottom: 24px; right: 24px;
+      padding: 12px 20px; border-radius: 8px; font-size: 14px;
+      transform: translateY(80px); opacity: 0;
+      transition: transform 0.25s ease, opacity 0.25s ease;
+      z-index: 1000; pointer-events: none;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    .modal-backdrop { background: rgba(0,0,0,0.3); }
+  </style>
+</head>
+<body class="bg-stone-50 text-slate-800 min-h-screen">
+
+<script>
+  fetch("/api/admin/me").then(r => { if (!r.ok) window.location.href = "/login.html" })
+</script>
+
+<!-- Header -->
+<header class="bg-white border-b border-stone-200 px-6 py-4 flex items-center gap-3">
+  <div class="w-9 h-9 rounded-md bg-amber-600 flex items-center justify-center text-white font-bold text-sm">文</div>
+  <div>
+    <h1 class="font-bold text-lg leading-tight">DSE跨文章題目</h1>
+    <p class="text-xs text-slate-500">Cross-Article Questions (Part 7 & 8)</p>
+  </div>
+  <div class="ml-auto flex items-center gap-3">
+    <a href="/index.html" class="text-xs text-slate-500 hover:text-slate-700 border border-stone-200 rounded px-3 py-1.5">← Back to Main</a>
+    <button onclick="signOut()" class="text-xs text-slate-500 hover:text-slate-700 border border-stone-200 rounded px-3 py-1.5">Sign Out</button>
+  </div>
+</header>
+
+<div class="max-w-6xl mx-auto px-6 py-8">
+
+  <!-- Filters & Actions -->
+  <div class="flex items-center gap-3 mb-6">
+    <select id="filter-status" onchange="loadQuestions()" class="text-sm border border-stone-300 rounded px-3 py-2">
+      <option value="">All Status</option>
+      <option value="published">Published</option>
+      <option value="draft">Draft</option>
+    </select>
+    <select id="filter-part" onchange="loadQuestions()" class="text-sm border border-stone-300 rounded px-3 py-2">
+      <option value="">All Parts</option>
+      <option value="7">Part 7 (一詞多義)</option>
+      <option value="8">Part 8 (文言句式)</option>
+    </select>
+    <div class="ml-auto flex gap-2">
+      <button onclick="openQuestionModal()" class="text-sm bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700">+ New Question</button>
+    </div>
+  </div>
+
+  <!-- Questions Table -->
+  <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+    <div class="px-4 py-3 border-b border-stone-100 flex items-center justify-between">
+      <h2 class="font-semibold text-sm">Cross-Article Questions</h2>
+      <button onclick="loadQuestions()" class="text-xs text-amber-600 hover:text-amber-700">Refresh</button>
+    </div>
+
+    <!-- Bulk Actions (shown when drafts selected) -->
+    <div id="bulk-actions" class="hidden px-4 py-2 bg-amber-50 border-b border-amber-100 flex items-center gap-3">
+      <span class="text-sm text-slate-600"><span id="selected-count">0</span> selected</span>
+      <button onclick="bulkPublish()" class="text-xs px-3 py-1.5 rounded border border-green-300 text-green-700 hover:bg-green-50">Publish Selected</button>
+      <button onclick="bulkDelete()" class="text-xs px-3 py-1.5 rounded border border-red-300 text-red-700 hover:bg-red-50">Delete Selected</button>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead class="bg-stone-50 text-xs text-slate-500 uppercase tracking-wider">
+          <tr>
+            <th class="px-4 py-2.5 text-left"><input type="checkbox" id="select-all" onchange="toggleSelectAll()" class="w-3.5 h-3.5" /></th>
+            <th class="px-4 py-2.5 text-left font-medium">Question</th>
+            <th class="px-4 py-2.5 text-center font-medium">Part</th>
+            <th class="px-4 py-2.5 text-center font-medium">Format</th>
+            <th class="px-4 py-2.5 text-center font-medium">Related Articles</th>
+            <th class="px-4 py-2.5 text-center font-medium">Status</th>
+            <th class="px-4 py-2.5 text-right font-medium">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="questions-list" class="divide-y divide-stone-100">
+          <tr><td colspan="7" class="px-4 py-8 text-center text-sm text-slate-400">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Question Modal -->
+<div id="question-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+  <div class="bg-white rounded-xl shadow-2xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <div class="px-6 py-4 border-b border-stone-200 flex items-center justify-between sticky top-0 bg-white">
+      <h3 class="font-semibold text-lg" id="modal-title">New Question</h3>
+      <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+    </div>
+
+    <div class="px-6 py-4 space-y-4">
+      <!-- Question Text -->
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Question Text *</label>
+        <textarea id="qm-text" rows="3" class="w-full border border-stone-300 rounded px-3 py-2 text-sm" placeholder="Enter question text"></textarea>
+      </div>
+
+      <!-- Format & Part -->
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Format *</label>
+          <select id="qm-format" onchange="updateFormatFields()" class="w-full border border-stone-300 rounded px-3 py-2 text-sm">
+            <option value="mc">Multiple Choice</option>
+            <option value="fill-blank">Fill in the Blank</option>
+            <option value="sentence-order">Sentence Order</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Part *</label>
+          <select id="qm-part" class="w-full border border-stone-300 rounded px-3 py-2 text-sm">
+            <option value="7">Part 7 - 一詞多義辨認</option>
+            <option value="8">Part 8 - 文言句式辨認</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Related Articles (Multi-select) -->
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Related Articles * (hold Ctrl/Cmd to select multiple)</label>
+        <select id="qm-articles" multiple size="5" class="w-full border border-stone-300 rounded px-3 py-2 text-sm">
+          <option value="">Loading articles...</option>
+        </select>
+      </div>
+
+      <!-- MC Options (conditional) -->
+      <div id="mc-options-section">
+        <label class="block text-sm font-medium text-slate-700 mb-1">Options</label>
+        <div id="mc-options-list" class="space-y-2 mb-2"></div>
+        <button onclick="addOption()" class="text-xs text-amber-600 hover:text-amber-700">+ Add Option</button>
+        <div class="mt-2">
+          <label class="block text-xs text-slate-600 mb-1">Select Count (for multi-select MC)</label>
+          <input id="qm-select-count" type="number" min="1" max="6" value="1" class="w-20 border border-stone-300 rounded px-2 py-1 text-sm" />
+        </div>
+      </div>
+
+      <!-- Correct Answer -->
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Correct Answer *</label>
+        <input id="qm-correct-answer" type="text" class="w-full border border-stone-300 rounded px-3 py-2 text-sm" placeholder="e.g., A or A,C or 正確" />
+        <p class="text-xs text-slate-400 mt-1" id="answer-hint">For MC: enter key(s) like "A" or "A,C". For fill-blank: enter the answer. For sentence-order: enter sequence like "C,A,B,D".</p>
+      </div>
+
+      <!-- Explanation -->
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Explanation</label>
+        <textarea id="qm-explanation" rows="3" class="w-full border border-stone-300 rounded px-3 py-2 text-sm" placeholder="Explain the correct answer"></textarea>
+      </div>
+
+      <!-- Question Types (教學標籤) -->
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">Question Types (教學標籤)</label>
+        <div class="flex flex-wrap gap-3">
+          <label class="flex items-center gap-2 text-sm"><input type="checkbox" value="字詞解釋" class="qm-type-checkbox" /> 字詞解釋</label>
+          <label class="flex items-center gap-2 text-sm"><input type="checkbox" value="語句背誦" class="qm-type-checkbox" /> 語句背誦</label>
+          <label class="flex items-center gap-2 text-sm"><input type="checkbox" value="語句翻譯" class="qm-type-checkbox" /> 語句翻譯</label>
+          <label class="flex items-center gap-2 text-sm"><input type="checkbox" value="修辭手法" class="qm-type-checkbox" /> 修辭手法</label>
+          <label class="flex items-center gap-2 text-sm"><input type="checkbox" value="內容重點" class="qm-type-checkbox" /> 內容重點</label>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Status</label>
+        <select id="qm-status" class="w-full border border-stone-300 rounded px-3 py-2 text-sm">
+          <option value="draft">Draft</option>
+          <option value="published">Published</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="px-6 py-4 border-t border-stone-200 flex gap-3 justify-end sticky bottom-0 bg-white">
+      <button onclick="closeModal()" class="px-4 py-2 text-sm border border-stone-300 rounded hover:bg-stone-50">Cancel</button>
+      <button onclick="saveQuestion()" class="px-4 py-2 text-sm bg-amber-600 text-white rounded hover:bg-amber-700">Save Question</button>
+      <button onclick="saveAndPublish()" class="px-4 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700">Save & Publish</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script type="module" src="/js/cross-article-questions.js"></script>
+
+</body>
+</html>

@@ -32,7 +32,7 @@ export interface QuizOption {
 export interface Question {
   id: string | number  // UUID string for Supabase-sourced questions; number for legacy bundled data
   articleId?: string  // Article this question belongs to (for multi-article quizzes)
-  part: 1 | 2 | 3 | 4 | 5 | 6
+  part: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
   points: number
   stem: string
   format?: QuestionFormat
@@ -42,6 +42,7 @@ export interface Question {
   sequenceTokens?: string[]  // shuffled tokens for sentence-order
   explanation?: string
   questionTypes?: string[]  // Question type labels: 字詞解釋, 語句背誦, 語句翻譯, 修辭手法, 內容重點
+  relatedArticleIds?: string[]  // For weight-training cross-article questions
 }
 
 export interface QuizAnswer {
@@ -90,3 +91,36 @@ export interface SampledQuizResponse {
   poolProgress: PoolProgress
   questions: Question[]
 }
+
+// Weight Training Types
+export interface CrossArticleQuestion {
+  id: string
+  questionText: string
+  format: QuestionFormat
+  part: 7 | 8
+  options?: string[]
+  correctAnswer: string
+  explanation?: string
+  selectCount?: number
+  sequenceTokens?: string[]
+  relatedArticleIds: string[]
+}
+
+export interface WeightTrainingProgress {
+  totalInPool: number
+  seenCount: number
+  part7Seen: number
+  part7Total: number
+  part8Seen: number
+  part8Total: number
+  attemptNumber: number
+  estimatedAttemptsToComplete: number
+}
+
+export interface ExerciseAnswer {
+  questionId: string
+  userAnswer: string | null
+  isCorrect: boolean
+  pointsEarned?: number
+}
+

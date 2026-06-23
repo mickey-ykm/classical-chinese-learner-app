@@ -15,6 +15,8 @@ const questionsRouter = require("./routes/questions")
 const assessmentRouter = require("./routes/assessment")
 const generateArticleRouter = require("./routes/generate-article")
 const quizRouter = require("./routes/quiz")
+const crossArticleQuestionsRouter = require("./routes/cross-article-questions")
+const weightTrainingRouter = require("./routes/weight-training")
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -40,6 +42,8 @@ app.use(express.static(path.join(__dirname, "public")))
 app.use("/api/admin", authRouter)
 
 // Public mobile API routes (no admin session required)
+// IMPORTANT: Mount specific routes BEFORE parameterized routes to avoid conflicts
+app.use("/api/quiz/weight-training", weightTrainingRouter)
 app.use("/api/quiz", quizRouter)
 
 // Auth guard for all other /api/* routes
@@ -53,6 +57,7 @@ app.use("/api/exercises", exercisesRouter)
 app.use("/api/exercises/:id/generate-quiz", generateQuizRouter)
 app.use("/api/quiz-prompts", promptsRouter)
 app.use("/api/questions", questionsRouter)
+app.use("/api/cross-article-questions", crossArticleQuestionsRouter)
 app.use("/api/assessment", assessmentRouter)
 app.use("/api/generate-article", generateArticleRouter)
 

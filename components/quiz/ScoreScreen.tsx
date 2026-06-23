@@ -11,9 +11,10 @@ interface Props {
   partTitles: Record<number, string>
   articleId: string
   onRestart: () => void
+  onExit?: () => void
 }
 
-export default function ScoreScreen({ questions, answers, partTitles, articleId, onRestart }: Props) {
+export default function ScoreScreen({ questions, answers, partTitles, articleId, onRestart, onExit }: Props) {
   const router = useRouter()
   const { earned, total, percentage } = calculateScore(questions, answers)
 
@@ -80,10 +81,10 @@ export default function ScoreScreen({ questions, answers, partTitles, articleId,
           <Text className="text-slate-700 font-semibold text-base">重新挑戰</Text>
         </Pressable>
         <Pressable
-          onPress={() => router.push("/")}
+          onPress={() => onExit ? onExit() : router.push("/")}
           className="w-full py-3.5 rounded-xl border-2 border-slate-200 items-center active:opacity-80"
         >
-          <Text className="text-slate-700 font-semibold text-base">返回主頁</Text>
+          <Text className="text-slate-700 font-semibold text-base">返回</Text>
         </Pressable>
       </View>
     </ScrollView>

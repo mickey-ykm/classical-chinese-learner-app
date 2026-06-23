@@ -16,11 +16,14 @@ import ArticlePopup from "./ArticlePopup"
 
 interface Props {
   questions: Question[]
-  partTitles: Record<number, string>
+  partTitles?: Record<number, string>
   articleId?: string
   articles?: Array<{ id: string; title: string }>  // Multi-article mode
+  relatedArticlesMap?: Record<string, Array<{ id: string; title: string }>>  // For weight-training
   expectedMinutes?: number
-  onSave?: (score: number, total: number, totalSeconds: number) => void
+  exerciseType?: "weight-training" | "dse-training" | "regular"
+  onSave?: (score: number, total: number, answersOrTotalSeconds: number | Record<string | number, QuizAnswer>) => void
+  onExit?: () => void
   onFinished?: () => void
 }
 
@@ -39,7 +42,18 @@ function shuffleArray<T>(arr: T[]): T[] {
   return a
 }
 
-export default function QuizShell({ questions: rawQuestions, partTitles, articleId, articles, expectedMinutes, onSave, onFinished }: Props) {
+export default function QuizShell({
+  questions: rawQuestions,
+  partTitles = {},
+  articleId,
+  articles,
+  relatedArticlesMap,
+  expectedMinutes,
+  exerciseType = "regular",
+  onSave,
+  onExit,
+  onFinished
+}: Props) {
   const [questions] = useState<Question[]>(() =>
     rawQuestions.map((q) => {
       if (q.format === "mc" && q.options && q.options.length > 0) {
@@ -80,6 +94,7 @@ export default function QuizShell({ questions: rawQuestions, partTitles, article
   const [lastAnswerCorrect, setLastAnswerCorrect] = useState(false)
   const [isFinished, setIsFinished] = useState(false)
   const [showArticle, setShowArticle] = useState(false)
+  const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
 
   const startedAtRef = useRef(Date.now())
@@ -90,6 +105,9 @@ export default function QuizShell({ questions: rawQuestions, partTitles, article
   const currentArticleId = articles && currentQuestion?.articleId ? currentQuestion.articleId : articleId
   const currentArticle: Article | null = currentArticleId ? getArticle(currentArticleId) : null
   const currentArticleTitle = articles?.find(a => a.id === currentArticleId)?.title || currentArticle?.title
+
+  // For weight-training: show the selected related article
+  const articleToShow = selectedArticleId ? getArticle(selectedArticleId) : currentArticle
 
   useEffect(() => {
     if (isFinished) return
@@ -159,6 +177,20 @@ export default function QuizShell({ questions: rawQuestions, partTitles, article
   }
 
   if (isFinished) {
+    const totalSeconds = Math.floor((Date.now() - startedAtRef.current) / 1000)
+    const { earned } = calculateScore(questions, answers)
+
+    // Call onSave with appropriate signature
+    if (onSave) {
+      if (exerciseType === "weight-training") {
+        // New signature: pass answers object
+        onSave(earned, questions.length, answers)
+      } else {
+        // Old signature: pass totalSeconds
+        onSave(earned, questions.length, totalSeconds)
+      }
+    }
+
     return (
       <ScoreScreen
         questions={questions}
@@ -166,6 +198,7 @@ export default function QuizShell({ questions: rawQuestions, partTitles, article
         partTitles={partTitles}
         articleId={articleId ?? ""}
         onRestart={handleRestart}
+        onExit={onExit}
       />
     )
   }
@@ -208,6 +241,34 @@ export default function QuizShell({ questions: rawQuestions, partTitles, article
               <Text className="text-amber-500 text-xs">點擊查看</Text>
             </View>
           </Pressable>
+        )}
+
+        {/* Related articles buttons for weight-training mode */}
+        {relatedArticlesMap && relatedArticlesMap[currentQuestion.id] && (
+          <View className="gap-2">
+            <Text className="text-xs text-slate-500 font-semibold uppercase tracking-wide">相關文章</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="-mx-5 px-5">
+              <View className="flex-row gap-2">
+                {relatedArticlesMap[currentQuestion.id].map((article) => (
+                  <Pressable
+                    key={article.id}
+                    onPress={() => {
+                      setSelectedArticleId(article.id)
+                      setShowArticle(true)
+                    }}
+                    className="bg-white border border-slate-200 rounded-xl px-4 py-2.5 active:opacity-70"
+                  >
+                    <View className="flex-row items-center">
+                      <Text className="text-amber-600 text-sm mr-2">📄</Text>
+                      <Text className="text-slate-700 text-sm font-medium" style={{ fontFamily: "Georgia" }}>
+                        {article.title}
+                      </Text>
+                    </View>
+                  </Pressable>
+                ))}
+              </View>
+            </ScrollView>
+          </View>
         )}
 
       {currentQuestion.format === "fill-blank" ? (
@@ -285,8 +346,11 @@ export default function QuizShell({ questions: rawQuestions, partTitles, article
 
       <ArticlePopup
         visible={showArticle}
-        article={currentArticle}
-        onClose={() => setShowArticle(false)}
+        article={articleToShow}
+        onClose={() => {
+          setShowArticle(false)
+          setSelectedArticleId(null)
+        }}
       />
     </View>
     </ScrollView>
