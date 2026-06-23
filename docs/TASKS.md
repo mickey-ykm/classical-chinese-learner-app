@@ -11,14 +11,6 @@ _Add new tasks here. Format: `- [ ] #N — Type: Brief description`_
   - **Summary:** Currently the database (Supabase setup) only log logged-in-users' `quiz_answer` data because it is linked to the `attempt_id`. However we would like to analyze non-logged-in-users' `quiz_attempts` and `quiz_answers` data for user behavior analysis.
 - [ ] **#025 — FEATURE: Log all exercise attempt data**
   - **Summary:** Currently the database (Supabase setup) only log single article attempt records in `quiz_attempts`. But the app now have `revision exercises` and `DSE training exercise`. We should log the records for user behavior analysis. *Beware of sampling logic*: The quiz answers should have been used for sampoling usage. So think deep about this data logic to sugggest proposals.
-- [ ] **#026 — FEATURE: Weight training Exercise Logic**
-  - **Summary:** The `weight training exercise` is currently to be released. The feature logic is:
-   - we need a new section in admin portal named `DSE跨文章題題`, the CRUD is similar to the existing edit question feature. 
-   - For product logic of question part, we will add part 7 `一詞多義辨認` and part 8 `文言句式辨認`. 
-   - For `weight training exercise`, `part` will only be part 7 and part 8. The existing number field of `part` should be enough to cater. 
-   - A new multi-selection drop-down will allow the users to select `Related DSE exam articles` for article type = `DSE Exam`. The admin can pick more than 1 `DSE exam` articles per 1 question.
-   - We expect the admin to create 80-100 questions manually in the admin portal section. In the app, when user click `weight training exercise`, random 10 questions will be picked from this independent question pool. 
-   - In the app, the question page should have buttons to open the related article to view for user to answer the question. We can reuse the one in `DSE training exercise`, just 1 button per 1 related article.
 
 <!-- Example:
 - [ ] #007 — Bug: ...
@@ -69,6 +61,28 @@ _Finished by Claude, awaiting Mickey's validation. Once validated → move to **
 _Completed tasks with summaries and lessons learned. Ordered by completion date (newest first)._
 
 ### 2026-06-23
+
+- [x] **#026 — FEATURE: Weight Training Exercise Logic (針對性難題訓練)**
+  - **Summary:** Fully implemented cross-article quiz feature with smart sampling, repeat avoidance, and multi-select partial credit scoring.
+  - **Admin portal:** New `/cross-article-questions.html` page for managing cross-article questions. Multi-article selection via checkboxes. Auto-calculated points (points = number of correct answers). Draft/published workflow.
+  - **Backend API:**
+    - `GET /api/quiz/weight-training/progress?userId=<uuid>` — returns seen count, attempt number, pool stats
+    - `GET /api/quiz/weight-training/sample?userId=<uuid>` — smart sampling: 5 Part 7 + 5 Part 8 with repeat avoidance (based on last 100 sessions)
+    - `POST /api/quiz/weight-training/session` — saves session + answers to `exercise_sessions` and `exercise_answers`
+    - Graceful fallback: if progress query fails, continues with anonymous sampling
+  - **Mobile app:** Lobby shows progress (e.g., "已挑戰 45 / 120 題"). Quiz with related article buttons (tap to view multiple articles during quiz). Session auto-saves on completion. Score screen shows total > 10 possible.
+  - **Scoring:** Single-select MC = 1 point. Multi-select MC = points equal to number of correct answers (e.g., 2 points for question with 2 correct answers). Partial credit: 1 mark per correct selection, no penalty.
+  - **Database schema:** New tables `cross_article_questions` (id, question_text, format, part, options, correct_answer, explanation, select_count, points, status), `cross_article_question_articles` (junction table). New column in `exercise_answers`: `points_earned`.
+  - **SQL migrations:** Added `points INTEGER NOT NULL DEFAULT 1` to `cross_article_questions`; updated existing MC questions to set correct points.
+  - **Bug fixes during implementation:**
+    1. Error alert "getWeightTrainingSeenData query failed" → `.in()` query with 801 session IDs exceeded Supabase limit. Fixed: limit to 100 most recent sessions.
+    2. Duplicate handleSave calls → removed `answers` from useEffect deps + added type validation.
+    3. Total score stuck at 10 → multiple layers needed fixing: (a) DB column, (b) auto-calculate, (c) backend conversion, (d) API response mapping, (e) mobile app conversion from hardcoded `points: 1` to `q.points`.
+    4. UI padding → components touching edges. Fixed: added `px-4` to QuizShell.
+    5. Misleading "每題 1 分" display → removed from PartHeader.
+  - **Key lesson:** When errors reference database queries but SQL looks correct, check application code layers (API field mapping, conversions, hardcoded values) before continuing SQL debugging.
+  - **Files changed:** `admin/public/cross-article-questions.html`, `admin/public/js/cross-article-questions.js`, `admin/routes/cross-article-questions.js`, `admin/routes/weight-training.js`, `admin/lib/cross-article-helpers.js`, `admin/lib/weight-training-sampling.js`, `app/weight-training.tsx`, `components/quiz/QuizShell.tsx`, `components/quiz/PartHeader.tsx`, `lib/quiz.ts`, `CLAUDE.md`
+  - **Completed:** ✅ Production-ready
 
 - [x] **#023 — BUG: Multiple choice questions did not display explanation**
   - **Summary:** Fixed multi-select MC questions (selectCount > 1) not displaying explanation text after submission. The component was only showing "正確答案: A, C" without the explanation content. Added `explanation` prop to `MCQuestion` component and updated the feedback section to display explanation text below the correct answer, matching the pattern used in `QuizQuestion` for single-choice questions.
