@@ -85,7 +85,17 @@ async function getWeightTrainingSeenData(userId) {
     .select("question_id, session_id")
     .in("session_id", sessionIds)
 
-  if (ansErr) throw new Error("getWeightTrainingSeenData answers query failed: " + ansErr.message)
+  if (ansErr) {
+    console.error("getWeightTrainingSeenData query failed:", {
+      error: ansErr,
+      code: ansErr.code,
+      message: ansErr.message,
+      details: ansErr.details,
+      hint: ansErr.hint,
+      sessionIds: sessionIds.slice(0, 3), // Log first 3 session IDs for debugging
+    })
+    throw new Error("getWeightTrainingSeenData answers query failed: " + ansErr.message)
+  }
 
   // Build a map from session_id -> finished_at for quick lookup
   const finishedAtById = {}
