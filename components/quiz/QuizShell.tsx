@@ -252,6 +252,7 @@ export default function QuizShell({ questions: rawQuestions, partTitles, article
           correctAnswer={currentQuestion.correctAnswer}
           selectCount={currentQuestion.selectCount ?? 2}
           points={currentQuestion.points}
+          explanation={currentQuestion.explanation}
           onAnswer={(correct, selected, pointsEarned) => {
             setAnswers((prev) => ({
               ...prev,

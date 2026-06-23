@@ -13,6 +13,7 @@ interface MCQuestionProps {
   correctAnswer: string // "A" for single/true-false; "A,C,E" for multi
   selectCount: number
   points?: number
+  explanation?: string
   onAnswer: (isCorrect: boolean, selected: string[], pointsEarned: number) => void
   onNext: () => void
   isLastQuestion: boolean
@@ -24,6 +25,7 @@ export default function MCQuestion({
   correctAnswer,
   selectCount,
   points,
+  explanation,
   onAnswer,
   onNext,
   isLastQuestion,
@@ -146,7 +148,15 @@ export default function MCQuestion({
           <Mascot mood={isCorrect ? "happy" : "sad"} size={90} />
           <View className="w-full bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
             <Text className="text-xs font-semibold text-amber-700 mb-1">正確答案</Text>
-            <Text className="text-sm text-slate-700">{correctAnswer}</Text>
+            <Text className="text-sm text-slate-700 mb-2">{correctAnswer}</Text>
+            {explanation ? (
+              <>
+                <Text className="text-xs font-semibold text-amber-700 mb-1">解析</Text>
+                <Text className="text-sm text-slate-700 leading-relaxed">
+                  {explanation}
+                </Text>
+              </>
+            ) : null}
           </View>
           <Pressable
             onPress={onNext}

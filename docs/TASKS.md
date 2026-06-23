@@ -7,10 +7,6 @@ _Active task list for day-to-day development work. Add new tasks to **Open**, mo
 ## Open
 
 _Add new tasks here. Format: `- [ ] #N — Type: Brief description`_
-- [ ] **#022 — BUG: legacy article data exist while the cache is not clear**
-  - **Summary:** Some legacy, deleted article data still exist in the app. They should no long exist in the app. Screen: docs/debug-screenshots/legacy_articles.png
-- [ ] **#023 — BUG: Multiple choice questions did not display explanation**
-  - **Summary:** For multiple choice questions that can pick more than 1 options, upon answered, the explanation box only shows the correct option A/B/C without showing the content of explanation. Screen: docs/debug-screenshots/multiMC_no_explanation.png
 - [ ] **#024 — FEATURE: Log anonymous user quiz answer**
   - **Summary:** Currently the database (Supabase setup) only log logged-in-users' `quiz_answer` data because it is linked to the `attempt_id`. However we would like to analyze non-logged-in-users' `quiz_attempts` and `quiz_answers` data for user behavior analysis.
 - [ ] **#025 — FEATURE: Log all exercise attempt data**
@@ -51,6 +47,15 @@ _Tasks currently being worked on. Add start date and assignee._
 
 _Finished by Claude, awaiting Mickey's validation. Once validated → move to **Done**. If issues found → move back to **In Progress** with notes._
 
+- [ ] **#022 — BUG: legacy article data exist while the cache is not clear**
+  - **Summary:** Implemented automatic orphan detection during incremental sync. When the app syncs from Supabase, it now fetches all published article IDs and compares them with the local cache. Articles that exist in cache but not in Supabase (deleted articles) are automatically removed from SQLite, memory, and tombstoned. Seed articles are protected and never removed. This means deleted articles will automatically disappear on the next app launch without requiring manual "清除快取並重新同步".
+  - **Files changed:** `lib/contentStore.ts`, `CLAUDE.md`
+  - **Testing needed:** 
+    1. Delete an article from Supabase admin portal
+    2. Close and reopen the mobile app (triggers `backgroundFetch`)
+    3. Verify the deleted article no longer appears in the article list
+  - **Technical details:** Added `removeOrphans()` function that runs after every incremental sync. Performs one additional lightweight query (`SELECT id WHERE status = 'published'`) to get the full published article set, then removes orphans from cache.
+
 - [ ] **#020 — BUG: Strange time counting**
   - **Summary:** Fixed time formatting bug where large durations displayed incorrectly (e.g., "46780 分" for 32+ days). Updated `formatSeconds()` and `timeDelta()` in `account.tsx` and `attempt.tsx` to use appropriate units based on duration: < 1 min shows seconds; 1-59 min shows minutes (and seconds); 1-23 hours shows hours and minutes; 24+ hours shows days and hours. The 46,780-minute duration now correctly displays as "32 天 11 小時".
   - **Files changed:** `app/account.tsx`, `app/attempt.tsx`
@@ -62,6 +67,14 @@ _Finished by Claude, awaiting Mickey's validation. Once validated → move to **
 ## Done (Recent)
 
 _Completed tasks with summaries and lessons learned. Ordered by completion date (newest first)._
+
+### 2026-06-23
+
+- [x] **#023 — BUG: Multiple choice questions did not display explanation**
+  - **Summary:** Fixed multi-select MC questions (selectCount > 1) not displaying explanation text after submission. The component was only showing "正確答案: A, C" without the explanation content. Added `explanation` prop to `MCQuestion` component and updated the feedback section to display explanation text below the correct answer, matching the pattern used in `QuizQuestion` for single-choice questions.
+  - **Files changed:** `components/quiz/MCQuestion.tsx`, `components/quiz/QuizShell.tsx`
+  - **Root cause:** `MCQuestion` component didn't have an `explanation` prop, and `QuizShell` wasn't passing `currentQuestion.explanation` to it
+  - **Validated:** ✅ Explanation now displays properly for multi-select questions
 
 ### 2026-06-21
 

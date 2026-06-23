@@ -205,6 +205,57 @@ function mapSupabaseRow(row: Record<string, unknown>): { article: Article; quiz:
   }
 }
 
+async function removeOrphans(publishedIds: Set<string>): Promise<{ updated: number; errors: number }> {
+  const db = await getDb()
+  let updated = 0
+  let errors = 0
+
+  // Load current tombstone set
+  const tombstoneRow = await db.getFirstAsync<{ value: string }>(
+    "SELECT value FROM content_meta WHERE key = ?",
+    ["removed_ids"]
+  )
+  const removedIds = new Set<string>(tombstoneRow ? JSON.parse(tombstoneRow.value) : [])
+
+  // Get all cached article IDs (excluding seed articles)
+  const cachedRows = await db.getAllAsync<{ id: string }>(
+    "SELECT id FROM content_cache"
+  )
+
+  // Find orphans: articles in cache but not in published set
+  for (const row of cachedRows) {
+    // Skip seed articles - they should stay even if not in Supabase
+    if (SEED_ARTICLES[row.id]) continue
+
+    if (!publishedIds.has(row.id)) {
+      // This article was deleted from Supabase - remove it
+      try {
+        await db.runAsync("DELETE FROM content_cache WHERE id = ?", [row.id])
+        _articles.delete(row.id)
+        _quizzes.delete(row.id)
+        _meta.delete(row.id)
+        const idx = ARTICLE_ORDER.indexOf(row.id)
+        if (idx !== -1) ARTICLE_ORDER.splice(idx, 1)
+        removedIds.add(row.id)
+        updated++
+      } catch {
+        errors++
+      }
+    }
+  }
+
+  // Persist updated tombstones if any articles were removed
+  if (updated > 0) {
+    await db.runAsync(
+      "INSERT OR REPLACE INTO content_meta (key, value) VALUES (?, ?)",
+      ["removed_ids", JSON.stringify([...removedIds])]
+    )
+    notifyListeners()
+  }
+
+  return { updated, errors }
+}
+
 async function fetchAndStore(lastSyncAt: string | null): Promise<{ updated: number; errors: number }> {
   let query = supabase
     .from("articles")
@@ -223,7 +274,26 @@ async function fetchAndStore(lastSyncAt: string | null): Promise<{ updated: numb
 
   const { data, error } = await query
   if (error) throw new Error(error.message)
-  if (!data || data.length === 0) return { updated: 0, errors: 0 }
+
+  // Fetch all published article IDs to detect deletions (incremental sync only)
+  let publishedIds: Set<string> | null = null
+  if (lastSyncAt) {
+    const { data: idData, error: idError } = await supabase
+      .from("articles")
+      .select("id")
+      .eq("status", "published")
+    if (!idError && idData) {
+      publishedIds = new Set(idData.map((row) => row.id))
+    }
+  }
+
+  if (!data || data.length === 0) {
+    // Even if no changed articles, still check for deletions during incremental sync
+    if (publishedIds) {
+      return await removeOrphans(publishedIds)
+    }
+    return { updated: 0, errors: 0 }
+  }
 
   const db = await getDb()
   let updated = 0
@@ -298,6 +368,16 @@ async function fetchAndStore(lastSyncAt: string | null): Promise<{ updated: numb
   }
 
   if (updated > 0) notifyListeners()
+
+  // After processing updates, check for deletions during incremental sync
+  if (lastSyncAt && publishedIds) {
+    const orphanResult = await removeOrphans(publishedIds)
+    return {
+      updated: updated + orphanResult.updated,
+      errors: errors + orphanResult.errors
+    }
+  }
+
   return { updated, errors }
 }
 

@@ -144,8 +144,9 @@ These must never be violated. Violating them causes silent data loss that only s
 
 **Mobile app sync behavior**
 - `contentStore.ts` syncs from Supabase on app launch via `backgroundFetch()` (once per session)
-- Incremental sync uses `updated_at > last_sync_at` — only detects changed articles, not deleted ones
-- After a Supabase data purge, use "清除快取並重新同步" button in Account screen to force a full re-sync
+- Incremental sync uses `updated_at > last_sync_at` — detects changed articles AND deleted articles (via orphan detection)
+- Orphan detection: during incremental sync, fetches all published article IDs and removes cached articles that no longer exist in Supabase
+- After a Supabase data purge, "清除快取並重新同步" button forces a full re-sync (faster than waiting for next incremental sync)
 - `clearCacheAndResync()` clears SQLite + in-memory cache, then fetches all published articles from Supabase
 - Bundled seed data (18 articles in `data/articles/` and `data/quizzes/`) is only used as fallback if Supabase returns nothing
 
