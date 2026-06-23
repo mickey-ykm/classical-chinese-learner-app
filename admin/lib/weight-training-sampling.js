@@ -67,11 +67,14 @@ async function getWeightTrainingSeenData(userId) {
   if (!userId || !supabase) return empty
 
   // Get exercise_sessions for this user + weight-training type
+  // Limit to recent 100 sessions to avoid .in() array size limits
   const { data: sessions, error: sessErr } = await supabase
     .from("exercise_sessions")
     .select("id, finished_at")
     .eq("user_id", userId)
     .eq("kind", "weight-training")
+    .order("finished_at", { ascending: false })
+    .limit(100)
 
   if (sessErr) throw new Error("getWeightTrainingSeenData sessions query failed: " + sessErr.message)
   if (!sessions || sessions.length === 0) return empty
