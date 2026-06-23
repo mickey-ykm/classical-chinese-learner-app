@@ -103,6 +103,8 @@ export default function WeightTrainingScreen() {
     if (!user?.id) return
 
     try {
+      console.log("handleSave called with:", { score, total, answersCount: Object.keys(answers).length })
+
       // Convert answers to ExerciseAnswer format
       const exerciseAnswers: ExerciseAnswer[] = Object.entries(answers).map(([questionId, answer]) => ({
         questionId: String(questionId),
@@ -113,7 +115,7 @@ export default function WeightTrainingScreen() {
 
       // Validate we have answers
       if (exerciseAnswers.length === 0) {
-        console.warn("No answers to save")
+        console.warn("No answers to save - answers object:", answers)
         return
       }
 
