@@ -39,6 +39,8 @@ export default function WeightTrainingScreen() {
       setProgress(prog)
     } catch (e: any) {
       console.error("Failed to load progress:", e)
+      // Non-fatal - continue without progress display
+      setProgress(null)
     }
   }
 
@@ -47,7 +49,15 @@ export default function WeightTrainingScreen() {
       setLoading(true)
       setError(null)
 
-      const sampled = await sampleWeightTraining(user?.id)
+      // Try with userId first, fallback to anonymous if it fails
+      let sampled: CrossArticleQuestion[]
+      try {
+        sampled = await sampleWeightTraining(user?.id)
+      } catch (e: any) {
+        console.warn("Failed to sample with user ID, trying anonymous:", e)
+        // Fallback to anonymous sampling
+        sampled = await sampleWeightTraining(undefined)
+      }
 
       if (sampled.length === 0) {
         setError("未有可用的題目。請稍後再試。")
