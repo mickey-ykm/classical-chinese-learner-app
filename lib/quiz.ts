@@ -48,6 +48,15 @@ export function checkMultiAnswer(
     correctSet.size === selectedSet.size &&
     [...correctSet].every((k) => selectedSet.has(k))
 
+  console.log("Multi-select scoring:", {
+    correct: Array.from(correctSet),
+    selected: Array.from(selectedSet),
+    correctSelections,
+    wrongSelections,
+    pointsEarned,
+    isCorrect
+  })
+
   return {
     questionId: question.id,
     selectedOptions: selectedKeys,
