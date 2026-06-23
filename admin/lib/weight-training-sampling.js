@@ -79,6 +79,13 @@ async function getWeightTrainingSeenData(userId) {
   const attemptNumber = sessions.length
   const sessionIds = sessions.map((s) => s.id)
 
+  // Debug: log sessionIds to check for issues
+  console.log("Querying exercise_answers for sessions:", {
+    count: sessionIds.length,
+    firstSessionId: sessionIds[0],
+    sessionIdType: typeof sessionIds[0],
+  })
+
   // Get all exercise_answers for those sessions
   const { data: answers, error: ansErr } = await supabase
     .from("exercise_answers")
