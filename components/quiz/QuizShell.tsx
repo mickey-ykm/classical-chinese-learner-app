@@ -213,8 +213,8 @@ export default function QuizShell({
     currentIndex === 0 || questions[currentIndex - 1]?.part !== currentQuestion.part
 
   return (
-    <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
-      <View className="gap-6">
+    <ScrollView className="flex-1 px-4" contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
+      <View className="gap-6">{/* Gap between major sections */}
         <View className="flex-row items-center gap-3">
           <View className="flex-1">
             <QuizProgressBar current={currentIndex + 1} total={questions.length} />
