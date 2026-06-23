@@ -25,6 +25,7 @@ router.get("/sample", async (req, res) => {
       correctAnswer: q.correct_answer,
       explanation: q.explanation,
       selectCount: q.select_count || 1,
+      points: q.points || 1,  // Point value for scoring
       sequenceTokens: q.sequence_tokens || undefined,
       relatedArticleIds: q.relatedArticleIds || [],
     }))
