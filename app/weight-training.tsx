@@ -105,11 +105,9 @@ export default function WeightTrainingScreen() {
     try {
       // Check if answers is actually an object
       if (typeof answers !== 'object' || answers === null || Array.isArray(answers)) {
-        console.warn("Invalid answers format:", typeof answers, answers)
+        // Silently ignore invalid calls (duplicate invocations with stale data)
         return
       }
-
-      console.log("handleSave called with:", { score, total, answersCount: Object.keys(answers).length })
 
       // Convert answers to ExerciseAnswer format
       const exerciseAnswers: ExerciseAnswer[] = Object.entries(answers).map(([questionId, answer]) => ({
@@ -121,7 +119,7 @@ export default function WeightTrainingScreen() {
 
       // Validate we have answers
       if (exerciseAnswers.length === 0) {
-        console.warn("No answers to save - answers object:", answers)
+        // Silently ignore if no answers (shouldn't happen with valid data)
         return
       }
 
