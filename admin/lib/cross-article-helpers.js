@@ -62,6 +62,7 @@ function rowToCrossArticleQuestion(row, relatedArticles = []) {
     correctAnswer: row.correct_answer,
     explanation: row.explanation,
     status: row.status,
+    points: row.points || 1,  // Default to 1 if not set
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     relatedArticles: relatedArticles.map(a => ({
