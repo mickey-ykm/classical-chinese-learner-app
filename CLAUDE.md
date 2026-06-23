@@ -55,7 +55,7 @@ app/
     dse-learner.tsx  # DSE 文章 — filtered by articleType === "dse-exam" | "dse-non-exam"
     extra-articles.tsx # 其他文章 — filtered by articleType === "other" | undefined
     dse-training.tsx # DSE 操練 — lobby + QuizShell
-    weight-training.tsx # 重量訓練 — coming soon
+    weight-training.tsx # 重量訓練 — cross-article quiz with smart sampling (5 part 7 + 5 part 8)
   read.tsx           # Article reader (stack, pushed over tabs)
   quiz.tsx           # Quiz (stack, pushed over tabs)
   account.tsx        # Account / history (stack)
@@ -186,6 +186,82 @@ These must never be violated. Violating them causes silent data loss that only s
 - The `quiz_prompts` table uses human-readable slug IDs (e.g. `"phase7-multi-type"`)
 - The Supabase schema was altered: `ALTER TABLE quiz_prompts ALTER COLUMN id TYPE text`
 - Do not revert this or create new uuid-keyed prompt tables
+
+## Weight Training (針對性難題訓練)
+
+**Feature overview**
+- Cross-article quiz mode: questions can relate to multiple articles (not limited to single article context)
+- Smart sampling: 5 Part 7 + 5 Part 8 questions with repeat avoidance based on user history
+- Multi-select scoring: questions with multiple correct answers award partial credit (1 mark per correct selection)
+- Related articles UI: each question shows related article buttons for quick reference during quiz
+
+**Database schema**
+```sql
+cross_article_questions (
+  id uuid,
+  question_text text,
+  format text,           -- 'mc', 'fill-blank', 'sentence-order'
+  part integer,          -- 7 or 8
+  options jsonb,         -- MC options: {A: "text", B: "text", ...}
+  correct_answer text,   -- MC: "A" or "A,C,E" (multi-select)
+  explanation text,
+  select_count integer,  -- MC: 1 for single-select, 2+ for multi-select
+  points integer,        -- auto-calculated: = number of correct answers in correct_answer
+  status text,           -- 'draft' or 'published'
+  ...
+)
+
+cross_article_question_articles (
+  question_id uuid → cross_article_questions.id,
+  article_id text → articles.id
+)
+
+exercise_sessions (
+  id uuid,
+  user_id uuid,
+  kind text,             -- 'weight-training', 'dse-training', 'article-quiz'
+  finished_at timestamp,
+  ...
+)
+
+exercise_answers (
+  id uuid,
+  session_id uuid → exercise_sessions.id,
+  question_id uuid,      -- references cross_article_questions.id for weight-training
+  user_answer text,
+  is_correct boolean,
+  points_earned integer  -- supports partial credit
+)
+```
+
+**Admin portal workflow**
+1. Create/edit cross-article questions at `/cross-article-questions.html`
+2. Select multiple related articles via checkboxes
+3. For multi-select MC: set `select_count` (e.g., "選 2 個答案"), enter comma-separated correct answers (e.g., "A,C")
+4. Points are **auto-calculated** on save: `points = number of correct answers in correct_answer`
+5. Questions must be set to "published" status to appear in sampling
+
+**Backend API** (`admin/routes/weight-training.js`, `admin/lib/weight-training-sampling.js`)
+- `GET /api/quiz/weight-training/progress?userId=<uuid>` — returns seen count, attempt number, pool stats
+- `GET /api/quiz/weight-training/sample?userId=<uuid>` — returns 10 questions (5 part 7 + 5 part 8) with repeat avoidance
+- `POST /api/quiz/weight-training/session` — saves session + answers to `exercise_sessions` and `exercise_answers`
+- Repeat avoidance: queries last 100 sessions, builds seen map, filters out recently answered questions
+- Graceful fallback: if progress query fails, continues with anonymous sampling (no repeat avoidance)
+
+**Mobile app** (`app/weight-training.tsx`)
+- Lobby shows progress (e.g., "已挑戰 45 / 120 題") if available
+- Fetches 10 questions via `/api/quiz/weight-training/sample?userId=...`
+- Converts to `Question[]` format for `QuizShell` (preserves `points` and `relatedArticleIds`)
+- QuizShell renders related article buttons for each question (can view multiple articles during quiz)
+- On completion, saves to backend via `/api/quiz/weight-training/session`
+
+**Scoring**
+- Single-select MC (1 correct answer): 1 point
+- Multi-select MC (2+ correct answers): `points = number of correct answers` (e.g., 2 points for question with 2 correct answers)
+- Partial credit: `MCQuestion.tsx` awards 1 mark per correct selection (no penalty for wrong selections)
+- Total score can be > 10 (e.g., 12 points if there are multi-select questions)
+- Example: select A,B for a question with correct answers A,B,C → earn 2 points (out of 3 possible)
+
 
 **quiz-prompts routes must use async Supabase-backed functions**
 - Use `readQuizPromptsAsync` / `writeQuizPromptsAsync` / `deleteQuizPromptAsync`
