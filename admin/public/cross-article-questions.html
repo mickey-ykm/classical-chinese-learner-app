@@ -127,12 +127,12 @@
         </div>
       </div>
 
-      <!-- Related Articles (Multi-select) -->
+      <!-- Related Articles (Checkboxes) -->
       <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">Related Articles * (hold Ctrl/Cmd to select multiple)</label>
-        <select id="qm-articles" multiple size="5" class="w-full border border-stone-300 rounded px-3 py-2 text-sm">
-          <option value="">Loading articles...</option>
-        </select>
+        <label class="block text-sm font-medium text-slate-700 mb-2">Related Articles * (select at least 1)</label>
+        <div id="qm-articles-checkboxes" class="border border-stone-300 rounded px-3 py-3 max-h-48 overflow-y-auto space-y-2">
+          <p class="text-xs text-slate-400">Loading articles...</p>
+        </div>
       </div>
 
       <!-- MC Options (conditional) -->

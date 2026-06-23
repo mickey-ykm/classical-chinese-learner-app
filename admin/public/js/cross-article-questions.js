@@ -23,16 +23,20 @@ function showToast(message, type = 'success') {
   setTimeout(() => toast.classList.remove('show'), 3000)
 }
 
-// Load articles for multi-select dropdown
+// Load articles for checkbox selection
 async function loadArticles() {
   try {
     const res = await fetch('/api/exercises')
     if (!res.ok) throw new Error('Failed to load articles')
     const data = await res.json()
     articlesList = data
-    const select = document.getElementById('qm-articles')
-    select.innerHTML = data.map(a =>
-      `<option value="${a.id}">${escapeHtml(a.title)} (${a.articleType || 'other'})</option>`
+    const container = document.getElementById('qm-articles-checkboxes')
+    container.innerHTML = data.map(a =>
+      `<label class="flex items-center gap-2 text-sm hover:bg-stone-50 px-2 py-1 rounded cursor-pointer">
+        <input type="checkbox" value="${a.id}" class="article-checkbox w-4 h-4 accent-amber-500" />
+        <span class="flex-1">${escapeHtml(a.title)}</span>
+        <span class="text-xs text-slate-400">${a.articleType || 'other'}</span>
+      </label>`
     ).join('')
   } catch (e) {
     console.error('Failed to load articles:', e)
@@ -149,8 +153,7 @@ window.openQuestionModal = async function(id = null) {
   document.querySelectorAll('.qm-type-checkbox').forEach(cb => cb.checked = false)
 
   // Clear article selection
-  const articlesSelect = document.getElementById('qm-articles')
-  Array.from(articlesSelect.options).forEach(opt => opt.selected = false)
+  document.querySelectorAll('.article-checkbox').forEach(cb => cb.checked = false)
 
   if (id) {
     title.textContent = 'Edit Question'
@@ -176,8 +179,8 @@ window.openQuestionModal = async function(id = null) {
       // Select related articles
       if (q.relatedArticles) {
         q.relatedArticles.forEach(a => {
-          const opt = articlesSelect.querySelector(`option[value="${a.id}"]`)
-          if (opt) opt.selected = true
+          const checkbox = document.querySelector(`.article-checkbox[value="${a.id}"]`)
+          if (checkbox) checkbox.checked = true
         })
       }
 
@@ -297,9 +300,9 @@ function collectQuestionData() {
   const explanation = document.getElementById('qm-explanation').value.trim()
   const status = document.getElementById('qm-status').value
 
-  // Get selected articles
-  const articlesSelect = document.getElementById('qm-articles')
-  const relatedArticleIds = Array.from(articlesSelect.selectedOptions).map(opt => opt.value)
+  // Get selected articles from checkboxes
+  const selectedCheckboxes = document.querySelectorAll('.article-checkbox:checked')
+  const relatedArticleIds = Array.from(selectedCheckboxes).map(cb => cb.value)
 
   // Validation
   if (!questionText) { showToast('Question text is required', 'error'); return null }
