@@ -96,6 +96,7 @@ export default function QuizShell({
   const [showArticle, setShowArticle] = useState(false)
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  const [hasSaved, setHasSaved] = useState(false)
 
   const startedAtRef = useRef(Date.now())
   const { user } = useAuth()
@@ -116,6 +117,23 @@ export default function QuizShell({
     }, 1000)
     return () => clearInterval(interval)
   }, [isFinished])
+
+  // Save quiz results when finished
+  useEffect(() => {
+    if (isFinished && !hasSaved && onSave) {
+      const totalSeconds = Math.floor((Date.now() - startedAtRef.current) / 1000)
+      const { earned } = calculateScore(questions, answers)
+
+      if (exerciseType === "weight-training") {
+        // New signature: pass answers object
+        onSave(earned, questions.length, answers)
+      } else {
+        // Old signature: pass totalSeconds
+        onSave(earned, questions.length, totalSeconds)
+      }
+      setHasSaved(true)
+    }
+  }, [isFinished, hasSaved, onSave, exerciseType, questions, answers])
 
   useEffect(() => {
     if (!isFinished || !user) return
@@ -172,25 +190,12 @@ export default function QuizShell({
     setRevealAnswer(false)
     setWaitingForNext(false)
     setIsFinished(false)
+    setHasSaved(false)
     startedAtRef.current = Date.now()
     setElapsedSeconds(0)
   }
 
   if (isFinished) {
-    const totalSeconds = Math.floor((Date.now() - startedAtRef.current) / 1000)
-    const { earned } = calculateScore(questions, answers)
-
-    // Call onSave with appropriate signature
-    if (onSave) {
-      if (exerciseType === "weight-training") {
-        // New signature: pass answers object
-        onSave(earned, questions.length, answers)
-      } else {
-        // Old signature: pass totalSeconds
-        onSave(earned, questions.length, totalSeconds)
-      }
-    }
-
     return (
       <ScoreScreen
         questions={questions}

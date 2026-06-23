@@ -101,6 +101,12 @@ export default function WeightTrainingScreen() {
         pointsEarned: answer.pointsEarned || (answer.isCorrect ? 1 : 0),
       }))
 
+      // Validate we have answers
+      if (exerciseAnswers.length === 0) {
+        console.warn("No answers to save")
+        return
+      }
+
       await saveWeightTrainingSession(user.id, score, total, exerciseAnswers)
 
       // Mark progress for refresh on next lobby visit
