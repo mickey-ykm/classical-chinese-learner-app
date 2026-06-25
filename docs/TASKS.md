@@ -7,6 +7,496 @@ _Active task list for day-to-day development work. Add new tasks to **Open**, mo
 ## Open
 
 _Add new tasks here. Format: `- [ ] #N — Type: Brief description`_
+- [ ] **#030 — FEATURE: First-time user onboarding (hybrid approach)**
+  - **Summary:** Implement hybrid onboarding system combining welcome carousel (3 screens, one-time) + contextual feature discovery tooltips (appear on first use of each feature).
+  - **Approach:** Welcome carousel establishes purpose and value proposition; tooltips teach specific features just-in-time when user encounters them. Both components are skippable and use AsyncStorage flags to track completion.
+  
+  - **Part 1: Welcome Carousel (3 screens)**
+    - **Screen 1 — Welcome + Purpose**
+      - App name + demon mascot illustration
+      - Heading: "DSE 文言文備試，智能操練"
+      - Subtext: "範文閱讀 · 智能出題 · 針對弱項"
+      - "下一步" button
+    - **Screen 2 — Key Features**
+      - Visual mockup showing app interface (article with footnotes, quiz, score)
+      - Feature highlights: "原文註解 · 白話翻譯 · 重複避免 · 錯題重溫"
+      - "下一步" button
+    - **Screen 3 — Get Started**
+      - "登入後記錄進度，智能避開已做題目"
+      - Three CTAs: "Google 登入" / "電郵登入" / "以訪客身份試用"
+    - **Implementation:**
+      - [ ] Create `app/onboarding.tsx` with swipeable carousel (react-native ViewPager or FlatList horizontal)
+      - [ ] Add demon mascot SVG illustration for screen 1
+      - [ ] Create feature mockup screenshot/illustration for screen 2
+      - [ ] Store `hasSeenOnboarding` flag in AsyncStorage
+      - [ ] Redirect to onboarding from `app/index.tsx` if flag is false
+      - [ ] "以訪客身份試用" button sets flag and navigates to home
+  
+  - **Part 2: Feature Discovery Tooltips**
+    - **Tooltip locations and content:**
+      - First article open → near footnote number: "💡 點擊數字可查看註解"
+      - First article open → near translation tab: "💡 可切換白話文語譯"
+      - First quiz start → above question: "💡 題目會智能避開已做過的"
+      - First wrong answer → in feedback: "💡 做錯的題目會自動加入「溫故知新」"
+      - First quiz complete (anonymous) → in score screen: "💡 登入後記錄進度和正確率"
+      - First DSE training visit → in lobby: "💡 模擬試場環境，44-66 題跨文章測試"
+    - **Implementation:**
+      - [ ] Create `components/onboarding/Tooltip.tsx` (reusable tooltip component)
+      - [ ] Design tooltip UI: amber background, arrow pointer, dismiss "X" button
+      - [ ] Create `lib/onboardingFlags.ts` helper (read/write AsyncStorage flags)
+      - [ ] Add tooltip to `app/read.tsx` for footnote hint (flag: `hasSeenFootnoteHint`)
+      - [ ] Add tooltip to `app/read.tsx` for translation tab hint (flag: `hasSeenTranslationHint`)
+      - [ ] Add tooltip to `components/quiz/QuizShell.tsx` for smart sampling hint (flag: `hasSeenSamplingHint`)
+      - [ ] Add tooltip to `components/quiz/QuizShell.tsx` for revision hint (flag: `hasSeenRevisionHint`)
+      - [ ] Add tooltip to `components/quiz/ScoreScreen.tsx` for login prompt (flag: `hasSeenLoginPrompt`, only show for anonymous)
+      - [ ] Add tooltip to `app/(tabs)/dse-training.tsx` for mock exam hint (flag: `hasSeenMockExamHint`)
+  
+  - **Technical details:**
+    - AsyncStorage keys: `@onboarding:hasSeenWelcome`, `@onboarding:hasSeenFootnoteHint`, etc.
+    - Tooltip component props: `content: string`, `visible: boolean`, `onDismiss: () => void`, `anchor: "top" | "bottom" | "left" | "right"`
+    - Tooltips auto-dismiss after 5 seconds or on user tap
+    - All flags independent (dismissing one doesn't affect others)
+  
+  - **Why hybrid approach:**
+    - Carousel gives immediate context (app purpose, target audience)
+    - Tooltips teach complex features without upfront time burden
+    - Anonymous users can skip welcome and still learn via tooltips
+    - Lower cognitive load (just-in-time learning vs upfront overload)
+  
+  - **Estimated effort:** 4-6 hours (2-3 hours for carousel, 2-3 hours for tooltip system + integration)
+
+- [ ] **#031 — FEATURE: Mistake Pattern Analysis Dashboard**
+  - **Summary:** Show users their weak areas by analyzing performance across question types and parts. Help students identify where to focus study time by highlighting below-average performance areas with actionable recommendations.
+  - **Value proposition:**
+    - DSE students are time-poor and need to know *what* to practice, not just *how much*
+    - "你在「修辭手法」題型的正確率只有 45%（全站平均 68%）" → immediate insight
+    - Personalized recommendations: "建議加強練習第 7 部分（一詞多義）"
+    - Differentiator: most learning apps show totals, not diagnostic breakdowns
+  - **Data to display:**
+    - **By question type** (字詞解釋, 語句背誦, 語句翻譯, 修辭手法, 內容重點):
+      - User correct rate vs. platform average
+      - Total attempted for each type
+      - Trend (improving/declining over last 10 attempts)
+    - **By part** (Parts 1-8):
+      - User correct rate vs. platform average per part
+      - Weakest part highlighted with "建議加強" badge
+    - **Overall insights:**
+      - Most common mistake type
+      - Best performing area (positive reinforcement)
+      - Recommended next practice (article/exercise targeting weak area)
+  - **Implementation approach:**
+    - **Backend API** (`admin/routes/analytics.js`):
+      - [ ] `GET /api/analytics/mistakes?userId=<uuid>` — aggregate quiz_answers by question_types and part
+      - [ ] Join with questions table to get question_types array
+      - [ ] Calculate user correct rate per type/part
+      - [ ] Calculate platform averages (cache daily, not per-request)
+      - [ ] Return: `{ byType: [{type, userRate, avgRate, attempted, trend}], byPart: [{part, userRate, avgRate}], insights: {...} }`
+    - **Mobile UI** (`app/analysis.tsx` or in `app/account.tsx`):
+      - [ ] Add "弱項分析" card/tab in account screen
+      - [ ] Display question type breakdown (horizontal bar chart showing user vs avg)
+      - [ ] Display part breakdown (radar chart or list with progress bars)
+      - [ ] Highlight weakest areas in amber/red
+      - [ ] Show "建議練習" with link to relevant article or weight training
+      - [ ] Require minimum data threshold (e.g., 20+ questions answered) before showing analysis
+    - **Database queries:**
+      - [ ] User stats: `SELECT question_types, part, is_correct FROM quiz_answers JOIN questions WHERE user_id = X`
+      - [ ] Platform averages: `SELECT question_types, part, AVG(is_correct) FROM quiz_answers JOIN questions GROUP BY ...`
+      - [ ] Consider adding question_types index on questions table for performance
+    - **Caching strategy:**
+      - [ ] Cache platform averages in Redis or in-memory (refresh daily)
+      - [ ] User stats can be computed on-demand (relatively small dataset per user)
+  - **UI/UX considerations:**
+    - Show "需要更多數據" placeholder if user has < 20 answers
+    - Use visual hierarchy: weakest area most prominent, strongest area subtle positive reinforcement
+    - Avoid overwhelming with too many metrics — focus on top 2-3 actionable insights
+    - Link insights to action: "加強練習" button goes directly to relevant content
+  - **Success metrics:**
+    - Users viewing analysis engage with recommended practice 40%+ of the time
+    - Users who view analysis weekly show 15%+ improvement in weak areas over 1 month
+  - **Estimated effort:** 2-3 days (backend aggregation + API, mobile UI + charts, testing)
+
+- [ ] **#032 — FEATURE: Spaced Repetition Vocabulary System**
+  - **Summary:** Extract key classical Chinese terms (字詞, 典故, 句式) from articles into flashcard deck with SRS (Spaced Repetition System) algorithm. Provides systematic daily vocabulary review drills to build long-term retention.
+  - **Value proposition:**
+    - Classical Chinese vocab is a major DSE bottleneck — students forget terms between study sessions
+    - SRS proven effective for language learning (Anki, Duolingo model)
+    - 5-minute daily drill = low friction, high retention
+    - Complements article reading (reinforces terms encountered in context)
+  - **System components:**
+    - **Vocabulary database** (`vocabulary` table):
+      - `id`, `term` (字詞), `definition` (解釋), `example_sentence` (例句), `source_article_id`
+      - `difficulty` (beginner/intermediate/advanced), `frequency` (common/rare)
+      - Initial seed: manually curate 200-300 high-frequency DSE terms
+    - **User progress tracking** (`user_vocabulary` table):
+      - `user_id`, `vocabulary_id`, `interval_days` (1 → 3 → 7 → 14 → 30), `next_review_date`, `ease_factor`, `times_reviewed`
+      - SRS algorithm: SM-2 or simplified Leitner system
+      - Response quality: "忘記了" (Again) / "勉強記得" (Hard) / "記得" (Good) / "非常熟悉" (Easy)
+    - **Daily drill interface** (`app/vocabulary.tsx`):
+      - Shows term → user tries to recall → reveals definition + example
+      - 4-button response (Again/Hard/Good/Easy) updates SRS schedule
+      - Session size: 10-15 cards (5 new + 10 review)
+      - Progress bar showing daily goal completion
+  - **Implementation approach:**
+    - **Phase 1: Vocabulary curation (manual)**
+      - [ ] Extract 200-300 key terms from existing 18 seed articles
+      - [ ] Format: CSV with columns (term, definition, example, article_id, difficulty)
+      - [ ] Create `vocabulary` table in Supabase
+      - [ ] Seed script to import CSV → `admin/seed-vocabulary.js`
+    - **Phase 2: SRS backend** (`admin/routes/vocabulary.js`)
+      - [ ] `GET /api/vocabulary/due?userId=<uuid>` — returns cards due for review today
+      - [ ] `POST /api/vocabulary/review` — accepts card_id + response (again/hard/good/easy), updates next_review_date
+      - [ ] Implement SM-2 algorithm in `admin/lib/srs.js` (or use existing library like `sm2` npm package)
+      - [ ] Create `user_vocabulary` table with RLS policies
+    - **Phase 3: Mobile UI**
+      - [ ] Create `app/vocabulary.tsx` flashcard screen
+      - [ ] Swipeable card component (react-native-deck-swiper or custom)
+      - [ ] Show term on front, flip to reveal definition + example on back
+      - [ ] 4-button response interface at bottom
+      - [ ] Daily progress indicator: "今日已完成 8 / 15 張"
+      - [ ] Empty state: "今日無需複習 ✓" when queue is empty
+    - **Phase 4: Integration**
+      - [ ] Add "每日字詞複習" card to homepage (shows # of cards due)
+      - [ ] Badge notification if cards overdue (gentle nudge, not pushy)
+      - [ ] Link terms in article footnotes to vocabulary entries (future enhancement)
+  - **SRS algorithm (simplified SM-2):**
+    - New card: interval = 1 day
+    - Response "Again": reset interval to 1 day
+    - Response "Hard": interval × 1.2
+    - Response "Good": interval × 2.5 (standard progression: 1→3→7→18→45 days)
+    - Response "Easy": interval × 3, increase ease factor
+    - Cap max interval at 180 days
+  - **Content strategy:**
+    - Start with 200-300 curated terms (proven DSE-relevant)
+    - Expand to 500-1000 terms over time (community contribution or LLM extraction)
+    - Tag terms by article/topic for filtered practice
+  - **Success metrics:**
+    - Daily active vocabulary users (% of logged-in users)
+    - Retention rate of terms reviewed (post-quiz performance on related questions)
+    - Average streak length for vocabulary practice
+  - **Estimated effort:** 1-2 weeks
+    - Curation: 1-2 days (200-300 terms)
+    - Backend: 2-3 days (tables, API, SRS logic)
+    - Mobile UI: 3-4 days (flashcard component, swipe gestures, integration)
+    - Testing: 1-2 days (SRS algorithm validation, edge cases)
+
+- [ ] **#033 — FEATURE: Study Streaks + Daily Goals**
+  - **Summary:** Implement study streak tracking and daily goal system to drive habit formation and daily engagement. Shows consecutive days studied with fire emoji badge and progress ring for daily goals.
+  - **Value proposition:**
+    - Habit formation drives retention — language learning needs consistency over intensity
+    - Visual progress motivates daily return ("Don't break the streak!")
+    - Low-friction goals (e.g., "完成 1 篇文章" or "答對 10 題") achievable in 10-15 minutes
+    - Gentle nudge via local notification if streak at risk (optional, non-intrusive)
+  - **Features:**
+    - **Streak counter:**
+      - "連續學習 7 天 🔥" badge on homepage and account screen
+      - Tracks consecutive days with at least 1 completed activity (article read or quiz completed)
+      - Resets to 0 if a day is missed (but shows "最長連續: 14 天" as milestone)
+      - Streak survives timezone changes (tracks by local date, not UTC)
+    - **Daily goals:**
+      - User sets goal type: "完成 1 篇文章閱讀" OR "完成 1 次測驗" OR "答對 10 題" (configurable in settings)
+      - Progress ring on homepage showing completion (e.g., "8 / 10 題已完成")
+      - Goal resets at midnight local time
+      - Celebration animation when goal completed: "今日目標達成！🎉"
+    - **Weekly summary:**
+      - End-of-week notification (optional): "本週學習 5 天，完成 3 篇文章，答對 67 題"
+      - Shows consistency chart (7-day grid with check marks for active days)
+  - **Implementation approach:**
+    - **Data tracking** (AsyncStorage + Supabase):
+      - [ ] AsyncStorage: `@streak:currentStreak`, `@streak:longestStreak`, `@streak:lastActiveDate`, `@goals:dailyGoalType`, `@goals:dailyProgress`
+      - [ ] Sync to Supabase `user_streaks` table (optional, for cloud backup): `user_id`, `current_streak`, `longest_streak`, `last_active_date`
+      - [ ] Check on app launch: if `lastActiveDate` was yesterday, increment streak; if older, reset to 1
+      - [ ] Update streak after quiz completion or article read (via existing `saveQuizHistory` / `recordReadProgress`)
+    - **Mobile UI:**
+      - [ ] Add streak badge to homepage hero section: large "🔥 7 天" with subtitle "連續學習"
+      - [ ] Add daily goal progress ring to homepage (circular progress, 0-100%)
+      - [ ] Add streak + longest streak to account screen stats section
+      - [ ] Create `app/settings.tsx` (or extend account screen) with daily goal selector
+      - [ ] Celebration modal on goal completion: confetti animation + "今日目標達成！" message
+      - [ ] Weekly summary card on homepage (collapsible, shows 7-day activity grid)
+    - **Local notifications** (optional, requires user permission):
+      - [ ] 8pm daily reminder if goal not completed: "還差 2 題就完成今日目標！"
+      - [ ] 11pm streak reminder if no activity today: "完成 1 次測驗保持連續記錄 🔥"
+      - [ ] Use `expo-notifications` for scheduling
+      - [ ] Settings toggle to enable/disable notifications
+  - **UX considerations:**
+    - Non-intrusive: notifications are gentle reminders, not guilt trips
+    - Positive framing: "你已連續學習 7 天！" not "不要中斷連續記錄！"
+    - Flexible goals: users can adjust daily goal difficulty in settings
+    - Streak survives edge cases: traveling across timezones, early morning study sessions
+  - **Success metrics:**
+    - Daily active user rate increases by 20%+ after implementing streaks
+    - Average session frequency increases (more short daily sessions vs. long weekly sessions)
+    - 7-day retention rate improves by 15%+
+  - **Estimated effort:** 1 day
+    - AsyncStorage tracking: 2 hours
+    - Homepage UI (badge, progress ring): 2 hours
+    - Goal logic + celebration: 2 hours
+    - Notifications (optional): 2 hours
+
+- [ ] **#034 — FEATURE: Achievement Badges**
+  - **Summary:** Implement collectible achievement badge system for milestone events. Provides positive reinforcement and visible progress markers beyond raw stats.
+  - **Value proposition:**
+    - Gamification that rewards progress without competitive pressure (unlike leaderboards)
+    - Visible milestones help students see tangible accomplishments
+    - Badge collection appeals to completionist mindset common in students
+    - Social sharing potential (optional: share unlocked badges)
+  - **Badge categories:**
+    - **Getting Started:**
+      - "初次嘗試" — Complete first quiz
+      - "首篇文章" — Read first article
+      - "註冊會員" — Sign up with Google or email
+    - **Volume milestones:**
+      - "練習新手" — Complete 10 questions
+      - "練習能手" — Complete 50 questions
+      - "練習高手" — Complete 200 questions
+      - "閱讀愛好者" — Read 5 articles
+      - "博覽群書" — Read 20 articles
+    - **Accuracy milestones:**
+      - "準確射手" — Achieve 80% correct rate in a single quiz
+      - "完美答題" — Get 100% in a quiz (10+ questions)
+      - "持續進步" — Improve correct rate by 20%+ over 1 month
+    - **Consistency:**
+      - "堅持一週" — 7-day study streak
+      - "堅持一月" — 30-day study streak
+      - "每日學習者" — Complete daily goal 7 days in a row
+    - **Special achievements:**
+      - "模擬考通過" — Complete DSE mock exam with 60%+ score
+      - "錯題重溫達人" — Complete 20+ revision exercises
+      - "字詞大師" — Review 100+ vocabulary cards (requires #032)
+  - **Implementation approach:**
+    - **Badge definitions** (JSON config or database):
+      - [ ] Create `data/badges.json` with badge definitions: `{id, title, description, icon, requirement, rarity}`
+      - [ ] Or create `badges` table in Supabase: `id`, `title`, `description`, `icon_name`, `requirement_type`, `requirement_value`, `rarity`
+      - [ ] Rarity levels: common / rare / epic (affects visual styling)
+    - **User badge tracking** (`user_badges` table):
+      - [ ] Columns: `user_id`, `badge_id`, `unlocked_at`, `is_new` (for showing "NEW!" indicator)
+      - [ ] Query on app launch to check newly unlocked badges
+      - [ ] RLS policy: users can only read their own badges
+    - **Backend logic** (`admin/lib/badge-check.js`):
+      - [ ] Function `checkAndAwardBadges(userId)` — runs after quiz completion, article read, streak update
+      - [ ] Queries user stats (questions completed, streak, correct rate, etc.)
+      - [ ] Compares against badge requirements
+      - [ ] Inserts new rows into `user_badges` if requirements met
+      - [ ] Returns array of newly unlocked badges
+    - **Mobile UI:**
+      - [ ] Badge unlock modal (fullscreen): large badge icon + title + "恭喜解鎖！" message
+      - [ ] Badge gallery in account screen: grid of all badges (locked/unlocked states)
+      - [ ] Locked badges show silhouette + requirement hint: "完成 50 題解鎖"
+      - [ ] Badge detail view: tap badge → shows description, unlock date, share button
+      - [ ] "NEW!" indicator on account badge icon if unviewed badges exist
+    - **Visual design:**
+      - [ ] Badge icons: simple SVG illustrations (medal, star, book, flame, etc.)
+      - [ ] Rarity colors: common (gray), rare (amber), epic (purple)
+      - [ ] Unlock animation: scale + fade in + confetti particles
+  - **UX considerations:**
+    - Non-blocking: badge unlock modal appears after quiz score screen (not interrupting flow)
+    - No pressure: locked badges show requirements but don't nag users
+    - Opt-in sharing: "分享到社交媒體" button in badge detail (generates image card)
+  - **Success metrics:**
+    - % of users who unlock at least 3 badges
+    - Engagement lift after badge unlock (do users continue studying?)
+    - Badge gallery view rate (are users checking their collection?)
+  - **Estimated effort:** 1-2 days
+    - Badge definitions + database: 2 hours
+    - Backend check logic: 3 hours
+    - Mobile UI (modal, gallery, animations): 4-5 hours
+    - Testing: 1-2 hours
+
+- [ ] **#035 — FEATURE: Progress Visualization Charts**
+  - **Summary:** Display line charts and bar charts showing performance trends over time. Helps students visualize improvement and identify patterns (e.g., "我在週末表現較差").
+  - **Value proposition:**
+    - Visible improvement = motivation during plateaus
+    - Charts reveal patterns invisible in raw stats (e.g., time-of-day performance, part-specific trends)
+    - Complements mistake analysis (#031) with temporal dimension
+    - Appeals to data-driven students who want detailed insights
+  - **Charts to display:**
+    - **Overall correct rate trend (line chart):**
+      - X-axis: Last 30 days (or 10 most recent quizzes)
+      - Y-axis: Correct rate (0-100%)
+      - Shows moving average to smooth noise
+      - Highlight: "比上月進步 12%！"
+    - **Performance by part (bar chart):**
+      - 8 bars representing Parts 1-8
+      - Height = correct rate for each part
+      - Color: green (>70%), amber (50-70%), red (<50%)
+      - Shows user's strengths and weaknesses at a glance
+    - **Questions completed over time (area chart):**
+      - X-axis: Last 30 days
+      - Y-axis: Cumulative questions completed
+      - Shows study volume consistency
+      - Milestone markers: "第 100 題", "第 200 題"
+    - **Weekly activity heatmap** (calendar grid):
+      - 7×4 grid showing last 28 days
+      - Each cell colored by activity level (0 = gray, 1-5 = light amber, 6+ = dark amber)
+      - GitHub-style contribution graph
+  - **Implementation approach:**
+    - **Backend API** (`admin/routes/analytics.js`):
+      - [ ] `GET /api/analytics/trends?userId=<uuid>&days=30` — returns time-series data
+      - [ ] Response: `{ correctRateTrend: [{date, rate}], byPart: [{part, rate}], cumulativeQuestions: [{date, total}], activityHeatmap: [{date, count}] }`
+      - [ ] Aggregation queries on `quiz_answers` grouped by date/part
+      - [ ] Cache results (1 hour TTL) to reduce DB load
+    - **Mobile UI** (`app/progress.tsx` or section in `app/account.tsx`):
+      - [ ] Install charting library: `react-native-chart-kit` or `victory-native`
+      - [ ] Add "學習進度" tab/card in account screen
+      - [ ] Line chart component for correct rate trend (scrollable if > 30 days)
+      - [ ] Horizontal bar chart for part breakdown
+      - [ ] Area chart for cumulative questions
+      - [ ] Heatmap calendar grid (custom component or library)
+      - [ ] Require minimum data: "需要完成至少 5 次測驗才能顯示趨勢圖" placeholder
+    - **Chart interactions:**
+      - [ ] Tap data point on line chart → tooltip showing exact date + rate
+      - [ ] Tap bar in part chart → navigates to practice for that part
+      - [ ] Pinch-to-zoom on line chart for detailed view (optional)
+  - **UX considerations:**
+    - Show "需要更多數據" placeholder if user has < 5 quiz attempts
+    - Default to 30-day view, offer 7-day and 90-day toggles
+    - Highlight positive trends: "正確率上升趨勢！" badge on improving charts
+    - Avoid overwhelming with too many charts — start with 2-3 most actionable ones
+  - **Success metrics:**
+    - % of users who view progress charts at least once per week
+    - Correlation between chart viewing and study consistency
+    - Users who view charts show higher retention vs. non-viewers
+  - **Estimated effort:** 2-3 days
+    - Backend API + aggregation: 1 day
+    - Chart library integration: 1 day
+    - Mobile UI + interactions: 1 day
+
+- [ ] **#036 — FEATURE: Home Screen Widget (iOS/Android)**
+  - **Summary:** Implement native home screen widget showing daily progress, study streak, and quick action button. Reduces friction to start studying by providing at-a-glance status and one-tap entry.
+  - **Value proposition:**
+    - Home screen visibility = daily reminder without notification spam
+    - One-tap "開始練習" reduces app launch friction
+    - Shows key stats (streak, daily goal) without opening app
+    - Industry-standard feature for learning apps (Duolingo, Streaks, etc.)
+  - **Widget variants:**
+    - **Small widget** (iOS: 2×2, Android: 2×2):
+      - Shows current streak: "🔥 7 天"
+      - Tap to open app to homepage
+    - **Medium widget** (iOS: 4×2, Android: 4×2):
+      - Shows streak + daily goal progress ring
+      - "今日已完成 8 / 10 題"
+      - Tap to open app
+    - **Large widget** (iOS: 4×4, Android: 4×4, optional):
+      - Shows streak, daily goal, weekly summary (7-day activity grid)
+      - "開始練習" button → deep link to quiz screen
+  - **Implementation approach:**
+    - **iOS (WidgetKit):**
+      - [ ] Create `ios/ClassicalChineseWidget` Swift target in Xcode
+      - [ ] Implement SwiftUI widget views (small/medium/large)
+      - [ ] Fetch data via App Groups shared UserDefaults (streak, goal progress)
+      - [ ] Update widget timeline every 15 minutes (WidgetKit limitation)
+      - [ ] Handle widget tap: open app via URL scheme or universal link
+    - **Android (Glance Widget):**
+      - [ ] Create widget provider class in `android/app/src/main/java/.../widget/`
+      - [ ] Define widget layouts in XML (small/medium sizes)
+      - [ ] Use RemoteViews to update widget content
+      - [ ] Fetch data from SharedPreferences (React Native AsyncStorage)
+      - [ ] Update widget via broadcast receiver (triggered when streak/goal updates)
+    - **React Native bridge:**
+      - [ ] Expo config plugin for widget setup (or manual native code)
+      - [ ] Shared data layer: write streak/goal data to App Groups (iOS) + SharedPreferences (Android)
+      - [ ] Update widget when streak or goal changes (via native module call)
+      - [ ] Deep link handling: `classicalchineselearner://quiz` opens quiz screen
+  - **Data sync:**
+    - [ ] On quiz completion: update AsyncStorage → trigger widget refresh
+    - [ ] On daily goal completion: update widget to show checkmark
+    - [ ] On streak increment: update widget to show new count
+    - [ ] Widget timeline refreshes every 15 minutes (iOS limitation) or on-demand (Android)
+  - **UX considerations:**
+    - Widget shows cached data (may be slightly stale) — acceptable tradeoff for performance
+    - "開始練習" button deep-links to quiz lobby (not article list)
+    - Widget follows system dark mode setting
+    - Empty state if no activity yet: "開始你的學習之旅"
+  - **Limitations:**
+    - iOS WidgetKit cannot refresh more frequently than ~15 minutes (Apple limitation)
+    - Android widgets can be more dynamic but vary by launcher
+    - Requires native code — cannot be fully implemented in pure React Native/JS
+  - **Success metrics:**
+    - % of users who add widget to home screen
+    - Widget tap-through rate (opens app via widget vs. app icon)
+    - Users with widget show higher DAU vs. users without widget
+  - **Estimated effort:** 3-4 days
+    - iOS WidgetKit implementation: 1-2 days (Swift + SwiftUI)
+    - Android widget implementation: 1-2 days (Kotlin/Java + XML layouts)
+    - React Native bridge + data sync: 1 day
+    - Testing on multiple device sizes: 0.5 day
+  - **Note:** Requires native development skills (Swift for iOS, Kotlin/Java for Android). If unfamiliar, consider hiring contractor or postponing until post-launch.
+
+- [ ] **#037 — UX: Adjustable Font Size**
+  - **Summary:** Allow users to adjust text size for articles and quiz questions. Improves accessibility for vision-impaired users and accommodates personal reading preferences.
+  - **Value proposition:**
+    - Accessibility: vision-impaired students can increase font size
+    - Personal preference: some students prefer larger text for classical Chinese (complex characters)
+    - Industry standard: most reading apps offer font size adjustment
+    - Quick win: low implementation effort, high perceived value
+  - **Features:**
+    - **3 size options:** 小 (16px base) / 中 (18px base, default) / 大 (22px base)
+    - **Applies to:** article text, quiz question stems, options, explanations
+    - **Persists:** setting stored in AsyncStorage, survives app restarts
+    - **Settings location:** account screen or dedicated settings page
+  - **Implementation approach:**
+    - **State management:**
+      - [ ] Create `contexts/FontSizeContext.tsx` with `fontSize` state ('small' | 'medium' | 'large')
+      - [ ] Load from AsyncStorage on app launch: `@settings:fontSize`
+      - [ ] Provide `setFontSize(size)` function to update state + AsyncStorage
+    - **UI components:**
+      - [ ] Wrap app in `FontSizeProvider` (in `app/_layout.tsx`)
+      - [ ] Update `ArticleText.tsx`: read `fontSize` from context, apply multiplier to base sizes
+      - [ ] Update quiz components (`QuizQuestion.tsx`, `MCQuestion.tsx`, `FillBlankQuestion.tsx`, `SentenceOrderQuestion.tsx`): apply fontSize multiplier
+      - [ ] Font size multipliers: small = 0.89x, medium = 1.0x, large = 1.22x
+    - **Settings UI:**
+      - [ ] Add "字體大小" section in account screen (or create `app/settings.tsx`)
+      - [ ] 3 radio buttons: 小 / 中 / 大 with preview text: "範文字體預覽：飢腸轆轆"
+      - [ ] Instant preview: changing size immediately updates preview text
+      - [ ] Save automatically on selection (no "Save" button needed)
+  - **Technical details:**
+    - Base font sizes (medium):
+      - Article text: 18px (Georgia font)
+      - Quiz questions: 18px
+      - Footnotes: 16px
+      - UI labels: 14px (unchanged by this setting)
+    - Multipliers applied only to content text, not UI chrome (tabs, buttons, headers)
+    - Line height scales proportionally: `lineHeight = fontSize * 2.3`
+  - **UX considerations:**
+    - Preview text in settings shows actual article content font (not generic "Aa")
+    - Setting persists across sessions (user doesn't re-select every time)
+    - Large font may require more scrolling — acceptable tradeoff for readability
+    - Does not affect image sizes or layout spacing (only text)
+  - **Success metrics:**
+    - % of users who change from default font size
+    - Distribution of size preferences (most users stay on medium, or prefer large?)
+    - Accessibility improvement: qualitative feedback from vision-impaired users
+  - **Estimated effort:** 2-3 hours
+    - Context + AsyncStorage: 1 hour
+    - Update components: 1 hour
+    - Settings UI: 1 hour
+
+- [ ] **#029 — FEATURE: Magic link (passwordless email) authentication**
+  - **Summary:** Add passwordless email authentication as a second login method alongside Google OAuth. Users enter their email address and receive a one-time login link via email. No password creation or management required.
+  - **Technical approach:**
+    - Use Supabase Auth's built-in magic link feature (OTP via email)
+    - Add email input form to `app/login.tsx` with "Email" and "Google" tab selector
+    - Call `supabase.auth.signInWithOtp({ email, options: { emailRedirectTo } })`
+    - Handle email link callback in existing `app/oauth.tsx` route
+    - Show "Check your email" confirmation message after submission
+  - **Benefits:**
+    - Zero cost (same as Google OAuth, no SMS fees)
+    - Lower friction than email/password (no password creation)
+    - No password management burden (forgot password, reset flows, weak passwords)
+    - Built into Supabase Auth, minimal implementation effort (~20-30 min)
+  - **UX considerations:**
+    - Clear messaging: "我們會發送登入連結到你的電子郵件"
+    - Email delivery time: may take 10-30 seconds
+    - Requires email access each time (can't log in if email is inaccessible)
+    - Suggest keeping Google OAuth as primary/fast option for repeat users
+  - **Implementation checklist:**
+    - [ ] Add email input UI to login screen with tab selector
+    - [ ] Implement `signInWithOtp` call in AuthContext
+    - [ ] Add confirmation screen / message after email submission
+    - [ ] Update oauth.tsx to handle email magic link callback
+    - [ ] Test full flow: enter email → receive link → click link → authenticated
+    - [ ] Add error handling (invalid email, rate limiting, delivery failures)
+    - [ ] Update CLAUDE.md with new auth method documentation
 - [ ] **#024 — FEATURE: Log anonymous user quiz answer**
   - **Summary:** Currently the database (Supabase setup) only log logged-in-users' `quiz_answer` data because it is linked to the `attempt_id`. However we would like to analyze non-logged-in-users' `quiz_attempts` and `quiz_answers` data for user behavior analysis.
 - [ ] **#025 — FEATURE: Log all exercise attempt data**
