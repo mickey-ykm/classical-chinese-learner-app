@@ -10,7 +10,8 @@ import UpgradeModal from "@/components/UpgradeModal"
 
 interface ExerciseSession {
   id: string
-  article_id: string
+  article_id: string | null
+  kind: string
   score: number
   total_points: number
   finished_at: string
@@ -85,18 +86,28 @@ function AttemptRow({ attempt, title, onPress }: { attempt: ExerciseSession; tit
     ? timeDelta(attempt.total_seconds, attempt.expected_seconds)
     : null
 
+  // Exercise type badge
+  const badge =
+    attempt.kind === "dse-training" ? "🎓" :
+    attempt.kind === "weight-training" ? "💪" :
+    null
+
   return (
     <Pressable
       onPress={onPress}
       className="bg-white rounded-2xl border border-slate-100 px-4 py-3 gap-2 active:opacity-70"
     >
       <View className="flex-row justify-between items-start">
-        <Text
-          className="text-sm font-bold text-slate-800 flex-1 mr-2"
-          style={{ fontFamily: "Georgia" }}
-        >
-          {title}
-        </Text>
+        <View className="flex-row items-center gap-1.5 flex-1 mr-2">
+          {badge && <Text className="text-base">{badge}</Text>}
+          <Text
+            className="text-sm font-bold text-slate-800 flex-1"
+            style={{ fontFamily: "Georgia" }}
+            numberOfLines={1}
+          >
+            {title}
+          </Text>
+        </View>
         <Text className="text-xs text-slate-400">{formatDate(attempt.finished_at)}</Text>
       </View>
       <View className="flex-row items-center gap-2">
@@ -140,9 +151,8 @@ export default function AccountScreen() {
     if (!user) return
     supabase
       .from("exercise_sessions")
-      .select("id, article_id, score, total_points, finished_at, total_seconds, expected_seconds")
+      .select("id, article_id, kind, score, total_points, finished_at, total_seconds, expected_seconds")
       .eq("user_id", user.id)
-      .eq("kind", "article-quiz")
       .order("finished_at", { ascending: false })
       .then(({ data }) => {
         setAttempts((data as ExerciseSession[]) ?? [])
@@ -277,14 +287,27 @@ export default function AccountScreen() {
               </View>
             ) : (
               <View className="gap-2">
-                {attempts.map((attempt) => (
-                  <AttemptRow
-                    key={attempt.id}
-                    attempt={attempt}
-                    title={titleById[attempt.article_id] ?? attempt.article_id}
-                    onPress={() => router.push({ pathname: "/attempt", params: { id: attempt.id } })}
-                  />
-                ))}
+                {attempts.map((attempt) => {
+                  // Determine title based on kind
+                  let title: string
+                  if (attempt.kind === "dse-training") {
+                    title = "DSE 模擬試"
+                  } else if (attempt.kind === "weight-training") {
+                    title = "重量訓練"
+                  } else {
+                    // article-quiz: fetch article title
+                    title = attempt.article_id ? (titleById[attempt.article_id] ?? attempt.article_id) : "文章練習"
+                  }
+
+                  return (
+                    <AttemptRow
+                      key={attempt.id}
+                      attempt={attempt}
+                      title={title}
+                      onPress={() => router.push({ pathname: "/attempt", params: { id: attempt.id } })}
+                    />
+                  )
+                })}
               </View>
             )}
 

@@ -65,6 +65,8 @@ function ArticlePreviewCard({
   onStart: () => void
   progress?: { seenCount: number; totalInPool: number }
 }) {
+  const isPaid = !article.isFree
+
   return (
     <Pressable
       onPress={onStart}
@@ -72,13 +74,21 @@ function ArticlePreviewCard({
     >
       <View className="flex-row items-center justify-between">
         <View className="flex-1 mr-3">
-          <Text
-            className="text-sm font-bold text-slate-800 leading-snug mb-0.5"
-            style={{ fontFamily: "Georgia" }}
-            numberOfLines={1}
-          >
-            {article.title}
-          </Text>
+          <View className="flex-row items-center gap-1.5 mb-0.5">
+            <Text
+              className="text-sm font-bold text-slate-800 leading-snug flex-1"
+              style={{ fontFamily: "Georgia" }}
+              numberOfLines={1}
+            >
+              {article.title}
+            </Text>
+            {isPaid && (
+              <View className="flex-row items-center gap-0.5 bg-amber-50 border border-amber-200 rounded-md px-1.5 py-0.5">
+                <Text className="text-xs">🔒</Text>
+                <Text className="text-xs font-semibold text-amber-700">付費</Text>
+              </View>
+            )}
+          </View>
           <Text className="text-xs text-slate-400">{article.source}</Text>
         </View>
         <View className="items-end gap-0.5">

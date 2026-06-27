@@ -6,7 +6,8 @@ import { supabase } from "@/lib/supabase"
 import { getArticle, getPartTitles, getAllQuestions, STANDARD_PART_TITLES } from "@/lib/data"
 
 interface AttemptDetail {
-  article_id: string
+  article_id: string | null
+  kind: string
   score: number
   total_points: number
   finished_at: string
@@ -100,7 +101,7 @@ export default function AttemptScreen() {
       // Fetch session
       const { data: att, error: attErr } = await supabase
         .from("exercise_sessions")
-        .select("article_id, score, total_points, finished_at, total_seconds, expected_seconds")
+        .select("article_id, kind, score, total_points, finished_at, total_seconds, expected_seconds")
         .eq("id", id)
         .single()
 
@@ -110,7 +111,7 @@ export default function AttemptScreen() {
       }
       setAttempt(att as AttemptDetail)
 
-      // Fetch answers with question details (to get part numbers)
+      // Fetch answers
       const { data: answers, error: ansErr } = await supabase
         .from("exercise_answers")
         .select("question_id, is_correct, points_earned")
@@ -121,7 +122,74 @@ export default function AttemptScreen() {
         return
       }
 
-      // Fetch questions to get part numbers
+      // Branch by kind to determine question source
+      if (att.kind === "dse-training") {
+        // DSE training: skip part breakdown (multi-article)
+        setLoading(false)
+        return
+      }
+
+      if (att.kind === "weight-training") {
+        // Weight training: join with cross_article_questions
+        const questionIds = (answers || []).map(a => a.question_id).filter(Boolean)
+        if (questionIds.length === 0) {
+          setLoading(false)
+          return
+        }
+
+        const { data: questions, error: qErr } = await supabase
+          .from("cross_article_questions")
+          .select("id, part, points")
+          .in("id", questionIds)
+
+        if (qErr) {
+          setLoading(false)
+          return
+        }
+
+        // Build question map
+        const questionMap = new Map((questions || []).map(q => [String(q.id), q]))
+
+        // Group answers by part (7 or 8)
+        const grouped: Record<number, { correct: number; total: number; earned: number; possible: number }> = {}
+        for (const a of (answers || [])) {
+          const q = questionMap.get(String(a.question_id))
+          if (!q) continue
+
+          const part = q.part
+          if (!grouped[part]) grouped[part] = { correct: 0, total: 0, earned: 0, possible: 0 }
+          grouped[part].total++
+          if (a.is_correct) grouped[part].correct++
+          grouped[part].earned += a.points_earned
+          grouped[part].possible += q.points || 1
+        }
+
+        // Build part stats with hardcoded titles for part 7 and 8
+        const partTitles: Record<number, string> = {
+          7: "第 7 部分：一詞多義",
+          8: "第 8 部分：綜合題型",
+        }
+
+        setPartStats(
+          Object.keys(grouped)
+            .map(Number)
+            .sort()
+            .map((part) => ({
+              title: partTitles[part] ?? `第 ${part} 部分`,
+              ...grouped[part],
+            }))
+        )
+
+        setLoading(false)
+        return
+      }
+
+      // Article quiz: join with questions table (current logic)
+      if (!att.article_id) {
+        setLoading(false)
+        return
+      }
+
       const { data: questions, error: qErr } = await supabase
         .from("questions")
         .select("id, part, points")
@@ -202,8 +270,21 @@ export default function AttemptScreen() {
       ? timeDelta(attempt.total_seconds, attempt.expected_seconds)
       : null
 
-  let articleTitle = attempt.article_id
-  try { articleTitle = getArticle(attempt.article_id).title } catch {}
+  // Determine title based on kind
+  let articleTitle: string
+  if (attempt.kind === "dse-training") {
+    articleTitle = "DSE 模擬試"
+  } else if (attempt.kind === "weight-training") {
+    articleTitle = "重量訓練"
+  } else if (attempt.article_id) {
+    try {
+      articleTitle = getArticle(attempt.article_id).title
+    } catch {
+      articleTitle = attempt.article_id
+    }
+  } else {
+    articleTitle = "文章練習"
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50">

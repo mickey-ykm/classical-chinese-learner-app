@@ -8,8 +8,19 @@ import UpgradeModal from "@/components/UpgradeModal"
 import type { ArticleEntry } from "@/lib/types"
 
 function LessonCard({ article, onStart }: { article: ArticleEntry; onStart: () => void }) {
+  const isPaid = !article.isFree
+
   return (
     <View className="bg-white rounded-2xl border border-slate-100 shadow-sm px-4 pt-4 pb-3 mb-3">
+      <View className="flex-row items-center justify-between mb-2">
+        <View className="flex-1" />
+        {isPaid && (
+          <View className="flex-row items-center gap-0.5 bg-amber-50 border border-amber-200 rounded-md px-1.5 py-0.5">
+            <Text className="text-xs">🔒</Text>
+            <Text className="text-xs font-semibold text-amber-700">付費練習</Text>
+          </View>
+        )}
+      </View>
       <Text className="text-base font-bold text-slate-800 leading-snug mb-0.5" style={{ fontFamily: "Georgia" }}>
         {article.title}
       </Text>
@@ -23,12 +34,20 @@ function LessonCard({ article, onStart }: { article: ArticleEntry; onStart: () =
 }
 
 function ChallengeCard({ article, onStart }: { article: ArticleEntry; onStart: () => void }) {
+  const isPaid = !article.isFree
+
   return (
     <View className="rounded-2xl px-4 pt-4 pb-3 border border-slate-700 bg-slate-800 mb-3">
-      <View className="flex-row items-center mb-2.5">
+      <View className="flex-row items-center justify-between mb-2.5">
         <View className="bg-amber-500 rounded px-2 py-0.5">
           <Text className="text-white text-[10px] font-bold tracking-widest">章節挑戰</Text>
         </View>
+        {isPaid && (
+          <View className="flex-row items-center gap-0.5 bg-amber-50 border border-amber-200 rounded-md px-1.5 py-0.5">
+            <Text className="text-xs">🔒</Text>
+            <Text className="text-xs font-semibold text-amber-700">付費練習</Text>
+          </View>
+        )}
       </View>
       <Text className="text-base font-bold text-white leading-snug mb-0.5" style={{ fontFamily: "Georgia" }}>
         {article.title}

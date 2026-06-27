@@ -65,6 +65,100 @@ _Add new tasks here. Format: `- [ ] #N — Type: Brief description`_
   
   - **Estimated effort:** 4-6 hours (2-3 hours for carousel, 2-3 hours for tooltip system + integration)
 
+- [ ] **#039 — FEATURE: Multi-Type Exercise History in Account Screen**
+  - **Summary:** Extend account history to display all exercise types (article quiz, DSE training, weight training), not just single-article quizzes. Show appropriate metadata per type and handle different question sources in the attempt detail screen.
+  - **Current state:** `app/account.tsx` only shows `kind='article-quiz'` history. Tapping navigates to `app/attempt.tsx` which assumes single article and joins with `questions` table for part breakdown.
+  - **Goal:** Display unified history for all exercise types with proper branching logic in detail view.
+  
+  - **Implementation approach:**
+    
+    **Part 1: History List (`app/account.tsx`)**
+    - [ ] Remove `.eq("kind", "article-quiz")` filter from query (fetch all kinds)
+    - [ ] Add `kind` field to query results
+    - [ ] Update `ExerciseSession` interface to include `kind` field
+    - [ ] Update `AttemptRow` component to display different titles based on `kind`:
+      - `article-quiz`: article title from `getArticle(article_id)` (current behavior)
+      - `dse-training`: "DSE 模擬試" (article_id is null)
+      - `weight-training`: "重量訓練" (article_id is null)
+    - [ ] Add exercise type badge/icon to visually distinguish types:
+      - Article quiz: 📖 or no badge (default)
+      - DSE training: 🎓 or "DSE" badge
+      - Weight training: 💪 or "重訓" badge
+    
+    **Part 2: Attempt Detail Screen (`app/attempt.tsx`)**
+    - [ ] Add `kind` field to `AttemptDetail` interface
+    - [ ] Update query to include `kind` from `exercise_sessions`
+    - [ ] Branch title display logic:
+      - `article-quiz`: fetch from `getArticle(article_id)` (current)
+      - `dse-training`: hardcode "DSE 模擬試"
+      - `weight-training`: hardcode "重量訓練"
+    - [ ] Branch question source and part breakdown by `kind`:
+      
+      **For `article-quiz` (current logic):**
+      - Fetch answers from `exercise_answers`
+      - Join with `questions` table via `article_id`
+      - Group by `part` (Parts 1-6)
+      - Use `getPartTitles()` for part names
+      
+      **For `weight-training`:**
+      - Fetch answers from `exercise_answers`
+      - Join with `cross_article_questions` table (not `questions`)
+      - Query: `SELECT id, part, points FROM cross_article_questions WHERE id IN (...)`
+      - Group by `part` (Parts 7-8 only)
+      - Use hardcoded titles: "第 7 部分：一詞多義", "第 8 部分：綜合題型"
+      
+      **For `dse-training`:**
+      - Fetch answers from `exercise_answers`
+      - Skip part breakdown (multi-article, parts don't aggregate meaningfully)
+      - Show only total score card (no "各部分表現" section)
+      - Alternative: could show article-by-article breakdown in future
+    
+    - [ ] Conditional rendering of part breakdown section:
+      - Show for `article-quiz` and `weight-training`
+      - Hide for `dse-training`
+    
+    **Part 3: Error Handling**
+    - [ ] Handle case where `article_id` is null (weight/dse training)
+    - [ ] Handle case where question lookup fails (orphaned answers)
+    - [ ] Graceful fallback if part titles are unavailable
+  
+  - **Technical considerations:**
+    - `cross_article_questions` table has `id uuid`, `part integer`, `points integer` fields
+    - Weight training parts are always 7 or 8 (hardcoded in sampling logic)
+    - DSE training sessions store `question_ids uuid[]` in `exercise_sessions` (could use for future breakdown)
+    - Both weight and DSE training have `article_id = NULL` in `exercise_sessions`
+  
+  - **UI/UX notes:**
+    - Keep visual consistency across exercise types (same card style, same color scheme)
+    - Exercise type badge should be subtle (not overwhelming)
+    - Part 7/8 titles should be descriptive (not just "第 7 部分")
+    - Missing part breakdown for DSE training is acceptable for v1 (can enhance later)
+  
+  - **Testing checklist:**
+    - [ ] Complete article quiz → verify appears in history with article title
+    - [ ] Complete DSE training → verify appears in history as "DSE 模擬試"
+    - [ ] Complete weight training → verify appears in history as "重量訓練"
+    - [ ] Tap each type → verify attempt detail loads correctly
+    - [ ] Verify part breakdown shows correctly for article quiz (Parts 1-6)
+    - [ ] Verify part breakdown shows correctly for weight training (Parts 7-8)
+    - [ ] Verify DSE training shows total score only (no part breakdown)
+    - [ ] Test with mixed history (all three types) → verify sorting by date works
+  
+  - **Why unified screen vs separate screens:**
+    - Unified history reduces navigation complexity (one entry point)
+    - Branching logic is contained and maintainable
+    - Less code duplication than separate screens per type
+    - Future exercise types can be added incrementally
+    - Trade-off: some complexity in `attempt.tsx`, but acceptable given shared scaffolding
+  
+  - **Future enhancements (out of scope):**
+    - Article-by-article breakdown for DSE training
+    - Question-by-question drill-down view
+    - Filtering history by exercise type
+    - Export history to CSV/PDF
+  
+  - **Estimated effort:** 2-3 hours (mostly branching logic + testing)
+
 - [ ] **#031 — FEATURE: Mistake Pattern Analysis Dashboard**
   - **Summary:** Show users their weak areas by analyzing performance across question types and parts. Help students identify where to focus study time by highlighting below-average performance areas with actionable recommendations.
   - **Value proposition:**
@@ -773,3 +867,28 @@ _Completed tasks with summaries and lessons learned. Ordered by completion date 
 - **Doc:** Documentation update
 - **Test:** Add or fix tests
 - **Deploy:** Deployment or infrastructure task
+
+### 2026-06-27
+
+- [x] **#039 — FEATURE: Multi-Type Exercise History in Account Screen**
+  - **Summary:** Extended account history to display all exercise types (article quiz, DSE training, weight training) with unified history list and branching logic in attempt detail screen.
+  - **Implementation:**
+    - **History list (`app/account.tsx`):**
+      - Removed `.eq("kind", "article-quiz")` filter to fetch all exercise types
+      - Added `kind` field to `ExerciseSession` interface and query
+      - Updated title display logic: article quiz shows article title, DSE training shows "DSE 模擬試", weight training shows "重量訓練"
+      - Added exercise type badges: 🎓 for DSE training, 💪 for weight training
+    - **Attempt detail (`app/attempt.tsx`):**
+      - Added `kind` field to `AttemptDetail` interface and query
+      - Changed `article_id` to nullable (weight/DSE training have null article_id)
+      - Branched question source by `kind`:
+        - `article-quiz`: join with `questions` table (Parts 1-6)
+        - `weight-training`: join with `cross_article_questions` table (Parts 7-8 only)
+        - `dse-training`: skip part breakdown (total score only)
+      - Added hardcoded Part 7/8 titles for weight training: "第 7 部分：一詞多義", "第 8 部分：綜合題型"
+  - **Files changed:** `app/account.tsx`, `app/attempt.tsx`
+  - **Testing needed:**
+    - Complete all three exercise types and verify they appear in history
+    - Verify part breakdown displays correctly for each type
+    - Verify DSE training shows total score without part breakdown
+  - **Completed:** ✅ Code implemented, ready for testing
