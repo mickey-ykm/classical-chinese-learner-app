@@ -15,6 +15,7 @@ interface AuthContextValue {
   loading: boolean
   isAnonymous: boolean
   signInWithGoogle: () => Promise<void>
+  signInWithEmail: (email: string) => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -24,6 +25,7 @@ const AuthContext = createContext<AuthContextValue>({
   loading: true,
   isAnonymous: false,
   signInWithGoogle: async () => {},
+  signInWithEmail: async () => {},
   signOut: async () => {},
 })
 
@@ -116,6 +118,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  async function signInWithEmail(email: string) {
+    const redirectTo = "classicalchineselearnerapp://oauth"
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: redirectTo,
+      },
+    })
+
+    if (error) throw error
+    // Success: user will receive email with magic link
+  }
+
   async function signOut() {
     await supabase.auth.signOut()
     // Restore a fresh anonymous session so the app always has a real UUID.
@@ -127,7 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, isAnonymous: user?.is_anonymous ?? false, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ user, profile, loading, isAnonymous: user?.is_anonymous ?? false, signInWithGoogle, signInWithEmail, signOut }}>
       {children}
     </AuthContext.Provider>
   )

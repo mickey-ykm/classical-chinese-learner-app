@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"
-import { View, Text, Pressable, ActivityIndicator, Alert } from "react-native"
+import { View, Text, Pressable, ActivityIndicator, Alert, TextInput } from "react-native"
 import { useRouter } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { Logo } from "@/components/Logo"
@@ -7,8 +7,11 @@ import { useAuth } from "@/hooks/useAuth"
 
 export default function LoginScreen() {
   const router = useRouter()
-  const { signInWithGoogle, user, isAnonymous } = useAuth()
+  const { signInWithGoogle, signInWithEmail, user, isAnonymous } = useAuth()
   const [signingIn, setSigningIn] = useState(false)
+  const [email, setEmail] = useState("")
+  const [sendingEmail, setSendingEmail] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
   // Tracks whether we're in the middle of a fresh sign-in attempt,
   // so the success alert only fires after the session is actually confirmed.
   const justSignedIn = useRef(false)
@@ -39,6 +42,40 @@ export default function LoginScreen() {
       }
     } finally {
       setSigningIn(false)
+    }
+  }
+
+  async function handleEmailSignIn() {
+    if (!email.trim()) {
+      Alert.alert("請輸入電郵地址", "")
+      return
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      Alert.alert("電郵格式不正確", "請檢查你的電郵地址")
+      return
+    }
+
+    setSendingEmail(true)
+    justSignedIn.current = true
+    try {
+      await signInWithEmail(email)
+      setEmailSent(true)
+    } catch (e: unknown) {
+      justSignedIn.current = false
+      const message = e instanceof Error ? e.message : "發送失敗，請再試一次"
+
+      // Customize message for known errors
+      let displayMessage = message
+      if (message.toLowerCase().includes("rate limit")) {
+        displayMessage = "請稍後再試（每分鐘限一次）"
+      }
+
+      Alert.alert("發送錯誤", displayMessage)
+    } finally {
+      setSendingEmail(false)
     }
   }
 
@@ -79,6 +116,57 @@ export default function LoginScreen() {
               </>
             )}
           </Pressable>
+
+          {/* Divider */}
+          <View className="flex-row items-center gap-3">
+            <View className="flex-1 h-px bg-slate-200" />
+            <Text className="text-slate-400 text-sm">或</Text>
+            <View className="flex-1 h-px bg-slate-200" />
+          </View>
+
+          {/* Email input section */}
+          {!emailSent ? (
+            <>
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                placeholder="電郵地址"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                editable={!sendingEmail}
+                className="bg-white border border-slate-200 rounded-2xl px-4 py-4 text-slate-700"
+              />
+              <Pressable
+                onPress={handleEmailSignIn}
+                disabled={sendingEmail || !email.trim()}
+                className="bg-amber-500 rounded-2xl py-4 items-center active:opacity-80"
+                style={{ opacity: sendingEmail || !email.trim() ? 0.5 : 1 }}
+              >
+                {sendingEmail ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <Text className="text-white font-semibold text-base">
+                    發送登入連結
+                  </Text>
+                )}
+              </Pressable>
+            </>
+          ) : (
+            <View className="bg-amber-50 border border-amber-200 rounded-2xl p-4 gap-2">
+              <Text className="text-amber-800 font-semibold text-center">
+                ✉️ 登入連結已發送
+              </Text>
+              <Text className="text-amber-700 text-sm text-center">
+                請檢查你的電郵收件箱（{email}）並點擊連結以登入
+              </Text>
+              <Pressable onPress={() => setEmailSent(false)} className="mt-2">
+                <Text className="text-amber-600 text-sm text-center underline">
+                  重新輸入電郵地址
+                </Text>
+              </Pressable>
+            </View>
+          )}
         </View>
 
         <Pressable onPress={() => router.back()} hitSlop={12}>

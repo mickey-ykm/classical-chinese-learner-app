@@ -374,6 +374,17 @@ exercise_answers (
 - **OAuth callback handling**: `app/oauth.tsx` route handles the callback and redirects to home; prevents "Unmatched Route" error screen
 - **Debugging**: Test on iOS simulator first (fast iteration, real-time logs) before burning EAS Android build quota — OAuth errors manifest identically on both platforms
 
+**Magic link email authentication**
+- Uses Supabase Auth's built-in OTP (one-time password) via email feature
+- **User flow**: Enter email → receive magic link via email → tap link → logged in (no password required)
+- **Implementation**: `signInWithEmail()` in AuthContext calls `supabase.auth.signInWithOtp()` with same redirect URL as OAuth
+- **Callback handling**: Magic links use the same `classicalchineselearnerapp://oauth` callback route as Google OAuth — no separate route needed
+- **Email storage**: Supabase automatically stores email in `auth.users` table; accessible via `user.email` (same as OAuth users)
+- **Rate limiting**: Supabase limits OTP requests (typically 1 email per minute per address) to prevent abuse
+- **Link expiration**: Magic links expire after 1 hour (Supabase default)
+- **UI**: Login screen shows both Google button and email input field with divider ("或" = OR)
+- **Confirmation**: After sending email, shows amber confirmation card with user's email address and "重新輸入電郵地址" button to correct typos
+
 
 
 Before adding any new field or route to `admin/server.js`, read:
