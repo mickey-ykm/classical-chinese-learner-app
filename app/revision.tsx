@@ -130,11 +130,13 @@ export default function RevisionScreen() {
   // Quiz phase
   if (phase === "quiz" && questions.length > 0) {
     return (
-      <QuizShell
-        questions={questions}
-        exerciseType="regular"
-        onExit={handleQuizExit}
-      />
+      <SafeAreaView className="flex-1 bg-slate-50">
+        <QuizShell
+          questions={questions}
+          exerciseType="regular"
+          onExit={handleQuizExit}
+        />
+      </SafeAreaView>
     )
   }
 
