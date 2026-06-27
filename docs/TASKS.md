@@ -566,12 +566,12 @@ _Add new tasks here. Format: `- [ ] #N — Type: Brief description`_
     - Settings UI: 1 hour
 
   
-- [ ] **#024 — FEATURE: Log anonymous user quiz answer**
+- [x] **#024 — FEATURE: Log anonymous user quiz answer**
   - **Summary:** Currently the database (Supabase setup) only log logged-in-users' `quiz_answer` data because it is linked to the `attempt_id`. However we would like to analyze non-logged-in-users' `quiz_attempts` and `quiz_answers` data for user behavior analysis.
-  - **Status:** ✅ RESOLVED by #038 migration — `exercise_sessions.user_id` supports NULL for anonymous users.
-- [ ] **#025 — FEATURE: Log all exercise attempt data**
+  - **Status:** ✅ COMPLETED 2026-06-27 — Resolved by #038 migration. `exercise_sessions.user_id` supports NULL for anonymous users.
+- [x] **#025 — FEATURE: Log all exercise attempt data**
   - **Summary:** Currently the database (Supabase setup) only log single article attempt records in `quiz_attempts`. But the app now have `revision exercises` and `DSE training exercise`. We should log the records for user behavior analysis. *Beware of sampling logic*: The quiz answers should have been used for sampoling usage. So think deep about this data logic to sugggest proposals.
-  - **Status:** ✅ RESOLVED by #038 migration — DSE Training, Weight Training, and Article Quizzes all log to `exercise_sessions`. Revision exercises still need implementation.
+  - **Status:** ✅ COMPLETED 2026-06-27/28 — Resolved by #038 migration. All exercise types (Article Quiz, DSE Training, Weight Training, Revision) now log to unified `exercise_sessions` + `exercise_answers` tables.
 
 <!-- Example:
 - [ ] #007 — Bug: ...
