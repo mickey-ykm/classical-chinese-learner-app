@@ -207,6 +207,34 @@ export default function DSETrainingTab() {
             </Text>
           </Pressable>
 
+          {/* Article-based Revision */}
+          <Pressable
+            onPress={() => router.push("/revision?view=article")}
+            className="bg-white border border-slate-200 rounded-2xl px-5 py-5 mb-4 shadow-sm active:opacity-80"
+          >
+            <View className="flex-row items-center mb-2">
+              <Text className="text-2xl mr-3">📚</Text>
+              <Text className="text-base font-bold text-slate-800" style={{ fontFamily: "Georgia" }}>文章錯題重溫</Text>
+            </View>
+            <Text className="text-sm text-slate-500 leading-5">
+              按文章分類，針對性重溫各篇章的錯題。
+            </Text>
+          </Pressable>
+
+          {/* Part-based Revision (focus on Parts 7-8) */}
+          <Pressable
+            onPress={() => router.push("/revision?view=part")}
+            className="bg-white border border-slate-200 rounded-2xl px-5 py-5 mb-4 shadow-sm active:opacity-80"
+          >
+            <View className="flex-row items-center mb-2">
+              <Text className="text-2xl mr-3">🎯</Text>
+              <Text className="text-base font-bold text-slate-800" style={{ fontFamily: "Georgia" }}>文言文語基能力錯題重溫</Text>
+            </View>
+            <Text className="text-sm text-slate-500 leading-5">
+              按部分分類，集中練習特定語文基礎能力。
+            </Text>
+          </Pressable>
+
           {/* Weight Training (針對性難題訓練) */}
           <Pressable
             onPress={() => router.push("/weight-training")}

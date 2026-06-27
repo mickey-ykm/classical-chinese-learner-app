@@ -4,9 +4,11 @@ import { useRouter } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useAuth } from "@/hooks/useAuth"
 import { supabase } from "@/lib/supabase"
-import { getArticleIndex } from "@/lib/data"
+import { getArticleIndex, STANDARD_PART_TITLES } from "@/lib/data"
 import { refresh as refreshContent, clearCacheAndResync } from "@/lib/contentStore"
 import UpgradeModal from "@/components/UpgradeModal"
+
+const API_URL = process.env.EXPO_PUBLIC_ADMIN_URL || "https://ccladmin.mickey-calligraphy.art"
 
 interface ExerciseSession {
   id: string
@@ -17,6 +19,14 @@ interface ExerciseSession {
   finished_at: string
   total_seconds: number | null
   expected_seconds: number | null
+}
+
+interface RevisionSummary {
+  overall: {
+    totalMistakes: number
+    weakestPart: number | null
+    weakestPartCount: number
+  }
 }
 
 function formatDate(iso: string): string {
@@ -144,6 +154,8 @@ export default function AccountScreen() {
   const [syncing, setSyncing] = useState(false)
   const [syncMsg, setSyncMsg] = useState<string | null>(null)
   const [upgradeVisible, setUpgradeVisible] = useState(false)
+  const [revisionSummary, setRevisionSummary] = useState<RevisionSummary | null>(null)
+  const [loadingRevision, setLoadingRevision] = useState(true)
 
   const articleIndex = getArticleIndex()
   const titleById = Object.fromEntries(articleIndex.map((a) => [a.id, a.title]))
@@ -159,7 +171,22 @@ export default function AccountScreen() {
         setAttempts((data as ExerciseSession[]) ?? [])
         setLoadingAttempts(false)
       })
-  }, [user])
+
+    // Fetch revision summary
+    if (!isAnonymous) {
+      fetch(`${API_URL}/api/revision/summary?userId=${user.id}`)
+        .then(res => res.json())
+        .then(data => {
+          setRevisionSummary(data)
+          setLoadingRevision(false)
+        })
+        .catch(() => {
+          setLoadingRevision(false)
+        })
+    } else {
+      setLoadingRevision(false)
+    }
+  }, [user, isAnonymous])
 
   if (loading) return (
     <SafeAreaView className="flex-1 bg-slate-50 items-center justify-center">
@@ -273,6 +300,35 @@ export default function AccountScreen() {
         {/* Logged-in only: history + special features */}
         {!isAnonymous && (
           <>
+            {/* Revision Analytics */}
+            {!loadingRevision && revisionSummary && revisionSummary.overall.totalMistakes > 0 && (
+              <View className="mb-6">
+                <Text className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
+                  📚 錯題分析
+                </Text>
+                <View className="bg-gradient-to-br from-amber-50 to-white rounded-2xl border border-amber-200 px-5 py-4">
+                  <View className="flex-row items-center justify-between mb-3">
+                    <View>
+                      <Text className="text-2xl font-bold text-slate-800 mb-1">
+                        {revisionSummary.overall.totalMistakes} 題待重溫
+                      </Text>
+                      {revisionSummary.overall.weakestPart && (
+                        <Text className="text-sm text-slate-600">
+                          最弱部分：{STANDARD_PART_TITLES[revisionSummary.overall.weakestPart] || `第 ${revisionSummary.overall.weakestPart} 部分`} ({revisionSummary.overall.weakestPartCount} 題)
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                  <Pressable
+                    onPress={() => router.push("/revision")}
+                    className="bg-amber-500 rounded-xl py-3 active:opacity-80"
+                  >
+                    <Text className="text-white font-semibold text-center">開始重溫</Text>
+                  </Pressable>
+                </View>
+              </View>
+            )}
+
             <Text className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
               完成的練習
             </Text>

@@ -38,7 +38,9 @@ export default function RevisionScreen() {
   const params = useLocalSearchParams()
 
   const [phase, setPhase] = useState<"lobby" | "quiz">("lobby")
-  const [view, setView] = useState<"article" | "part">("article")
+  const [view, setView] = useState<"article" | "part">(
+    params.view === "part" ? "part" : "article"
+  )
   const [loading, setLoading] = useState(true)
   const [summary, setSummary] = useState<RevisionSummary | null>(null)
   const [questions, setQuestions] = useState<Question[]>([])

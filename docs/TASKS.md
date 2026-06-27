@@ -892,3 +892,59 @@ _Completed tasks with summaries and lessons learned. Ordered by completion date 
     - Verify part breakdown displays correctly for each type
     - Verify DSE training shows total score without part breakdown
   - **Completed:** ✅ Code implemented, ready for testing
+
+- [ ] **#040 — UX: Add revision shortcuts to DSE training lobby**
+  - **Summary:** Add two new buttons in DSE training lobby to quickly access revision exercises: "文章錯題重溫" (article-based) and "文言文語基能力錯題重溫" (part-based, specifically for Parts 7-8 weight training mistakes).
+  - **Rationale:** Students doing DSE training often want to revise their mistakes immediately. Currently they must navigate to the separate 溫故知新 screen. Adding shortcuts in the DSE training lobby streamlines the workflow.
+  - **Implementation:**
+    - Add two buttons in `app/(tabs)/dse-training.tsx` lobby screen (below DSE mock + 溫故知新 existing buttons)
+    - Button 1: "文章錯題重溫" → Navigate to `/revision` (default article view)
+    - Button 2: "文言文語基能力錯題重溫" → Navigate to `/revision?view=part` (filtered to show Parts 7-8 only, or just open part view)
+    - Both buttons should show mistake count badge if available (fetch from summary API)
+  - **UI Design:**
+    - Similar card style to existing DSE mock card
+    - Icon: 📚 for article mistakes, 🎯 for part-based mistakes
+    - Show total mistake count as badge (e.g., "27 題待重溫")
+  - **Estimated effort:** 1 hour
+
+- [ ] **#041 — FEATURE: Include mistakes in weight training sampling (no repeat avoidance for wrong questions)**
+  - **Summary:** Modify weight training sampling logic so that questions the student got wrong are NOT avoided in future weight training sessions. Currently, weight training uses repeat avoidance for ALL previously seen questions. This prevents students from practicing their weak areas.
+  - **Current behavior:** Weight training samples 10 questions (5 Part 7 + 5 Part 8) with repeat avoidance based on `exercise_answers` history. All seen questions are deprioritized.
+  - **Desired behavior:** 
+    - Questions answered correctly: avoid (current behavior)
+    - Questions answered incorrectly: include in sampling pool with HIGHER priority (not lower)
+    - This creates a natural learning loop: weak questions appear more often until mastered
+  - **Tricky aspects:**
+    - Need to distinguish "seen and correct" vs "seen and wrong" in sampling logic
+    - May need to adjust scoring algorithm in `admin/lib/weight-training-sampling.js`
+    - Should wrong questions appear in EVERY session, or with smart frequency? (requires design decision)
+    - Pool exhaustion: what if all questions are "wrong"? Still need some variety
+  - **Design questions to answer before implementation:**
+    1. Should wrong questions appear in EVERY weight training session? Or weighted probability?
+    2. Should a question disappear from weight training once answered correctly? Or after N consecutive correct answers?
+    3. Should weight training pool and revision pool be separate or unified?
+  - **Estimated effort:** 2-3 hours (includes design discussion + implementation)
+  - **Status:** Blocked pending design decisions
+
+- [ ] **#042 — UX: Add revision analytics to account screen**
+  - **Summary:** Move the revision analytics view (overall stats, weakest part, article/part breakdown) from the 溫故知新 lobby to the account screen. Keep the exercise history as a simple list view.
+  - **Current state:**
+    - Account screen: shows exercise history list (article quiz, DSE training, weight training, revision)
+    - 溫故知新 screen: shows analytics (total mistakes, weakest part, article/part grouping)
+  - **Desired state:**
+    - Account screen: exercise history list (current) + NEW revision analytics section
+    - 溫故知新 screen: remains as lobby for starting revision exercises (simplified, less analytics-heavy)
+  - **Implementation:**
+    - Add new section in `app/account.tsx` (logged-in users only)
+    - Fetch `/api/revision/summary?userId=<uuid>` in account screen
+    - Display card showing:
+      - Total mistakes: X 題待重溫
+      - Weakest part: Part N (Y 題)
+      - Button: "開始重溫" → navigate to `/revision`
+    - Optional: show mini breakdown (top 3 weakest areas)
+  - **Benefits:**
+    - Account screen becomes a true dashboard (progress + weak areas)
+    - Students see actionable insights immediately on account page
+    - 溫故知新 screen becomes more focused (just start quiz, less analytics clutter)
+  - **Estimated effort:** 1.5 hours
+
