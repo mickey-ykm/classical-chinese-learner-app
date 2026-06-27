@@ -165,9 +165,8 @@ export default function DSETrainingTab() {
       console.error('DSE training save error:', err)
     }
 
-    Alert.alert("測驗完成", `你答對了 ${score} / ${total} 題`, [
-      { text: "返回", onPress: () => router.back() }
-    ])
+    // Navigate back without showing alert (consistent with other exercise types)
+    router.back()
   }, [user, questions, router])
 
   // Mode selection screen

@@ -120,29 +120,24 @@ export default function QuizShell({
 
   // Save quiz results when finished
   useEffect(() => {
-    if (isFinished && !hasSaved && onSave) {
-      const totalSeconds = Math.floor((Date.now() - startedAtRef.current) / 1000)
-      const { earned } = calculateScore(questions, answers)
+    if (!isFinished) return
+    if (hasSaved) return
 
+    const totalSeconds = Math.floor((Date.now() - startedAtRef.current) / 1000)
+    const { earned, total } = calculateScore(questions, answers)
+
+    if (onSave) {
+      // Custom save handler provided (weight-training, dse-training, revision)
       if (exerciseType === "weight-training" || exerciseType === "dse-training") {
-        // New signature: pass answers object
-        onSave(earned, questions.length, answers)
+        // Pass answers object for backend processing
+        onSave(earned, total, answers)
       } else {
-        // Old signature: pass totalSeconds
-        onSave(earned, questions.length, totalSeconds)
+        // Regular article quiz: pass totalSeconds
+        onSave(earned, total, totalSeconds)
       }
       setHasSaved(true)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isFinished, hasSaved, onSave, exerciseType, questions])
-
-  useEffect(() => {
-    if (!isFinished) return
-    const totalSecs = Math.floor((Date.now() - startedAtRef.current) / 1000)
-    const { earned, total } = calculateScore(questions, answers)
-    if (onSave) {
-      onSave(earned, total, totalSecs)
     } else if (articleId) {
+      // Default save for article quiz (no custom handler)
       saveQuizAttemptToExerciseSessions(
         user?.id ?? null,
         articleId,
@@ -150,11 +145,14 @@ export default function QuizShell({
         answers,
         earned,
         total,
-        totalSecs,
+        totalSeconds,
         expectedMinutes != null ? expectedMinutes * 60 : undefined,
-      ).then(() => { onFinished?.() }).catch(() => {})
+      ).then(() => {
+        setHasSaved(true)
+        onFinished?.()
+      }).catch(() => {})
     }
-  }, [isFinished])
+  }, [isFinished, hasSaved])
 
   const isLastQuestion = currentIndex + 1 >= questions.length
 
