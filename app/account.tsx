@@ -303,22 +303,16 @@ export default function AccountScreen() {
             {/* Revision Analytics */}
             {!loadingRevision && revisionSummary && revisionSummary.overall.totalMistakes > 0 && (
               <View className="mb-6">
-                <Text className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
-                  文言文能力分析
-                </Text>
                 <View className="bg-gradient-to-br from-amber-50 to-white rounded-2xl border border-amber-200 px-5 py-4">
-                  <View className="flex-row items-center justify-between mb-3">
-                    <View>
-                      <Text className="text-2xl font-bold text-slate-800 mb-1">
-                        {revisionSummary.overall.totalMistakes} 題失誤
-                      </Text>
-                      {revisionSummary.overall.weakestPart && (
-                        <Text className="text-sm text-slate-600">
-                          最弱部分：{STANDARD_PART_TITLES[revisionSummary.overall.weakestPart] || `第 ${revisionSummary.overall.weakestPart} 部分`} ({revisionSummary.overall.weakestPartCount} 題)
-                        </Text>
-                      )}
-                    </View>
-                  </View>
+                  <Text className="text-2xl font-bold text-slate-800 mb-2">
+                    文言文能力分析
+                  </Text>
+                  <Text className="text-sm text-slate-600 mb-4">
+                    {revisionSummary.overall.totalMistakes} 題失誤
+                    {revisionSummary.overall.weakestPart && (
+                      <>：最弱部分 {STANDARD_PART_TITLES[revisionSummary.overall.weakestPart] || `第 ${revisionSummary.overall.weakestPart} 部分`} ({revisionSummary.overall.weakestPartCount} 題)</>
+                    )}
+                  </Text>
                   <Pressable
                     onPress={() => router.push("/revision")}
                     className="bg-amber-500 rounded-xl py-3 active:opacity-80"
