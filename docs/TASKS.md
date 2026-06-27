@@ -471,32 +471,6 @@ _Add new tasks here. Format: `- [ ] #N — Type: Brief description`_
     - Update components: 1 hour
     - Settings UI: 1 hour
 
-- [ ] **#029 — FEATURE: Magic link (passwordless email) authentication**
-  - **Summary:** Add passwordless email authentication as a second login method alongside Google OAuth. Users enter their email address and receive a one-time login link via email. No password creation or management required.
-  - **Technical approach:**
-    - Use Supabase Auth's built-in magic link feature (OTP via email)
-    - Add email input form to `app/login.tsx` with "Email" and "Google" tab selector
-    - Call `supabase.auth.signInWithOtp({ email, options: { emailRedirectTo } })`
-    - Handle email link callback in existing `app/oauth.tsx` route
-    - Show "Check your email" confirmation message after submission
-  - **Benefits:**
-    - Zero cost (same as Google OAuth, no SMS fees)
-    - Lower friction than email/password (no password creation)
-    - No password management burden (forgot password, reset flows, weak passwords)
-    - Built into Supabase Auth, minimal implementation effort (~20-30 min)
-  - **UX considerations:**
-    - Clear messaging: "我們會發送登入連結到你的電子郵件"
-    - Email delivery time: may take 10-30 seconds
-    - Requires email access each time (can't log in if email is inaccessible)
-    - Suggest keeping Google OAuth as primary/fast option for repeat users
-  - **Implementation checklist:**
-    - [ ] Add email input UI to login screen with tab selector
-    - [ ] Implement `signInWithOtp` call in AuthContext
-    - [ ] Add confirmation screen / message after email submission
-    - [ ] Update oauth.tsx to handle email magic link callback
-    - [ ] Test full flow: enter email → receive link → click link → authenticated
-    - [ ] Add error handling (invalid email, rate limiting, delivery failures)
-    - [ ] Update CLAUDE.md with new auth method documentation
 - [ ] **#024 — FEATURE: Log anonymous user quiz answer**
   - **Summary:** Currently the database (Supabase setup) only log logged-in-users' `quiz_answer` data because it is linked to the `attempt_id`. However we would like to analyze non-logged-in-users' `quiz_attempts` and `quiz_answers` data for user behavior analysis.
 - [ ] **#025 — FEATURE: Log all exercise attempt data**
@@ -549,6 +523,36 @@ _Finished by Claude, awaiting Mickey's validation. Once validated → move to **
 ## Done (Recent)
 
 _Completed tasks with summaries and lessons learned. Ordered by completion date (newest first)._
+
+### 2026-06-27
+
+- [x] **#029 — FEATURE: Magic link (passwordless email) authentication**
+  - **Summary:** Implemented passwordless email authentication as second login method alongside Google OAuth. Users enter email address, receive magic link via email, tap link to log in. No password creation or management required.
+  - **Implementation:**
+    - Added `signInWithEmail()` method to AuthContext using `supabase.auth.signInWithOtp()`
+    - Updated login screen with email input field, divider ("或"), and confirmation card
+    - Updated `oauth.tsx` to handle authorization code exchange for both OAuth and magic links
+    - Added error handling for expired links (60 sec default) and rate limiting
+  - **Technical details:**
+    - Magic links use same PKCE flow as OAuth (authorization code exchange via `exchangeCodeForSession`)
+    - Requires Gmail SMTP setup in Supabase Dashboard for rate limit >2 emails/hour (default Supabase limit is 2/hour)
+    - Gmail SMTP provides 500 emails/day free tier, suitable for development and small-scale production
+    - Both auth methods share same callback route (`classicalchineselearnerapp://oauth`)
+    - Email stored automatically in `auth.users` table, accessible via `user.email`
+  - **UI:** Google button + "或" divider + email input (Option C layout chosen by user)
+  - **Files changed:** `contexts/AuthContext.tsx`, `app/login.tsx`, `app/oauth.tsx`, `CLAUDE.md`
+  - **Lessons learned:**
+    - Magic links expire after 60 seconds by default - can be extended in Supabase email templates
+    - Gmail SMTP app password must have no spaces (16 chars continuous)
+    - SMTP sender email must match Gmail address exactly (not custom domain)
+    - Default Supabase email service has strict 2 emails/hour limit that requires SMTP for higher volume
+    - Magic links return authorization `code` parameter (not `token`), same as OAuth
+  - **Validated:** ✅ Email sent via Gmail SMTP, link opens app, session established, user logged in
+
+- [x] **#024 — FEATURE: Log anonymous user quiz answer**
+  - **Summary:** Currently the database (Supabase setup) only log logged-in-users' `quiz_answer` data because it is linked to the `attempt_id`. However we would like to analyze non-logged-in-users' `quiz_attempts` and `quiz_answers` data for user behavior analysis.
+- [x] **#025 — FEATURE: Log all exercise attempt data**
+  - **Summary:** Currently the database (Supabase setup) only log single article attempt records in `quiz_attempts`. But the app now have `revision exercises` and `DSE training exercise`. We should log the records for user behavior analysis. *Beware of sampling logic*: The quiz answers should have been used for sampoling usage. So think deep about this data logic to sugggest proposals.
 
 ### 2026-06-23
 
