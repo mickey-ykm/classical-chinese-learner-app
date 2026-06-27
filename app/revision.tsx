@@ -131,6 +131,11 @@ export default function RevisionScreen() {
   if (phase === "quiz" && questions.length > 0) {
     return (
       <SafeAreaView className="flex-1 bg-slate-50">
+        <View className="px-4 pt-4 pb-2">
+          <Pressable onPress={handleQuizExit} hitSlop={12} className="self-start">
+            <Text className="text-amber-600 font-semibold text-sm">← 退出</Text>
+          </Pressable>
+        </View>
         <QuizShell
           questions={questions}
           exerciseType="regular"
