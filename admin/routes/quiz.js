@@ -75,30 +75,31 @@ router.get("/dse-mock/sample", async (req, res) => {
     // If userId provided, get all seen questions across ALL DSE articles first
     if (userId) {
       const { data: dseAttempts, error: dseAttErr } = await supabase
-        .from("quiz_attempts")
-        .select("id, article_id, completed_at")
+        .from("exercise_sessions")
+        .select("id, article_id, finished_at")
+        .eq("kind", "article-quiz")
         .eq("user_id", userId)
         .in("article_id", pickedArticles.map(a => a.id))
 
       if (!dseAttErr && dseAttempts && dseAttempts.length > 0) {
         const attemptIds = dseAttempts.map(a => a.id)
         const { data: answers, error: ansErr } = await supabase
-          .from("quiz_answers")
-          .select("question_id, attempt_id")
-          .in("attempt_id", attemptIds)
+          .from("exercise_answers")
+          .select("question_id, session_id")
+          .in("session_id", attemptIds)
 
         if (!ansErr && answers) {
-          // Build map: question_id -> max(completed_at)
-          const attemptToCompletedAt = {}
+          // Build map: question_id -> max(finished_at)
+          const attemptToFinishedAt = {}
           for (const att of dseAttempts) {
-            attemptToCompletedAt[att.id] = att.completed_at
+            attemptToFinishedAt[att.id] = att.finished_at
           }
 
           for (const ans of answers) {
             const qid = String(ans.question_id)
-            const completedAt = attemptToCompletedAt[ans.attempt_id]
-            if (!seenAcrossArticles.has(qid) || completedAt > seenAcrossArticles.get(qid)) {
-              seenAcrossArticles.set(qid, completedAt)
+            const finishedAt = attemptToFinishedAt[ans.session_id]
+            if (!seenAcrossArticles.has(qid) || finishedAt > seenAcrossArticles.get(qid)) {
+              seenAcrossArticles.set(qid, finishedAt)
             }
           }
         }
@@ -226,10 +227,11 @@ router.get("/progress", async (req, res) => {
     const { userId } = req.query
     if (!userId) return res.json({ progress: {} })
 
-    // 1. Get all quiz attempts for this user
+    // 1. Get all article-quiz sessions for this user
     const { data: attempts, error: attErr } = await supabase
-      .from("quiz_attempts")
-      .select("id, article_id, score, total_points, completed_at")
+      .from("exercise_sessions")
+      .select("id, article_id, score, total_points, finished_at")
+      .eq("kind", "article-quiz")
       .eq("user_id", userId)
 
     if (attErr) throw new Error(attErr.message)
@@ -248,23 +250,23 @@ router.get("/progress", async (req, res) => {
       articleStats[aid].attemptIds.push(a.id)
     }
 
-    // 3. Get distinct seen question IDs per article via quiz_answers
+    // 3. Get distinct seen question IDs per article via exercise_answers
     const allAttemptIds = attempts.map((a) => a.id)
     const { data: answers, error: ansErr } = await supabase
-      .from("quiz_answers")
-      .select("attempt_id, question_id")
-      .in("attempt_id", allAttemptIds)
+      .from("exercise_answers")
+      .select("session_id, question_id")
+      .in("session_id", allAttemptIds)
 
     if (ansErr) throw new Error(ansErr.message)
 
-    // Build attempt_id -> article_id map
-    const attemptToArticle = {}
-    for (const a of attempts) attemptToArticle[a.id] = a.article_id
+    // Build session_id -> article_id map
+    const sessionToArticle = {}
+    for (const a of attempts) sessionToArticle[a.id] = a.article_id
 
     // Build per-article set of seen question IDs
     const seenByArticle = {}
     for (const ans of answers || []) {
-      const aid = attemptToArticle[ans.attempt_id]
+      const aid = sessionToArticle[ans.session_id]
       if (!aid) continue
       if (!seenByArticle[aid]) seenByArticle[aid] = new Set()
       seenByArticle[aid].add(String(ans.question_id))

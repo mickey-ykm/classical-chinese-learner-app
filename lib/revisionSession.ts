@@ -18,17 +18,18 @@ const REVISION_SAMPLE_SIZE = 15
 
 export async function fetchRevisionQuestions(userId: string): Promise<WrongQuestion[]> {
   const { data, error } = await supabase
-    .from("quiz_answers")
-    .select("question_id, is_correct, quiz_attempts!inner(article_id, user_id)")
-    .eq("quiz_attempts.user_id", userId)
+    .from("exercise_answers")
+    .select("question_id, is_correct, exercise_sessions!inner(article_id, user_id)")
+    .eq("exercise_sessions.user_id", userId)
     .eq("is_correct", false)
 
   if (error || !data) return []
 
   // Tally wrong counts per (article_id, question_id)
   const tally = new Map<string, { articleId: string; questionId: string; count: number }>()
-  for (const row of data as unknown as Array<{ question_id: string; is_correct: boolean; quiz_attempts: { article_id: string } }>) {
-    const articleId = row.quiz_attempts.article_id
+  for (const row of data as unknown as Array<{ question_id: string; is_correct: boolean; exercise_sessions: { article_id: string } }>) {
+    const articleId = row.exercise_sessions.article_id
+    if (!articleId) continue // Skip revision sessions without article_id
     const key = `${articleId}::${row.question_id}`
     const existing = tally.get(key)
     if (existing) {
@@ -66,9 +67,9 @@ export async function fetchRevisionQuestions(userId: string): Promise<WrongQuest
 
 export async function countRevisionMistakes(userId: string): Promise<number> {
   const { count, error } = await supabase
-    .from("quiz_answers")
-    .select("question_id, quiz_attempts!inner(user_id)", { count: "exact", head: true })
-    .eq("quiz_attempts.user_id", userId)
+    .from("exercise_answers")
+    .select("question_id, exercise_sessions!inner(user_id)", { count: "exact", head: true })
+    .eq("exercise_sessions.user_id", userId)
     .eq("is_correct", false)
 
   if (error) return 0

@@ -1,0 +1,337 @@
+// Classical Chinese Learner App - Database Schema
+// Generated: 2026-06-27
+// Use at: https://dbdiagram.io
+
+// ============================================================================
+// AUTH & USER PROFILES
+// ============================================================================
+
+Table profiles {
+  id uuid [pk, ref: > auth.users.id, note: 'References Supabase auth.users']
+  email text
+  display_name text
+  avatar_url text
+  revenuecat_id text [note: 'RevenueCat customer ID for subscription management']
+  is_pro boolean [default: false, note: 'Synced via RevenueCat webhook']
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+
+  Note: 'User profile data. Auto-created on signup via trigger. is_pro denormalized for fast access checks.'
+}
+
+Table admin_users {
+  id uuid [pk, default: `gen_random_uuid()`]
+  email text [unique, not null]
+  password_hash text [not null, note: 'bcrypt hash']
+  display_name text
+  created_at timestamptz [default: `now()`]
+
+  Note: 'Admin portal users. Separate from end-user auth.'
+}
+
+Table admin_sessions {
+  sid text [pk, note: 'Session ID']
+  sess jsonb [not null, note: 'Session data (express-session format)']
+  expires_at timestamptz [not null, note: 'Auto-cleanup after expiry']
+
+  indexes {
+    expires_at [name: 'admin_sessions_expires_idx']
+  }
+
+  Note: 'Supabase-backed session store for admin portal. Survives Railway restarts.'
+}
+
+// ============================================================================
+// CONTENT TABLES
+// ============================================================================
+
+Table articles {
+  id text [pk, note: 'Human-readable slug (e.g. "wang-rong-he-jiao")']
+  title text [not null]
+  source text [note: 'Original source text reference']
+  article_type text [not null, default: 'other', note: 'Enum: dse-exam | dse-non-exam | other']
+  is_dse_core boolean [not null, default: false, note: 'Auto-derived: true when article_type = dse-exam']
+  is_challenge boolean [default: false]
+  is_free boolean [not null, default: false, note: 'Controls free-tier access']
+  segments jsonb [not null, note: 'Array of text segments']
+  footnotes jsonb [not null, note: 'Footnote definitions']
+  modern_translation jsonb [note: 'Modern Chinese translation']
+  title_footnote_id text
+  expected_minutes integer [note: 'Admin-set expected completion time']
+  quiz_json jsonb [note: 'DERIVED CACHE from questions table. Never edit directly.']
+  status text [not null, default: 'draft', note: 'Enum: draft | published | archived']
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+
+  indexes {
+    (article_type, status)
+    (is_dse_core, status)
+  }
+
+  Note: '''
+  Core content table. quiz_json is a derived cache rebuilt via rebuildQuizJson()
+  after any question change. Mobile app reads quiz_json directly at runtime.
+  '''
+}
+
+Table questions {
+  id uuid [pk, default: `gen_random_uuid()`]
+  article_id text [ref: > articles.id, note: 'Parent article']
+  type text [not null, note: 'Pedagogical type (e.g. mc-single, fill-blank)']
+  format text [not null, note: 'Enum: mc | fill-blank | sentence-order']
+  part integer [note: 'Quiz part number (1-6) for sampling quotas']
+  points integer [not null, default: 1]
+  stem text [not null, note: 'Question text']
+  options jsonb [note: 'MC options: {A: "text", B: "text", ...}']
+  correct_answer text [not null, note: 'Key for MC, text for fill-blank, sequence for sentence-order']
+  explanation text
+  source_excerpt text [note: 'Original passage excerpt for context']
+  select_count integer [not null, default: 1, note: 'MC: 1 for single-select, 2+ for multi-select']
+  sequence_tokens jsonb [note: 'Sentence-order: array of tokens to arrange']
+  question_types text[] [note: 'Pedagogical labels: 字詞解釋, 語句背誦, etc.']
+  status text [not null, default: 'draft', note: 'Enum: draft | published | archived']
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+
+  indexes {
+    (article_id, type, status)
+    (article_id, status)
+  }
+
+  Note: '''
+  Question pool. Each article can have 50+ questions. Quizzes sample 22 questions
+  per session with smart repeat avoidance. Published questions are compiled into
+  articles.quiz_json for mobile consumption.
+  '''
+}
+
+Table quiz_prompts {
+  id text [pk, note: 'Human-readable slug (not UUID)']
+  name text [not null, unique]
+  description text
+  prompt_template text [not null, note: 'LLM prompt with {{placeholders}}']
+  default_model text [note: 'OpenRouter model ID']
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+
+  Note: 'Reusable LLM prompts for quiz generation. Admin can create/edit via UI.'
+}
+
+Table article_versions {
+  id uuid [pk, default: `gen_random_uuid()`]
+  article_id text [ref: > articles.id]
+  snapshot jsonb [not null, note: 'Full article + metadata snapshot']
+  edited_by text [note: 'Admin user email']
+  edited_at timestamptz [default: `now()`]
+
+  indexes {
+    (article_id, edited_at)
+  }
+
+  Note: 'Audit log. Every article save creates a version snapshot for revert capability.'
+}
+
+// ============================================================================
+// WEIGHT TRAINING (CROSS-ARTICLE QUESTIONS)
+// ============================================================================
+
+Table cross_article_questions {
+  id uuid [pk, default: `gen_random_uuid()`]
+  question_text text [not null]
+  format text [not null, note: 'Enum: mc | fill-blank | sentence-order']
+  part integer [not null, note: 'Weight training part: 7 or 8']
+  options jsonb [note: 'MC options: {A: "text", B: "text", ...}']
+  correct_answer text [not null]
+  explanation text
+  select_count integer [not null, default: 1, note: 'MC: 1 for single, 2+ for multi-select']
+  points integer [not null, note: 'Auto-calculated: count of correct answers']
+  status text [not null, default: 'draft', note: 'Enum: draft | published']
+  created_at timestamptz [default: `now()`]
+  updated_at timestamptz [default: `now()`]
+
+  indexes {
+    (part, status)
+  }
+
+  Note: '''
+  Cross-article questions for Weight Training feature. Can relate to multiple articles
+  (via junction table). Part 7 and 8 only. Points auto-calculated from correct_answer count.
+  '''
+}
+
+Table cross_article_question_articles {
+  question_id uuid [ref: > cross_article_questions.id]
+  article_id text [ref: > articles.id]
+
+  indexes {
+    (question_id, article_id) [pk]
+    article_id
+  }
+
+  Note: 'Junction table: many-to-many relationship between cross-article questions and articles.'
+}
+
+// ============================================================================
+// USER PROGRESS & HISTORY
+// ============================================================================
+
+Table read_progress {
+  user_id uuid [ref: > profiles.id]
+  article_id text [not null]
+  read_at timestamptz [default: `now()`]
+
+  indexes {
+    (user_id, article_id) [pk]
+  }
+
+  Note: 'Tracks which articles user has read. Synced from mobile AsyncStorage on first login.'
+}
+
+Table quiz_attempts {
+  id uuid [pk, default: `gen_random_uuid()`]
+  user_id uuid [ref: > profiles.id, note: 'Null for anonymous users']
+  article_id text [not null]
+  completed_at timestamptz [default: `now()`]
+  score integer [not null]
+  total_points integer [not null]
+  total_seconds integer [note: 'Time taken']
+  expected_seconds integer [note: 'Snapshot of expected time at start']
+
+  indexes {
+    (user_id, completed_at)
+    (user_id, article_id, completed_at)
+  }
+
+  Note: '''
+  Single-article quiz attempts. Legacy table still used for article-specific quizzes.
+  DSE Training and Weight Training use exercise_sessions instead.
+  '''
+}
+
+Table quiz_answers {
+  id uuid [pk, default: `gen_random_uuid()`]
+  attempt_id uuid [ref: > quiz_attempts.id]
+  question_id text [not null, note: 'Stores UUID strings (Supabase) or numeric strings (legacy bundled)']
+  part_number integer [not null]
+  user_choice text [note: 'User answer (format depends on question type)']
+  correct_choice text [note: 'Correct answer']
+  is_correct boolean [not null]
+  points_earned integer [not null, note: 'Supports partial credit for multi-select']
+
+  indexes {
+    attempt_id
+    (attempt_id, question_id)
+  }
+
+  Note: '''
+  Individual answers within a quiz attempt. Supports partial credit scoring
+  (e.g., multi-select MC awards points per correct selection).
+  '''
+}
+
+Table exercise_sessions {
+  id uuid [pk, default: `gen_random_uuid()`]
+  user_id uuid [ref: > profiles.id, note: 'Null for anonymous users']
+  article_id text [ref: > articles.id, note: 'Null for cross-article exercises']
+  kind text [not null, note: 'Enum: weight-training | dse-training | article-quiz']
+  question_type text [note: 'Weight training only: question type filter']
+  question_ids uuid[] [note: 'Sampled question IDs for this session']
+  started_at timestamptz [default: `now()`]
+  finished_at timestamptz
+  total_seconds integer [note: 'Actual time taken']
+  expected_seconds integer [note: 'Expected time at start']
+  score integer
+  total_points integer
+
+  indexes {
+    (user_id, finished_at)
+    (user_id, kind, finished_at)
+  }
+
+  Note: '''
+  Unified exercise session tracking. Replaces quiz_attempts for new exercise types
+  (DSE Training, Weight Training). kind=article-quiz for regular article quizzes.
+  '''
+}
+
+Table exercise_answers {
+  id uuid [pk, default: `gen_random_uuid()`]
+  session_id uuid [ref: > exercise_sessions.id]
+  question_id uuid [note: 'References cross_article_questions.id for weight-training']
+  user_answer text
+  is_correct boolean [not null]
+  points_earned integer [not null, note: 'Supports partial credit']
+
+  indexes {
+    session_id
+    (session_id, question_id)
+  }
+
+  Note: '''
+  Individual answers within an exercise session. Supports cross-article questions
+  and partial credit scoring.
+  '''
+}
+
+// ============================================================================
+// REFERENCE: Supabase auth.users (not managed by app)
+// ============================================================================
+
+Table auth.users {
+  id uuid [pk, note: 'Managed by Supabase Auth']
+  email text
+  raw_user_meta_data jsonb
+  created_at timestamptz
+
+  Note: 'Supabase managed auth table. Not directly modified by app.'
+}
+
+// ============================================================================
+// ENUM CONSTRAINTS (documented here, enforced via CHECK in PostgreSQL)
+// ============================================================================
+
+// articles.article_type: 'dse-exam' | 'dse-non-exam' | 'other'
+// articles.status: 'draft' | 'published' | 'archived'
+// questions.format: 'mc' | 'fill-blank' | 'sentence-order'
+// questions.status: 'draft' | 'published' | 'archived'
+// cross_article_questions.format: 'mc' | 'fill-blank' | 'sentence-order'
+// cross_article_questions.status: 'draft' | 'published'
+// exercise_sessions.kind: 'weight-training' | 'dse-training' | 'article-quiz'
+
+// ============================================================================
+// KEY BUSINESS RULES
+// ============================================================================
+
+// 1. quiz_json CACHE INVALIDATION
+//    - articles.quiz_json is a DERIVED CACHE from questions table
+//    - Must call rebuildQuizJson(articleId) after ANY question change:
+//      * Question publish/unpublish
+//      * Question edit (if published)
+//      * Question delete
+//      * Bulk operations
+//    - rebuildQuizJson() rebuilds quiz_json + bumps articles.updated_at
+//    - Mobile app syncs via updated_at timestamp
+
+// 2. DSE CORE DERIVATION
+//    - articles.is_dse_core = (article_type === 'dse-exam')
+//    - Never set independently; always derived in articleToRow()
+
+// 3. WEIGHT TRAINING POINTS
+//    - cross_article_questions.points = count of correct answers in correct_answer
+//    - Auto-calculated on save (e.g., "A,C,E" → 3 points)
+//    - Supports partial credit scoring in exercise_answers.points_earned
+
+// 4. ANONYMOUS USER LOGGING
+//    - quiz_attempts.user_id and exercise_sessions.user_id can be NULL
+//    - Anonymous users can complete exercises; no history sync
+
+// 5. QUESTION POOL SAMPLING
+//    - Each article quiz samples 22 questions: 6+2+4+2+2+6 (parts 1-6)
+//    - Sampling endpoint: GET /api/quiz/:articleId/sample?userId=<uuid>
+//    - Smart repeat avoidance: unseen first, then least-recently-seen
+//    - Pool progress tracked per user per article
+
+// 6. CROSS-ARTICLE EXERCISES
+//    - Weight Training: 5 Part 7 + 5 Part 8 questions from cross_article_questions
+//    - DSE Training: 22 questions per article × 2-3 randomly selected DSE articles
+//    - Both use exercise_sessions (not quiz_attempts)

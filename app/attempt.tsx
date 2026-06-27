@@ -9,7 +9,7 @@ interface AttemptDetail {
   article_id: string
   score: number
   total_points: number
-  completed_at: string
+  finished_at: string
   total_seconds: number | null
   expected_seconds: number | null
 }
@@ -99,26 +99,26 @@ export default function AttemptScreen() {
     async function load() {
       const [{ data: att }, { data: ans }] = await Promise.all([
         supabase
-          .from("quiz_attempts")
-          .select("article_id, score, total_points, completed_at, total_seconds, expected_seconds")
+          .from("exercise_sessions")
+          .select("article_id, score, total_points, finished_at, total_seconds, expected_seconds")
           .eq("id", id)
           .single(),
         supabase
-          .from("quiz_answers")
-          .select("part_number, is_correct, points_earned")
-          .eq("attempt_id", id),
+          .from("exercise_answers")
+          .select("is_correct, points_earned")
+          .eq("session_id", id),
       ])
 
       if (!att) { setLoading(false); return }
       setAttempt(att as AttemptDetail)
 
-      // Group answers by part
-      const grouped: Record<number, { correct: number; total: number; earned: number }> = {}
-      for (const a of (ans ?? []) as AnswerRow[]) {
-        if (!grouped[a.part_number]) grouped[a.part_number] = { correct: 0, total: 0, earned: 0 }
-        grouped[a.part_number].total++
-        if (a.is_correct) grouped[a.part_number].correct++
-        grouped[a.part_number].earned += a.points_earned
+      // Note: exercise_answers doesn't have part_number, so we can't group by part
+      // For now, show overall stats only
+      const grouped: Record<number, { correct: number; total: number; earned: number }> = { 1: { correct: 0, total: 0, earned: 0 } }
+      for (const a of (ans ?? []) as any[]) {
+        grouped[1].total++
+        if (a.is_correct) grouped[1].correct++
+        grouped[1].earned += a.points_earned
       }
 
       // Get part titles + possible points from local quiz data
@@ -138,9 +138,9 @@ export default function AttemptScreen() {
           .map(Number)
           .sort()
           .map((part) => ({
-            title: titles[part] ?? STANDARD_PART_TITLES[part] ?? `第 ${part} 部分`,
+            title: "總計", // No part breakdown available in new schema
             ...grouped[part],
-            possible: partPossible[part] ?? grouped[part].total,
+            possible: att.total_points,
           }))
       )
       setLoading(false)

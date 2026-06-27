@@ -110,6 +110,9 @@ articles
   - quiz_json (jsonb, derived cache from questions table)
   - status (draft | published | archived)
   - created_at, updated_at
+  
+  Purpose: Classical Chinese article content. Mobile app reads quiz_json directly at 
+  runtime (cached via contentStore). Admin portal manages via CRUD UI.
 
 questions
   - id (uuid, PK)
@@ -122,11 +125,33 @@ questions
   - question_types (array, pedagogical labels: 字詞解釋, 語句背誦, etc.)
   - status (draft | published | archived)
   - created_at, updated_at
+  
+  Purpose: Question pool per article (50+ questions each). Published questions compiled 
+  into articles.quiz_json. Each quiz samples 22 questions with smart repeat avoidance.
 
 quiz_prompts
   - id (text, PK)                    -- human-readable slug, not uuid
   - name, description, prompt_template, default_model
   - created_at, updated_at
+  
+  Purpose: Reusable LLM prompts for quiz generation. Admin selects prompt → generates 
+  questions via OpenRouter → saves as drafts for review.
+
+cross_article_questions
+  - id (uuid, PK)
+  - question_text, format, part (7 or 8), options, correct_answer, explanation
+  - select_count, points (auto-calculated from correct_answer count)
+  - status (draft | published)
+  - created_at, updated_at
+  
+  Purpose: Weight Training questions that can relate to multiple articles. Part 7/8 only.
+  Supports multi-select with partial credit scoring.
+
+cross_article_question_articles
+  - question_id (FK to cross_article_questions), article_id (FK to articles)
+  
+  Purpose: Many-to-many junction table linking cross-article questions to related articles.
+  Shown as "Related Articles" buttons in Weight Training quiz UI.
 ```
 
 #### User Data
@@ -136,27 +161,50 @@ profiles
   - email, display_name, avatar_url
   - revenuecat_id, is_pro
   - updated_at
+  
+  Purpose: User profile data. Auto-created on signup via trigger. is_pro synced via 
+  RevenueCat webhook (Phase 12). Anonymous users have no profile row.
 
 read_progress
   - user_id, article_id
   - read_at
+  
+  Purpose: Tracks which articles user has read. Synced from mobile AsyncStorage on first 
+  login. Used for "continue reading" and completion badges.
 
 quiz_attempts
   - id, user_id, article_id
   - completed_at, score, total_points
+  - total_seconds, expected_seconds
+  
+  Purpose: Single-article quiz attempts. Legacy table still used for article-specific 
+  quizzes. DSE Training and Weight Training use exercise_sessions instead.
 
 quiz_answers
   - id, attempt_id, question_id (text, stores UUID strings or numeric strings)
   - part_number, user_choice, correct_choice
   - is_correct, points_earned
+  
+  Purpose: Individual answers within a quiz attempt. Supports partial credit scoring 
+  (e.g., multi-select MC awards 1 point per correct selection).
 
 exercise_sessions
   - id, user_id, article_id
-  - kind (regular | revision | weight-training | dse-training)
+  - kind (article-quiz | weight-training | dse-training)
   - question_type (for weight-training)
   - question_ids (uuid array)
   - started_at, finished_at, total_seconds, expected_seconds
   - score, total_points
+  
+  Purpose: Unified exercise session tracking for all quiz types. Replaces quiz_attempts 
+  for new features. Supports anonymous users (user_id can be NULL).
+
+exercise_answers
+  - id, session_id, question_id (uuid)
+  - user_answer, is_correct, points_earned
+  
+  Purpose: Individual answers within an exercise session. Supports cross-article questions 
+  and partial credit scoring. Used by Weight Training and DSE Training.
 ```
 
 #### Admin
@@ -164,13 +212,22 @@ exercise_sessions
 admin_users
   - id, email, password_hash, display_name
   - created_at
+  
+  Purpose: Admin portal users. Separate from end-user auth. Password hashed with bcrypt.
+  Bootstrap via scripts/create-admin.ts.
 
 admin_sessions
   - sid (text, PK), sess (jsonb), expires_at
+  
+  Purpose: Supabase-backed session store for admin portal. Survives Railway restarts 
+  (replaces in-memory express-session). Auto-cleanup on expiry via index.
 
 article_versions
   - id, article_id, snapshot (jsonb)
   - edited_by, edited_at
+  
+  Purpose: Audit log. Every article save creates a version snapshot for revert capability. 
+  Full article + metadata stored as jsonb.
 ```
 
 ### Mobile Data Flow

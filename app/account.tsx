@@ -8,12 +8,12 @@ import { getArticleIndex } from "@/lib/data"
 import { refresh as refreshContent, clearCacheAndResync } from "@/lib/contentStore"
 import UpgradeModal from "@/components/UpgradeModal"
 
-interface QuizAttempt {
+interface ExerciseSession {
   id: string
   article_id: string
   score: number
   total_points: number
-  completed_at: string
+  finished_at: string
   total_seconds: number | null
   expected_seconds: number | null
 }
@@ -78,7 +78,7 @@ function timeDelta(totalSeconds: number, expectedSeconds: number): { label: stri
   return { label: `快 ${hourLabel}`, color: "text-amber-600" }
 }
 
-function AttemptRow({ attempt, title, onPress }: { attempt: QuizAttempt; title: string; onPress: () => void }) {
+function AttemptRow({ attempt, title, onPress }: { attempt: ExerciseSession; title: string; onPress: () => void }) {
   const pct = Math.round((attempt.score / attempt.total_points) * 100)
   const barColor = pct >= 80 ? "bg-amber-500" : pct >= 50 ? "bg-amber-300" : "bg-slate-300"
   const delta = attempt.total_seconds != null && attempt.expected_seconds != null
@@ -97,7 +97,7 @@ function AttemptRow({ attempt, title, onPress }: { attempt: QuizAttempt; title: 
         >
           {title}
         </Text>
-        <Text className="text-xs text-slate-400">{formatDate(attempt.completed_at)}</Text>
+        <Text className="text-xs text-slate-400">{formatDate(attempt.finished_at)}</Text>
       </View>
       <View className="flex-row items-center gap-2">
         <View className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -127,7 +127,7 @@ export default function AccountScreen() {
   const router = useRouter()
   const { user, profile, signOut, loading, isAnonymous: isAnonymousCtx } = useAuth()
   const isAnonymous = isAnonymousCtx || !user?.email
-  const [attempts, setAttempts] = useState<QuizAttempt[]>([])
+  const [attempts, setAttempts] = useState<ExerciseSession[]>([])
   const [loadingAttempts, setLoadingAttempts] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [syncMsg, setSyncMsg] = useState<string | null>(null)
@@ -139,12 +139,13 @@ export default function AccountScreen() {
   useEffect(() => {
     if (!user) return
     supabase
-      .from("quiz_attempts")
-      .select("id, article_id, score, total_points, completed_at, total_seconds, expected_seconds")
+      .from("exercise_sessions")
+      .select("id, article_id, score, total_points, finished_at, total_seconds, expected_seconds")
       .eq("user_id", user.id)
-      .order("completed_at", { ascending: false })
+      .eq("kind", "article-quiz")
+      .order("finished_at", { ascending: false })
       .then(({ data }) => {
-        setAttempts((data as QuizAttempt[]) ?? [])
+        setAttempts((data as ExerciseSession[]) ?? [])
         setLoadingAttempts(false)
       })
   }, [user])

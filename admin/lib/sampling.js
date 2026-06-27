@@ -98,10 +98,11 @@ async function getSeenData(userId, articleId) {
     newAnswers = answers || []
   }
 
-  // Query OLD system: quiz_attempts + quiz_answers (for historical data)
+  // Query exercise_sessions (unified system - all article quizzes)
   const { data: attempts, error: attErr } = await supabase
-    .from("quiz_attempts")
-    .select("id, completed_at")
+    .from("exercise_sessions")
+    .select("id, finished_at")
+    .eq("kind", "article-quiz")
     .eq("user_id", userId)
     .eq("article_id", articleId)
 
@@ -109,17 +110,17 @@ async function getSeenData(userId, articleId) {
 
   const attemptIds = (attempts || []).map(a => a.id)
   const attemptTimestamps = new Map(
-    (attempts || []).map(a => [a.id, a.completed_at])
+    (attempts || []).map(a => [a.id, a.finished_at])
   )
 
   let oldAnswers = []
   if (attemptIds.length > 0) {
     const { data: answers, error: oldAnsErr } = await supabase
-      .from("quiz_answers")
-      .select("question_id, attempt_id")
-      .in("attempt_id", attemptIds)
+      .from("exercise_answers")
+      .select("question_id, session_id")
+      .in("session_id", attemptIds)
 
-    if (oldAnsErr) throw new Error("getSeenData quiz_answers query failed: " + oldAnsErr.message)
+    if (oldAnsErr) throw new Error("getSeenData exercise_answers query failed: " + oldAnsErr.message)
     oldAnswers = answers || []
   }
 
@@ -136,7 +137,7 @@ async function getSeenData(userId, articleId) {
 
   for (const a of oldAnswers) {
     const qid = String(a.question_id)
-    const ts = attemptTimestamps.get(a.attempt_id)
+    const ts = attemptTimestamps.get(a.session_id)
     if (!seenMap.has(qid) || ts > seenMap.get(qid)) {
       seenMap.set(qid, ts)
     }

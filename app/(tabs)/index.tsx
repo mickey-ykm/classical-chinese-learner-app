@@ -52,7 +52,7 @@ interface RecentAttempt {
   article_id: string
   score: number
   total_points: number
-  completed_at: string
+  finished_at: string
   total_seconds: number | null
 }
 
@@ -123,10 +123,11 @@ export default function HomeTab() {
       loadArticles()
       if (!user) return
       supabase
-        .from("quiz_attempts")
-        .select("id, article_id, score, total_points, completed_at, total_seconds")
+        .from("exercise_sessions")
+        .select("id, article_id, score, total_points, finished_at, total_seconds")
+        .eq("kind", "article-quiz")
         .eq("user_id", user.id)
-        .order("completed_at", { ascending: false })
+        .order("finished_at", { ascending: false })
         .limit(3)
         .then(({ data }) => {
           if (data) setRecentAttempts(data as RecentAttempt[])
@@ -317,7 +318,7 @@ export default function HomeTab() {
                   >
                     {titleById[attempt.article_id] ?? attempt.article_id}
                   </Text>
-                  <Text className="text-xs text-slate-400">{formatDate(attempt.completed_at)}</Text>
+                  <Text className="text-xs text-slate-400">{formatDate(attempt.finished_at)}</Text>
                 </View>
                 <View className="flex-row items-center gap-2">
                   <View className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
