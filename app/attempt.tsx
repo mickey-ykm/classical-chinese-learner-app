@@ -97,28 +97,56 @@ export default function AttemptScreen() {
 
   useEffect(() => {
     async function load() {
-      const [{ data: att }, { data: ans }] = await Promise.all([
-        supabase
-          .from("exercise_sessions")
-          .select("article_id, score, total_points, finished_at, total_seconds, expected_seconds")
-          .eq("id", id)
-          .single(),
-        supabase
-          .from("exercise_answers")
-          .select("is_correct, points_earned")
-          .eq("session_id", id),
-      ])
+      // Fetch session
+      const { data: att, error: attErr } = await supabase
+        .from("exercise_sessions")
+        .select("article_id, score, total_points, finished_at, total_seconds, expected_seconds")
+        .eq("id", id)
+        .single()
 
-      if (!att) { setLoading(false); return }
+      if (attErr || !att) {
+        setLoading(false)
+        return
+      }
       setAttempt(att as AttemptDetail)
 
-      // Note: exercise_answers doesn't have part_number, so we can't group by part
-      // For now, show overall stats only
-      const grouped: Record<number, { correct: number; total: number; earned: number }> = { 1: { correct: 0, total: 0, earned: 0 } }
-      for (const a of (ans ?? []) as any[]) {
-        grouped[1].total++
-        if (a.is_correct) grouped[1].correct++
-        grouped[1].earned += a.points_earned
+      // Fetch answers with question details (to get part numbers)
+      const { data: answers, error: ansErr } = await supabase
+        .from("exercise_answers")
+        .select("question_id, is_correct, points_earned")
+        .eq("session_id", id)
+
+      if (ansErr) {
+        setLoading(false)
+        return
+      }
+
+      // Fetch questions to get part numbers
+      const { data: questions, error: qErr } = await supabase
+        .from("questions")
+        .select("id, part, points")
+        .eq("article_id", att.article_id)
+        .eq("status", "published")
+
+      if (qErr) {
+        setLoading(false)
+        return
+      }
+
+      // Build question map: id -> part
+      const questionMap = new Map((questions || []).map(q => [String(q.id), q]))
+
+      // Group answers by part
+      const grouped: Record<number, { correct: number; total: number; earned: number }> = {}
+      for (const a of (answers || [])) {
+        const q = questionMap.get(String(a.question_id))
+        if (!q) continue // Skip if question not found
+
+        const part = q.part
+        if (!grouped[part]) grouped[part] = { correct: 0, total: 0, earned: 0 }
+        grouped[part].total++
+        if (a.is_correct) grouped[part].correct++
+        grouped[part].earned += a.points_earned
       }
 
       // Get part titles + possible points from local quiz data
@@ -130,7 +158,10 @@ export default function AttemptScreen() {
           partPossible[q.part] = (partPossible[q.part] ?? 0) + q.points
         }
       } catch {
-        // quiz not cached locally — fall back to raw counts
+        // quiz not cached locally — fall back to question data
+        for (const q of questions || []) {
+          partPossible[q.part] = (partPossible[q.part] ?? 0) + (q.points || 1)
+        }
       }
 
       setPartStats(
@@ -138,11 +169,12 @@ export default function AttemptScreen() {
           .map(Number)
           .sort()
           .map((part) => ({
-            title: "總計", // No part breakdown available in new schema
+            title: titles[part] ?? STANDARD_PART_TITLES[part] ?? `第 ${part} 部分`,
             ...grouped[part],
-            possible: att.total_points,
+            possible: partPossible[part] ?? grouped[part].earned,
           }))
       )
+
       setLoading(false)
     }
     load()
@@ -187,7 +219,7 @@ export default function AttemptScreen() {
         <Text className="text-xl font-bold text-slate-800 mb-1" style={{ fontFamily: "Georgia" }}>
           {articleTitle}
         </Text>
-        <Text className="text-xs text-slate-400 mb-6">{formatDate(attempt.completed_at)}</Text>
+        <Text className="text-xs text-slate-400 mb-6">{formatDate(attempt.finished_at)}</Text>
 
         {/* Overall score */}
         <View className="bg-white rounded-2xl border border-slate-100 px-5 py-4 mb-4">
