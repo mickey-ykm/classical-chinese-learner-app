@@ -1,3 +1,6 @@
+#!/usr/bin/env node
+
+require('dotenv').config()
 const { supabase } = require("./lib/supabase")
 
 /**
