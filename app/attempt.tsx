@@ -129,6 +129,12 @@ export default function AttemptScreen() {
         return
       }
 
+      if (att.kind === "revision") {
+        // Revision: skip part breakdown (cross-article mistakes)
+        setLoading(false)
+        return
+      }
+
       if (att.kind === "weight-training") {
         // Weight training: join with cross_article_questions
         const questionIds = (answers || []).map(a => a.question_id).filter(Boolean)
@@ -276,6 +282,8 @@ export default function AttemptScreen() {
     articleTitle = "DSE 模擬試"
   } else if (attempt.kind === "weight-training") {
     articleTitle = "重量訓練"
+  } else if (attempt.kind === "revision") {
+    articleTitle = "溫故知新"
   } else if (attempt.article_id) {
     try {
       articleTitle = getArticle(attempt.article_id).title

@@ -90,6 +90,7 @@ function AttemptRow({ attempt, title, onPress }: { attempt: ExerciseSession; tit
   const badge =
     attempt.kind === "dse-training" ? "🎓" :
     attempt.kind === "weight-training" ? "💪" :
+    attempt.kind === "revision" ? "📚" :
     null
 
   return (
@@ -294,6 +295,8 @@ export default function AccountScreen() {
                     title = "DSE 模擬試"
                   } else if (attempt.kind === "weight-training") {
                     title = "重量訓練"
+                  } else if (attempt.kind === "revision") {
+                    title = "溫故知新"
                   } else {
                     // article-quiz: fetch article title
                     title = attempt.article_id ? (titleById[attempt.article_id] ?? attempt.article_id) : "文章練習"

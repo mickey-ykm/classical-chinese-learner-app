@@ -73,6 +73,20 @@ router.post("/session", async (req, res) => {
       return res.status(400).json({ error: "answers array is required" })
     }
 
+    // Get question IDs to fetch their point values
+    const questionIds = answers.map(a => a.questionId)
+
+    // Fetch questions to get their point values
+    const { data: questions, error: qErr } = await supabase
+      .from("cross_article_questions")
+      .select("id, points")
+      .in("id", questionIds)
+
+    if (qErr) throw new Error("Failed to fetch questions: " + qErr.message)
+
+    // Calculate total possible points
+    const totalPoints = questions.reduce((sum, q) => sum + (q.points || 1), 0)
+
     // Insert exercise_session
     const { data: session, error: sessErr } = await supabase
       .from("exercise_sessions")
@@ -81,7 +95,7 @@ router.post("/session", async (req, res) => {
         kind: "weight-training",
         article_id: null, // weight-training is cross-article
         score,
-        total_points: totalQuestions, // 1 point per question
+        total_points: totalPoints, // Sum of all possible points from questions
         finished_at: new Date().toISOString(),
       })
       .select("id")
