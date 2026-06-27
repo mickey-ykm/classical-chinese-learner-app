@@ -162,7 +162,7 @@ export default function DSETrainingTab() {
         totalSeconds
       )
     } catch (err) {
-      // Silent fail OK for DSE training
+      console.error('DSE training save error:', err)
     }
 
     Alert.alert("測驗完成", `你答對了 ${score} / ${total} 題`, [
