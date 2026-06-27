@@ -37,10 +37,10 @@ export default function FillBlankQuestion({
     const correct = acceptedAnswers.includes(normalise(input))
     onAnswer({
       questionId: question.id,
-      selectedOption: null,
+      selectedOption: input, // Store the user's input here
       isCorrect: correct,
       pointsEarned: correct ? question.points : 0,
-    })
+    } as QuizAnswer)
   }
 
   return (

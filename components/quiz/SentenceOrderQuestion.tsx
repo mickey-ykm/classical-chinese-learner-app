@@ -61,7 +61,7 @@ export default function SentenceOrderQuestion({
     setSubmitted(true)
     const result: QuizAnswer = {
       questionId: question.id,
-      selectedOption: null,
+      selectedOption: arranged.join(">"), // Store the user's arranged sequence here
       isCorrect: correct,
       pointsEarned: correct ? question.points : 0,
     }
