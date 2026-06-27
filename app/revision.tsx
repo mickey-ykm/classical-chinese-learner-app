@@ -129,6 +129,18 @@ export default function RevisionScreen() {
 
   // Quiz phase
   if (phase === "quiz" && questions.length > 0) {
+    // Build articles map for multi-article support
+    const articlesMap: Record<string, { id: string; title: string }> = {}
+    for (const q of questions) {
+      if (q.articleId && !articlesMap[q.articleId]) {
+        articlesMap[q.articleId] = {
+          id: q.articleId,
+          title: titleById[q.articleId] || q.articleId
+        }
+      }
+    }
+    const articlesArray = Object.values(articlesMap)
+
     return (
       <SafeAreaView className="flex-1 bg-slate-50">
         <View className="px-4 pt-4 pb-2">
@@ -138,6 +150,7 @@ export default function RevisionScreen() {
         </View>
         <QuizShell
           questions={questions}
+          articles={articlesArray.length > 0 ? articlesArray : undefined}
           exerciseType="regular"
           onExit={handleQuizExit}
         />
