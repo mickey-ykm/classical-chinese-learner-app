@@ -4,7 +4,7 @@ import type { Question, QuizAnswer, OptionKey } from "@/lib/types"
 import { checkAnswer, calculateScore } from "@/lib/quiz"
 import { getArticle } from "@/lib/data"
 import { useAuth } from "@/hooks/useAuth"
-import { saveQuizAttempt } from "@/lib/quizHistory"
+import { saveQuizAttemptToExerciseSessions } from "@/lib/quizHistory"
 import type { Article } from "@/lib/types"
 import QuizProgressBar from "./QuizProgressBar"
 import QuizQuestion from "./QuizQuestion"
@@ -124,7 +124,7 @@ export default function QuizShell({
       const totalSeconds = Math.floor((Date.now() - startedAtRef.current) / 1000)
       const { earned } = calculateScore(questions, answers)
 
-      if (exerciseType === "weight-training") {
+      if (exerciseType === "weight-training" || exerciseType === "dse-training") {
         // New signature: pass answers object
         onSave(earned, questions.length, answers)
       } else {
@@ -137,14 +137,19 @@ export default function QuizShell({
   }, [isFinished, hasSaved, onSave, exerciseType, questions])
 
   useEffect(() => {
-    if (!isFinished || !user) return
+    if (!isFinished) return
     const totalSecs = Math.floor((Date.now() - startedAtRef.current) / 1000)
     const { earned, total } = calculateScore(questions, answers)
     if (onSave) {
       onSave(earned, total, totalSecs)
     } else if (articleId) {
-      saveQuizAttempt(
-        user.id, articleId, questions, answers, earned, total,
+      saveQuizAttemptToExerciseSessions(
+        user?.id ?? null,
+        articleId,
+        questions,
+        answers,
+        earned,
+        total,
         totalSecs,
         expectedMinutes != null ? expectedMinutes * 60 : undefined,
       ).then(() => { onFinished?.() }).catch(() => {})

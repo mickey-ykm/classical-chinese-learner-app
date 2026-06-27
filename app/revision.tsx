@@ -55,7 +55,7 @@ export default function RevisionScreen() {
     if (!isFinished || !user || questions.length === 0) return
     const totalSecs = Math.floor((Date.now() - startedAtRef.current) / 1000)
     const { earned, total } = calculateScore(questions, answers)
-    saveRevisionSession(user.id, earned, total, totalSecs).catch(() => {})
+    saveRevisionSession(user.id, questions, answers, earned, total, totalSecs).catch(() => {})
   }, [isFinished])
 
   function handleSelect(key: OptionKey) {

@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase"
 import { getAllQuestions, getArticleIndex } from "@/lib/data"
-import type { Question } from "@/lib/types"
+import type { Question, QuizAnswer } from "@/lib/types"
 
 export interface WrongQuestion {
   question: Question
@@ -77,19 +77,44 @@ export async function countRevisionMistakes(userId: string): Promise<number> {
 
 export async function saveRevisionSession(
   userId: string,
+  questions: Question[],
+  answers: Record<string | number, QuizAnswer>,
   score: number,
   totalPoints: number,
   totalSeconds: number,
 ): Promise<void> {
-  await supabase.from("exercise_sessions").insert({
-    user_id: userId,
-    kind: "revision",
-    article_id: null,
-    question_ids: null,
-    started_at: new Date(Date.now() - totalSeconds * 1000).toISOString(),
-    finished_at: new Date().toISOString(),
-    total_seconds: totalSeconds,
-    score,
-    total_points: totalPoints,
+  const { data: session, error: sessErr } = await supabase
+    .from("exercise_sessions")
+    .insert({
+      user_id: userId,
+      kind: "revision",
+      article_id: null,
+      score,
+      total_points: totalPoints,
+      total_seconds: totalSeconds,
+      finished_at: new Date().toISOString(),
+    })
+    .select("id")
+    .single()
+
+  if (sessErr || !session) throw sessErr
+
+  // Insert answers
+  const answerRows = questions.map((q) => {
+    const answer = answers[q.id]
+    return {
+      session_id: session.id,
+      question_id: String(q.id),
+      user_answer: answer?.selectedOption ?? null,
+      is_correct: answer?.isCorrect ?? false,
+      points_earned: answer?.pointsEarned ?? (answer?.isCorrect ? 1 : 0),
+      answered_at: new Date().toISOString(),
+    }
   })
+
+  const { error: ansErr } = await supabase
+    .from("exercise_answers")
+    .insert(answerRows)
+
+  if (ansErr) throw ansErr
 }

@@ -1,12 +1,12 @@
-import { useState, useEffect } from "react"
-import { View, Text, ActivityIndicator, ScrollView, LayoutAnimation, Platform, UIManager, Pressable } from "react-native"
+import { useState, useEffect, useRef, useCallback } from "react"
+import { View, Text, ActivityIndicator, ScrollView, LayoutAnimation, Platform, UIManager, Pressable, Alert } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useRouter, useLocalSearchParams } from "expo-router"
 import QuizShell from "@/components/quiz/QuizShell"
 import { useAuth } from "@/hooks/useAuth"
-import { supabase } from "@/lib/supabase"
+import { saveDSETrainingSession } from "@/lib/exerciseSession"
 import { getArticle } from "@/lib/data"
-import type { Question, Article } from "@/lib/types"
+import type { Question, Article, QuizAnswer } from "@/lib/types"
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true)
@@ -89,6 +89,7 @@ export default function DSETrainingTab() {
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const startedAtRef = useRef(Date.now())
 
   // Handle initial mode from URL params
   useEffect(() => {
@@ -148,21 +149,26 @@ export default function DSETrainingTab() {
     }
   }
 
-  async function handleSave(score: number, total: number, totalSeconds: number) {
-    if (!user) return
+  const handleSave = useCallback(async (score: number, total: number, answersObj: Record<string | number, QuizAnswer>) => {
+    const totalSeconds = Math.floor((Date.now() - startedAtRef.current) / 1000)
+
     try {
-      await supabase.from("exercise_sessions").insert({
-        user_id: user.id,
-        kind: "dse-training",
+      await saveDSETrainingSession(
+        user?.id ?? null,
+        questions,
+        answersObj,
         score,
-        total_points: total,
-        duration_seconds: totalSeconds,
-        completed_at: new Date().toISOString(),
-      })
-    } catch {
-      // Non-fatal
+        total,
+        totalSeconds
+      )
+    } catch (err) {
+      // Silent fail OK for DSE training
     }
-  }
+
+    Alert.alert("測驗完成", `你答對了 ${score} / ${total} 題`, [
+      { text: "返回", onPress: () => router.back() }
+    ])
+  }, [user, questions, router])
 
   // Mode selection screen
   if (mode === "select") {
@@ -259,6 +265,7 @@ export default function DSETrainingTab() {
           <QuizShell
             questions={questions}
             articles={articles}
+            exerciseType="dse-training"
             partTitles={{ 1: "DSE 模擬考題" }}
             onSave={handleSave}
           />

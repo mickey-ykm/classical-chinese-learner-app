@@ -62,6 +62,7 @@ function sampleByPart(questions, seenMap) {
 
 /**
  * Fetch seen question data for a user+article from Supabase.
+ * Queries BOTH old (quiz_attempts) and new (exercise_sessions) tables during migration.
  *
  * @param {string|null} userId
  * @param {string} articleId
@@ -71,7 +72,33 @@ async function getSeenData(userId, articleId) {
   const empty = { seenMap: new Map(), seenCount: 0, attemptNumber: 0 }
   if (!userId || !supabase) return empty
 
-  // Get attempt IDs for this user+article
+  // Query NEW system: exercise_sessions + exercise_answers
+  const { data: sessions, error: sessErr } = await supabase
+    .from("exercise_sessions")
+    .select("id, finished_at")
+    .eq("user_id", userId)
+    .eq("kind", "article-quiz")
+    .eq("article_id", articleId)
+
+  if (sessErr) throw new Error("getSeenData sessions query failed: " + sessErr.message)
+
+  const sessionIds = (sessions || []).map(s => s.id)
+  const sessionTimestamps = new Map(
+    (sessions || []).map(s => [s.id, s.finished_at])
+  )
+
+  let newAnswers = []
+  if (sessionIds.length > 0) {
+    const { data: answers, error: newAnsErr } = await supabase
+      .from("exercise_answers")
+      .select("question_id, session_id")
+      .in("session_id", sessionIds)
+
+    if (newAnsErr) throw new Error("getSeenData exercise_answers query failed: " + newAnsErr.message)
+    newAnswers = answers || []
+  }
+
+  // Query OLD system: quiz_attempts + quiz_answers (for historical data)
   const { data: attempts, error: attErr } = await supabase
     .from("quiz_attempts")
     .select("id, completed_at")
@@ -79,36 +106,47 @@ async function getSeenData(userId, articleId) {
     .eq("article_id", articleId)
 
   if (attErr) throw new Error("getSeenData attempts query failed: " + attErr.message)
-  if (!attempts || attempts.length === 0) return empty
 
-  const attemptNumber = attempts.length
-  const attemptIds = attempts.map((a) => a.id)
+  const attemptIds = (attempts || []).map(a => a.id)
+  const attemptTimestamps = new Map(
+    (attempts || []).map(a => [a.id, a.completed_at])
+  )
 
-  // Get all quiz_answers for those attempts
-  const { data: answers, error: ansErr } = await supabase
-    .from("quiz_answers")
-    .select("question_id, attempt_id")
-    .in("attempt_id", attemptIds)
+  let oldAnswers = []
+  if (attemptIds.length > 0) {
+    const { data: answers, error: oldAnsErr } = await supabase
+      .from("quiz_answers")
+      .select("question_id, attempt_id")
+      .in("attempt_id", attemptIds)
 
-  if (ansErr) throw new Error("getSeenData answers query failed: " + ansErr.message)
-
-  // Build a map from attempt_id -> completed_at for quick lookup
-  const completedAtById = {}
-  for (const a of attempts) {
-    completedAtById[a.id] = a.completed_at
+    if (oldAnsErr) throw new Error("getSeenData quiz_answers query failed: " + oldAnsErr.message)
+    oldAnswers = answers || []
   }
 
-  // Build seenMap: question_id -> MAX(completed_at) across all attempts
+  // Merge seen maps: take most recent timestamp per question
   const seenMap = new Map()
-  for (const ans of answers || []) {
-    const qid = String(ans.question_id)
-    const completedAt = completedAtById[ans.attempt_id]
-    if (!seenMap.has(qid) || completedAt > seenMap.get(qid)) {
-      seenMap.set(qid, completedAt)
+
+  for (const a of newAnswers) {
+    const qid = String(a.question_id)
+    const ts = sessionTimestamps.get(a.session_id)
+    if (!seenMap.has(qid) || ts > seenMap.get(qid)) {
+      seenMap.set(qid, ts)
     }
   }
 
-  return { seenMap, seenCount: seenMap.size, attemptNumber }
+  for (const a of oldAnswers) {
+    const qid = String(a.question_id)
+    const ts = attemptTimestamps.get(a.attempt_id)
+    if (!seenMap.has(qid) || ts > seenMap.get(qid)) {
+      seenMap.set(qid, ts)
+    }
+  }
+
+  return {
+    seenMap,
+    seenCount: seenMap.size,
+    attemptNumber: sessions.length + attempts.length,
+  }
 }
 
 module.exports = { DEFAULT_PART_QUOTAS, sampleByPart, getSeenData }
