@@ -17,6 +17,7 @@ const generateArticleRouter = require("./routes/generate-article")
 const quizRouter = require("./routes/quiz")
 const crossArticleQuestionsRouter = require("./routes/cross-article-questions")
 const weightTrainingRouter = require("./routes/weight-training")
+const revisionRouter = require("./routes/revision")
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -43,6 +44,7 @@ app.use("/api/admin", authRouter)
 
 // Public mobile API routes (no admin session required)
 // IMPORTANT: Mount specific routes BEFORE parameterized routes to avoid conflicts
+app.use("/api/revision", revisionRouter)
 app.use("/api/quiz/weight-training", weightTrainingRouter)
 app.use("/api/quiz", quizRouter)
 
