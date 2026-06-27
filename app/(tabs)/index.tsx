@@ -204,15 +204,29 @@ export default function HomeTab() {
               <Text className="text-slate-400 text-xs">→</Text>
             </Pressable>
 
-            {/* Revision Button */}
+            {/* Article Revision Button */}
             <Pressable
-              onPress={() => router.push("/revision")}
+              onPress={() => router.push("/revision-article")}
               className="bg-white rounded-xl px-4 py-3 mb-2 active:opacity-70 flex-row items-center justify-between"
             >
               <View className="flex-row items-center flex-1">
-                <Text className="text-xl mr-3">🔁</Text>
+                <Text className="text-xl mr-3">📚</Text>
                 <Text className="text-sm font-semibold text-slate-800" style={{ fontFamily: "Georgia" }}>
-                  溫故知新
+                  文章錯題重溫
+                </Text>
+              </View>
+              <Text className="text-slate-400 text-xs">→</Text>
+            </Pressable>
+
+            {/* Part Revision Button */}
+            <Pressable
+              onPress={() => router.push("/revision-part")}
+              className="bg-white rounded-xl px-4 py-3 mb-2 active:opacity-70 flex-row items-center justify-between"
+            >
+              <View className="flex-row items-center flex-1">
+                <Text className="text-xl mr-3">🎯</Text>
+                <Text className="text-sm font-semibold text-slate-800" style={{ fontFamily: "Georgia" }}>
+                  語基能力錯題重溫
                 </Text>
               </View>
               <Text className="text-slate-400 text-xs">→</Text>
@@ -224,7 +238,7 @@ export default function HomeTab() {
               className="bg-white rounded-xl px-4 py-3 flex-row items-center justify-between active:opacity-70"
             >
               <View className="flex-row items-center flex-1">
-                <Text className="text-xl mr-3">🎯</Text>
+                <Text className="text-xl mr-3">💪</Text>
                 <Text className="text-sm font-semibold text-slate-800" style={{ fontFamily: "Georgia" }}>
                   針對性難題訓練
                 </Text>
