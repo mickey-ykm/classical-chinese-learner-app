@@ -297,7 +297,7 @@ export default function AccountScreen() {
           )}
         </View>
 
-        {/* Logged-in only: history + special features */}
+        {/* Logged-in only: analytics + history button */}
         {!isAnonymous && (
           <>
             {/* Revision Analytics */}
@@ -323,46 +323,23 @@ export default function AccountScreen() {
               </View>
             )}
 
-            <Text className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
-              完成的練習
-            </Text>
-
-            {loadingAttempts ? (
-              <ActivityIndicator size="small" color="#d97706" className="my-4" />
-            ) : attempts.length === 0 ? (
-              <View className="bg-white rounded-2xl border border-slate-100 px-4 py-6 items-center">
-                <Text className="text-slate-400 text-sm">尚未完成任何練習</Text>
-                <Pressable onPress={() => router.replace("/")} className="mt-3">
-                  <Text className="text-amber-600 font-semibold text-sm">開始學習 →</Text>
-                </Pressable>
+            {/* Exercise History Button */}
+            <Pressable
+              onPress={() => router.push("/exercise-history")}
+              className="bg-white rounded-2xl border border-slate-100 shadow-sm px-5 py-4 mb-6 active:opacity-70"
+            >
+              <View className="flex-row items-center justify-between">
+                <View>
+                  <Text className="text-lg font-bold text-slate-800 mb-1">所有練習紀錄</Text>
+                  {loadingAttempts ? (
+                    <Text className="text-sm text-slate-500">載入中...</Text>
+                  ) : (
+                    <Text className="text-sm text-slate-500">已完成 {attempts.length} 次練習</Text>
+                  )}
+                </View>
+                <Text className="text-slate-300 text-xl">→</Text>
               </View>
-            ) : (
-              <View className="gap-2">
-                {attempts.map((attempt) => {
-                  // Determine title based on kind
-                  let title: string
-                  if (attempt.kind === "dse-training") {
-                    title = "DSE 模擬試"
-                  } else if (attempt.kind === "weight-training") {
-                    title = "重量訓練"
-                  } else if (attempt.kind === "revision") {
-                    title = "溫故知新"
-                  } else {
-                    // article-quiz: fetch article title
-                    title = attempt.article_id ? (titleById[attempt.article_id] ?? attempt.article_id) : "文章練習"
-                  }
-
-                  return (
-                    <AttemptRow
-                      key={attempt.id}
-                      attempt={attempt}
-                      title={title}
-                      onPress={() => router.push({ pathname: "/attempt", params: { id: attempt.id } })}
-                    />
-                  )
-                })}
-              </View>
-            )}
+            </Pressable>
 
           </>
         )}
