@@ -28,10 +28,24 @@ export async function saveDSETrainingSession(
   // Insert answers
   const answerRows = questions.map((q) => {
     const answer = answers[q.id]
+    // Serialize user_answer based on answer structure
+    let userAnswer: string | null = null
+    if (answer) {
+      if ('selectedOption' in answer && answer.selectedOption != null) {
+        userAnswer = answer.selectedOption // MC single-select
+      } else if ('selectedOptions' in answer && Array.isArray((answer as any).selectedOptions)) {
+        userAnswer = (answer as any).selectedOptions.join(',') // MC multi-select
+      } else if ('input' in answer) {
+        userAnswer = (answer as any).input // Fill-blank
+      } else if ('submittedTokens' in answer && Array.isArray((answer as any).submittedTokens)) {
+        userAnswer = (answer as any).submittedTokens.join('>') // Sentence-order
+      }
+    }
+
     return {
       session_id: session.id,
       question_id: String(q.id),
-      user_answer: answer?.selectedOption ?? null,
+      user_answer: userAnswer,
       is_correct: answer?.isCorrect ?? false,
       points_earned: answer?.pointsEarned ?? (answer?.isCorrect ? 1 : 0),
       answered_at: new Date().toISOString(),
