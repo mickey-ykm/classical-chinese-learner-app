@@ -304,13 +304,13 @@ export default function AccountScreen() {
             {!loadingRevision && revisionSummary && revisionSummary.overall.totalMistakes > 0 && (
               <View className="mb-6">
                 <Text className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
-                  📚 錯題分析
+                  文言文能力分析
                 </Text>
                 <View className="bg-gradient-to-br from-amber-50 to-white rounded-2xl border border-amber-200 px-5 py-4">
                   <View className="flex-row items-center justify-between mb-3">
                     <View>
                       <Text className="text-2xl font-bold text-slate-800 mb-1">
-                        {revisionSummary.overall.totalMistakes} 題待重溫
+                        {revisionSummary.overall.totalMistakes} 題失誤
                       </Text>
                       {revisionSummary.overall.weakestPart && (
                         <Text className="text-sm text-slate-600">
@@ -323,7 +323,7 @@ export default function AccountScreen() {
                     onPress={() => router.push("/revision")}
                     className="bg-amber-500 rounded-xl py-3 active:opacity-80"
                   >
-                    <Text className="text-white font-semibold text-center">開始重溫</Text>
+                    <Text className="text-white font-semibold text-center">詳細報告</Text>
                   </Pressable>
                 </View>
               </View>
