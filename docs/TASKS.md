@@ -948,3 +948,39 @@ _Completed tasks with summaries and lessons learned. Ordered by completion date 
     - 溫故知新 screen becomes more focused (just start quiz, less analytics clutter)
   - **Estimated effort:** 1.5 hours
 
+
+### 2026-06-28
+
+- [x] **#010 — FEATURE: Revamp revision exercise with dual view and smart sampling**
+  - **Summary:** Complete overhaul of revision system with unified mistake tracking across all question types (Parts 1-8), dual-view lobby (article + part), smart sampling, and correction tracking.
+  - **Implementation:**
+    - Backend: `admin/lib/revision-helpers.js` - queries both `questions` and `cross_article_questions` tables, tracks correction status (removed once answered correctly after last wrong)
+    - Backend: `admin/routes/revision.js` - summary and sampling endpoints with filtering by article/part
+    - Mobile: New `app/revision.tsx` - dual-view toggle, overall statistics, weakest part recommendation, article/part grouping, empty state
+    - Smart sampling algorithm prioritizes recent (< 7 days: +10, 7-30 days: +5) and frequent mistakes (mistakeCount × 3)
+    - Sample sizes: 10 questions (article/part), 15 questions (mixed)
+  - **Files changed:** `admin/lib/revision-helpers.js`, `admin/routes/revision.js`, `admin/server.js`, `app/revision.tsx`, `app/revision-old.tsx.backup` (old version backed up)
+  - **Completed:** ✅ All features delivered, tested, and deployed
+
+- [x] **#040 — UX: Add revision shortcuts to DSE training lobby**
+  - **Summary:** Added two new buttons in DSE training lobby for quick access to revision exercises.
+  - **Implementation:**
+    - Added "📚 文章錯題重溫" button → navigates to `/revision?view=article`
+    - Added "🎯 文言文語基能力錯題重溫" button → navigates to `/revision?view=part`
+    - Updated `app/revision.tsx` to read `view` query parameter and pre-select correct view
+    - Streamlines workflow: students can quickly revise mistakes without navigating away from DSE training section
+  - **Files changed:** `app/(tabs)/dse-training.tsx`, `app/revision.tsx`
+  - **Completed:** ✅ Both shortcuts working, view parameter handled correctly
+
+- [x] **#042 — UX: Add revision analytics to account screen**
+  - **Summary:** Moved revision analytics from 溫故知新 lobby to account screen for better dashboard experience.
+  - **Implementation:**
+    - Added revision summary fetch in `app/account.tsx` (calls `/api/revision/summary`)
+    - New analytics card displays: total mistakes, weakest part with name
+    - "開始重溫" button navigates to `/revision`
+    - Only shown for logged-in users with mistakes (> 0)
+    - Uses amber gradient background to stand out
+  - **Files changed:** `app/account.tsx`
+  - **Benefits:** Account screen now shows actionable insights immediately, students see weak areas without navigating to separate screen
+  - **Completed:** ✅ Analytics card working, styling matches design system
+

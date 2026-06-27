@@ -193,23 +193,9 @@ export default function DSETrainingTab() {
             </Text>
           </Pressable>
 
-          {/* 溫故知新 — revision of past mistakes */}
-          <Pressable
-            onPress={() => router.push("/revision")}
-            className="bg-white border border-slate-200 rounded-2xl px-5 py-5 mb-4 shadow-sm active:opacity-80"
-          >
-            <View className="flex-row items-center mb-2">
-              <Text className="text-2xl mr-3">🔁</Text>
-              <Text className="text-base font-bold text-slate-800" style={{ fontFamily: "Georgia" }}>溫故知新</Text>
-            </View>
-            <Text className="text-sm text-slate-500 leading-5">
-              從你做錯的題目中抽選 15 條，重新練習加深記憶。
-            </Text>
-          </Pressable>
-
           {/* Article-based Revision */}
           <Pressable
-            onPress={() => router.push("/revision?view=article")}
+            onPress={() => router.push("/revision-article")}
             className="bg-white border border-slate-200 rounded-2xl px-5 py-5 mb-4 shadow-sm active:opacity-80"
           >
             <View className="flex-row items-center mb-2">
@@ -223,7 +209,7 @@ export default function DSETrainingTab() {
 
           {/* Part-based Revision (focus on Parts 7-8) */}
           <Pressable
-            onPress={() => router.push("/revision?view=part")}
+            onPress={() => router.push("/revision-part")}
             className="bg-white border border-slate-200 rounded-2xl px-5 py-5 mb-4 shadow-sm active:opacity-80"
           >
             <View className="flex-row items-center mb-2">
