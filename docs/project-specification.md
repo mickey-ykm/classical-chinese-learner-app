@@ -172,22 +172,6 @@ read_progress
   Purpose: Tracks which articles user has read. Synced from mobile AsyncStorage on first 
   login. Used for "continue reading" and completion badges.
 
-quiz_attempts
-  - id, user_id, article_id
-  - completed_at, score, total_points
-  - total_seconds, expected_seconds
-  
-  Purpose: Single-article quiz attempts. Legacy table still used for article-specific 
-  quizzes. DSE Training and Weight Training use exercise_sessions instead.
-
-quiz_answers
-  - id, attempt_id, question_id (text, stores UUID strings or numeric strings)
-  - part_number, user_choice, correct_choice
-  - is_correct, points_earned
-  
-  Purpose: Individual answers within a quiz attempt. Supports partial credit scoring 
-  (e.g., multi-select MC awards 1 point per correct selection).
-
 exercise_sessions
   - id, user_id, article_id
   - kind (article-quiz | weight-training | dse-training)
@@ -196,15 +180,15 @@ exercise_sessions
   - started_at, finished_at, total_seconds, expected_seconds
   - score, total_points
   
-  Purpose: Unified exercise session tracking for all quiz types. Replaces quiz_attempts 
-  for new features. Supports anonymous users (user_id can be NULL).
+  Purpose: Unified exercise session tracking for ALL quiz types. Supports anonymous users 
+  (user_id can be NULL). Replaces legacy quiz_attempts table (dropped 2026-06-27).
 
 exercise_answers
   - id, session_id, question_id (uuid)
   - user_answer, is_correct, points_earned
   
   Purpose: Individual answers within an exercise session. Supports cross-article questions 
-  and partial credit scoring. Used by Weight Training and DSE Training.
+  and partial credit scoring. Used by all exercise types.
 ```
 
 #### Admin

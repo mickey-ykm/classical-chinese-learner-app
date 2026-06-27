@@ -1,5 +1,6 @@
 // Classical Chinese Learner App - Database Schema
 // Generated: 2026-06-27
+// Updated: 2026-06-27 - Removed quiz_attempts and quiz_answers (migrated to exercise_sessions)
 // Use at: https://dbdiagram.io
 
 // ============================================================================
@@ -322,7 +323,7 @@ Table auth.users {
 //    - Supports partial credit scoring in exercise_answers.points_earned
 
 // 4. ANONYMOUS USER LOGGING
-//    - quiz_attempts.user_id and exercise_sessions.user_id can be NULL
+//    - exercise_sessions.user_id can be NULL for anonymous users
 //    - Anonymous users can complete exercises; no history sync
 
 // 5. QUESTION POOL SAMPLING
@@ -334,4 +335,4 @@ Table auth.users {
 // 6. CROSS-ARTICLE EXERCISES
 //    - Weight Training: 5 Part 7 + 5 Part 8 questions from cross_article_questions
 //    - DSE Training: 22 questions per article × 2-3 randomly selected DSE articles
-//    - Both use exercise_sessions (not quiz_attempts)
+//    - All exercise types now use exercise_sessions (unified model since 2026-06-27)
