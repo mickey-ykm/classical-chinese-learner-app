@@ -220,7 +220,17 @@ export default function AccountScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Back */}
-        <Pressable onPress={() => router.back()} hitSlop={12} className="self-start mb-6">
+        <Pressable
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back()
+            } else {
+              router.replace("/(tabs)")
+            }
+          }}
+          hitSlop={12}
+          className="self-start mb-6"
+        >
           <Text className="text-amber-600 font-semibold text-sm">← 返回</Text>
         </Pressable>
 
