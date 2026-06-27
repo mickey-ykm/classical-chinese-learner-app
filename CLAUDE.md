@@ -60,10 +60,22 @@ app/
   quiz.tsx           # Quiz (stack, pushed over tabs)
   account.tsx        # Account / history (stack)
   attempt.tsx        # Attempt detail (stack)
-  revision.tsx       # Revision chapter (stack)
+  revision.tsx       # Revision (general with view toggle) — from account analytics
+  revision-article.tsx # Revision (article-only) — from DSE lobby
+  revision-part.tsx  # Revision (part-only) — from DSE lobby
+  exercise-history.tsx # Full exercise history list (stack)
 ```
 
 Navigation: Tab → Read?id → Quiz?id → Score (Score rendered inside QuizShell).
+
+**Revision system architecture (2026-06-28)**
+
+Three entry points, three pages (no query params):
+- `/revision` — general revision with article/part view toggle (from account "詳細報告")
+- `/revision-article` — article-only list (from DSE lobby "文章錯題重溫")
+- `/revision-part` — part-only list (from DSE lobby "語基能力錯題重溫")
+
+Backend: `admin/lib/revision-helpers.js` queries both `questions` (Parts 1-6) and `cross_article_questions` (Parts 7-8) for unified mistake tracking. Questions removed once answered correctly AFTER last wrong answer.
 
 **Data layer**
 
