@@ -392,6 +392,14 @@ exercise_answers (
 - **Implementation**: `signInWithEmail()` in AuthContext calls `supabase.auth.signInWithOtp()` with same redirect URL as OAuth
 - **Callback handling**: Magic links use the same `classicalchineselearnerapp://oauth` callback route as Google OAuth — no separate route needed
 - **Email storage**: Supabase automatically stores email in `auth.users` table; accessible via `user.email` (same as OAuth users)
+
+**Custom font loading in Expo**
+- Fonts must be loaded with `useFonts` hook from `expo-font` in root layout, not just declared in `app.json`
+- Use relative paths in `require()`: `../assets/fonts/Font.otf` (the `@/` alias doesn't work)
+- Always validate font files after download: `file assets/fonts/*.otf` should show "OpenType font data" not "HTML document"
+- Gotcha: GitHub large files return HTML error pages if downloaded directly - use raw.githubusercontent.com URLs or specialized tools
+- Add error handling: log `fontError` from `useFonts` to catch registration failures (CTFontManager errors)
+- Don't block app with `if (!fontsLoaded) return null` - fonts failing should degrade gracefully, not show blank screen
 - **Rate limiting**: Supabase limits OTP requests (typically 1 email per minute per address) to prevent abuse
 - **Link expiration**: Magic links expire after 1 hour (Supabase default)
 - **UI**: Login screen shows both Google button and email input field with divider ("或" = OR)
