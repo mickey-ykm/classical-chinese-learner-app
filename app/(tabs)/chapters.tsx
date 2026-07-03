@@ -1,4 +1,4 @@
-import { ScrollView, View, Text, Pressable } from "react-native"
+import { ScrollView, View, Text } from "react-native"
 import { useRouter, useFocusEffect } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useCallback, useEffect, useState } from "react"
@@ -9,23 +9,26 @@ import { useAuth } from "@/hooks/useAuth"
 import { fetchArticleProgress, type ArticleProgressMap } from "@/lib/articleProgress"
 import UpgradeModal from "@/components/UpgradeModal"
 import type { ArticleEntry } from "@/lib/types"
+import {
+  Button,
+  Card,
+  Badge,
+  SegmentedControl,
+  ProgressBar,
+  JianColors,
+  JianTypography,
+  JianSpacing,
+  type SegmentOption,
+} from "@/components/jian"
 
 type SegmentType = "dse-exam" | "dse-non-exam" | "other"
 
 function ArticleTypeBadge({ articleType }: { articleType?: string }) {
   if (articleType === "dse-exam") {
-    return (
-      <View className="self-start bg-amber-100 border border-amber-200 rounded px-2 py-0.5 mb-2">
-        <Text className="text-[10px] font-bold tracking-wide text-amber-700">DSE甲部指定篇章</Text>
-      </View>
-    )
+    return <Badge type="dse-exam" />
   }
   if (articleType === "dse-non-exam") {
-    return (
-      <View className="self-start bg-blue-50 border border-blue-200 rounded px-2 py-0.5 mb-2">
-        <Text className="text-[10px] font-bold tracking-wide text-blue-600">高中教學課文</Text>
-      </View>
-    )
+    return <Badge type="dse-non-exam" />
   }
   return null
 }
@@ -38,20 +41,30 @@ interface CardProps {
 
 function ProgressStats({ progress, totalQuestions }: { progress?: ArticleProgressMap[string]; totalQuestions: number }) {
   if (!progress) return null
+
+  const progressPercentage = (progress.seenCount / progress.totalInPool) * 100
+
   return (
-    <View className="flex-row gap-3 mb-3 flex-wrap">
-      <Text className="text-xs text-amber-600 font-medium">
-        已完成 {progress.seenCount} / {progress.totalInPool} 題
-      </Text>
-      {progress.attemptCount > 0 && (
-        <>
-          <Text className="text-xs text-slate-300">·</Text>
-          <Text className="text-xs text-slate-400">練習 {progress.attemptCount} 次</Text>
-          <Text className="text-xs text-slate-300">·</Text>
-          <Text className="text-xs text-slate-400">正確率 {progress.correctRate}%</Text>
-        </>
-      )}
-    </View>
+    <>
+      <View style={{ flexDirection: 'row', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
+        <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.amber, fontWeight: JianTypography.medium }}>
+          已完成 {progress.seenCount} / {progress.totalInPool} 題
+        </Text>
+        {progress.attemptCount > 0 && (
+          <>
+            <Text style={{ fontSize: JianTypography.caption, color: JianColors.line2 }}>·</Text>
+            <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink2 }}>
+              練習 {progress.attemptCount} 次
+            </Text>
+            <Text style={{ fontSize: JianTypography.caption, color: JianColors.line2 }}>·</Text>
+            <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink2 }}>
+              正確率 {progress.correctRate}%
+            </Text>
+          </>
+        )}
+      </View>
+      <ProgressBar value={progressPercentage} variant="jade" height={6} style={{ marginBottom: 12 }} />
+    </>
   )
 }
 
@@ -59,26 +72,25 @@ function LessonCard({ article, progress, onStart }: CardProps) {
   const isPaid = !article.isFree
 
   return (
-    <View className="bg-white rounded-2xl border border-slate-100 shadow-sm px-4 pt-4 pb-3 mb-3">
-      <View className="flex-row items-center justify-between mb-2">
+    <Card variant="default" style={{ marginBottom: JianSpacing.md }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
         <ArticleTypeBadge articleType={article.articleType} />
-        {isPaid && (
-          <View className="flex-row items-center gap-0.5 bg-amber-50 border border-amber-200 rounded-md px-1.5 py-0.5">
-            <Text className="text-xs">🔒</Text>
-            <Text className="text-xs font-semibold text-amber-700">付費練習</Text>
-          </View>
-        )}
+        {isPaid && <Badge type="lock" />}
       </View>
-      <Text className="text-base font-bold text-slate-800 leading-snug mb-0.5" style={{ fontFamily: "Georgia" }}>
+      <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.heading, fontWeight: JianTypography.bold, color: JianColors.ink, lineHeight: 24, marginBottom: 2 }}>
         {article.title}
       </Text>
-      <Text className="text-xs text-slate-400 mb-1">{article.source}</Text>
-      <Text className="text-xs text-slate-400 mb-2">共 {article.totalQuestions} 題 · {article.totalPoints} 分</Text>
+      <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink3, marginBottom: 4 }}>
+        {article.source}
+      </Text>
+      <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink3, marginBottom: 8 }}>
+        共 {article.totalQuestions} 題 · {article.totalPoints} 分
+      </Text>
       <ProgressStats progress={progress} totalQuestions={article.totalQuestions} />
-      <Pressable onPress={onStart} className="py-2.5 rounded-xl bg-amber-500 items-center active:opacity-80">
-        <Text className="text-white font-semibold text-sm">立即開始</Text>
-      </Pressable>
-    </View>
+      <Button variant="primary" size="medium" fullWidth onPress={onStart}>
+        立即開始
+      </Button>
+    </Card>
   )
 }
 
@@ -86,29 +98,30 @@ function ChallengeCard({ article, progress, onStart }: CardProps) {
   const isPaid = !article.isFree
 
   return (
-    <View className="rounded-2xl px-4 pt-4 pb-3 border border-slate-700 bg-slate-800 mb-3">
-      <View className="flex-row items-center gap-2 mb-2.5">
+    <Card variant="ink" style={{ marginBottom: JianSpacing.md }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
         <ArticleTypeBadge articleType={article.articleType} />
-        <View className="bg-amber-500 rounded px-2 py-0.5 mb-2">
-          <Text className="text-white text-[10px] font-bold tracking-widest">章節挑戰</Text>
+        <View style={{ backgroundColor: JianColors.amber, borderRadius: 4, paddingHorizontal: 8, paddingVertical: 3 }}>
+          <Text style={{ fontFamily: JianTypography.sans, color: '#ffffff', fontSize: JianTypography.tiny, fontWeight: JianTypography.bold, letterSpacing: 1.2 }}>
+            章節挑戰
+          </Text>
         </View>
-        {isPaid && (
-          <View className="flex-row items-center gap-0.5 bg-amber-50 border border-amber-200 rounded-md px-1.5 py-0.5 mb-2">
-            <Text className="text-xs">🔒</Text>
-            <Text className="text-xs font-semibold text-amber-700">付費練習</Text>
-          </View>
-        )}
+        {isPaid && <Badge type="lock" />}
       </View>
-      <Text className="text-base font-bold text-white leading-snug mb-0.5" style={{ fontFamily: "Georgia" }}>
+      <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.heading, fontWeight: JianTypography.bold, color: JianColors.paper, lineHeight: 24, marginBottom: 2 }}>
         {article.title}
       </Text>
-      <Text className="text-xs text-slate-400 mb-1">{article.source}</Text>
-      <Text className="text-xs text-slate-500 mb-2">共 {article.totalQuestions} 題 · {article.totalPoints} 分</Text>
+      <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink3, marginBottom: 4 }}>
+        {article.source}
+      </Text>
+      <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink2, marginBottom: 8 }}>
+        共 {article.totalQuestions} 題 · {article.totalPoints} 分
+      </Text>
       <ProgressStats progress={progress} totalQuestions={article.totalQuestions} />
-      <Pressable onPress={onStart} className="py-2.5 rounded-xl bg-amber-500 items-center active:opacity-80">
-        <Text className="text-white font-semibold text-sm">接受挑戰</Text>
-      </Pressable>
-    </View>
+      <Button variant="primary" size="medium" fullWidth onPress={onStart}>
+        接受挑戰
+      </Button>
+    </Card>
   )
 }
 
@@ -155,79 +168,46 @@ export default function ChaptersTab() {
 
   const dseExamCount = allArticles.filter((a) => a.articleType === "dse-exam").length
   const dseNonExamCount = allArticles.filter((a) => a.articleType === "dse-non-exam").length
-  const otherCount = allArticles.filter((a) => a.articleType === "other" || !a.articleType).length
+
+  const segmentOptions: SegmentOption[] = [
+    { value: "dse-exam", label: "甲部指定" },
+    { value: "dse-non-exam", label: "高中課文" },
+    { value: "other", label: "其他範文" },
+  ]
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-50">
+    <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper }}>
       {/* Header */}
-      <View className="px-5 pt-4 pb-3">
-        <Text className="text-2xl font-bold text-slate-800" style={{ fontFamily: "Georgia" }}>
+      <View style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 }}>
+        <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.title, fontWeight: JianTypography.bold, color: JianColors.ink }}>
           篇章
         </Text>
-        <Text className="text-xs text-slate-500 mt-1">
+        <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink2, marginTop: 4 }}>
           共 {allArticles.length} 篇
         </Text>
       </View>
 
       {/* Segmented Control */}
-      <View className="px-5 pb-3">
-        <View className="flex-row bg-slate-100 rounded-lg p-1">
-          <Pressable
-            className={`flex-1 py-2 rounded-md ${segment === "dse-exam" ? "bg-amber-500" : ""}`}
-            onPress={() => setSegment("dse-exam")}
-          >
-            <Text
-              className={`text-center text-xs ${
-                segment === "dse-exam" ? "text-white font-semibold" : "text-slate-600"
-              }`}
-              style={{ fontFamily: "Georgia" }}
-            >
-              甲部指定
-            </Text>
-          </Pressable>
-          <Pressable
-            className={`flex-1 py-2 rounded-md ${segment === "dse-non-exam" ? "bg-amber-500" : ""}`}
-            onPress={() => setSegment("dse-non-exam")}
-          >
-            <Text
-              className={`text-center text-xs ${
-                segment === "dse-non-exam" ? "text-white font-semibold" : "text-slate-600"
-              }`}
-              style={{ fontFamily: "Georgia" }}
-            >
-              高中課文
-            </Text>
-          </Pressable>
-          <Pressable
-            className={`flex-1 py-2 rounded-md ${segment === "other" ? "bg-amber-500" : ""}`}
-            onPress={() => setSegment("other")}
-          >
-            <Text
-              className={`text-center text-xs ${
-                segment === "other" ? "text-white font-semibold" : "text-slate-600"
-              }`}
-              style={{ fontFamily: "Georgia" }}
-            >
-              其他範文
-            </Text>
-          </Pressable>
-        </View>
+      <View style={{ paddingHorizontal: 20, paddingBottom: 12 }}>
+        <SegmentedControl options={segmentOptions} value={segment} onChange={(value) => setSegment(value as SegmentType)} />
       </View>
 
       {/* Info Banner - only show for DSE segments */}
       {(segment === "dse-exam" || segment === "dse-non-exam") && (
-        <View className="px-5">
-          <View className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-3">
-            <Text className="text-xs text-amber-800 leading-5">
-              DSE 考試共含 <Text className="font-bold">{dseExamCount} 篇甲部指定篇章</Text>，<Text className="font-bold">{dseNonExamCount} 篇高中課文</Text>。
-              每次練習隨機抽出 <Text className="font-bold">22 題</Text>，約使用 <Text className="font-bold">10 分鐘</Text>完成。
+        <View style={{ paddingHorizontal: 20 }}>
+          <Card variant="near-complete" style={{ marginBottom: 12 }}>
+            <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink, lineHeight: 20 }}>
+              DSE 考試共含 <Text style={{ fontWeight: JianTypography.bold }}>{dseExamCount} 篇甲部指定篇章</Text>，
+              <Text style={{ fontWeight: JianTypography.bold }}>{dseNonExamCount} 篇高中課文</Text>。
+              每次練習隨機抽出 <Text style={{ fontWeight: JianTypography.bold }}>22 題</Text>，約使用{' '}
+              <Text style={{ fontWeight: JianTypography.bold }}>10 分鐘</Text>完成。
             </Text>
-          </View>
+          </Card>
         </View>
       )}
 
       {/* Article List */}
-      <ScrollView className="flex-1 px-5" contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView style={{ flex: 1, paddingHorizontal: 20 }} contentContainerStyle={{ paddingBottom: 32 }}>
         {filteredArticles.map((article) =>
           article.type === "challenge" ? (
             <ChallengeCard
@@ -246,7 +226,7 @@ export default function ChaptersTab() {
           )
         )}
         {filteredArticles.length === 0 && (
-          <Text className="text-slate-400 text-sm text-center mt-8">
+          <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, color: JianColors.ink3, textAlign: 'center', marginTop: 32 }}>
             {segment === "dse-exam" && "暫無甲部指定篇章"}
             {segment === "dse-non-exam" && "暫無高中課文"}
             {segment === "other" && "暫無其他範文"}
