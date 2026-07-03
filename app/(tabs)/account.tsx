@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase"
 import { getArticleIndex, STANDARD_PART_TITLES } from "@/lib/data"
 import { refresh as refreshContent, clearCacheAndResync } from "@/lib/contentStore"
 import UpgradeModal from "@/components/UpgradeModal"
+import { Card, Button, ProgressBar, JianColors, JianTypography, JianSpacing } from "@/components/jian"
 
 const API_URL = process.env.EXPO_PUBLIC_ADMIN_URL || "https://ccladmin.mickey-calligraphy.art"
 
@@ -38,26 +39,21 @@ function formatSeconds(s: number): string {
   const totalMinutes = Math.floor(s / 60)
   const sec = s % 60
 
-  // Less than 1 minute: show seconds only
   if (totalMinutes === 0) return `${sec} 秒`
 
-  // Less than 1 hour: show minutes (and seconds if non-zero)
   if (totalMinutes < 60) {
     if (sec === 0) return `${totalMinutes} 分`
     return `${totalMinutes} 分 ${sec} 秒`
   }
 
-  // 1 hour or more: show hours and minutes
   const hours = Math.floor(totalMinutes / 60)
   const mins = totalMinutes % 60
 
-  // Less than 24 hours
   if (hours < 24) {
     if (mins === 0) return `${hours} 小時`
     return `${hours} 小時 ${mins} 分`
   }
 
-  // 24 hours or more: show days and hours
   const days = Math.floor(hours / 24)
   const remainingHours = hours % 24
   if (remainingHours === 0) return `${days} 天`
@@ -68,35 +64,30 @@ function timeDelta(totalSeconds: number, expectedSeconds: number): { label: stri
   const diff = totalSeconds - expectedSeconds
   const absDiff = Math.abs(diff)
 
-  // Less than 1 minute difference: on time
-  if (absDiff < 60) return { label: "準時完成", color: "text-slate-400" }
+  if (absDiff < 60) return { label: "準時完成", color: JianColors.ink3 }
 
-  // Format the difference appropriately
   const diffMinutes = Math.floor(absDiff / 60)
 
   if (diffMinutes < 60) {
-    // Less than 1 hour: show in minutes
-    if (diff > 0) return { label: `超時 ${diffMinutes} 分`, color: "text-red-500" }
-    return { label: `快 ${diffMinutes} 分`, color: "text-amber-600" }
+    if (diff > 0) return { label: `超時 ${diffMinutes} 分`, color: JianColors.vermilion }
+    return { label: `快 ${diffMinutes} 分`, color: JianColors.amber }
   }
 
-  // 1 hour or more: show in hours
   const diffHours = Math.floor(diffMinutes / 60)
   const remainingMins = diffMinutes % 60
   const hourLabel = remainingMins > 0 ? `${diffHours} 小時 ${remainingMins} 分` : `${diffHours} 小時`
 
-  if (diff > 0) return { label: `超時 ${hourLabel}`, color: "text-red-500" }
-  return { label: `快 ${hourLabel}`, color: "text-amber-600" }
+  if (diff > 0) return { label: `超時 ${hourLabel}`, color: JianColors.vermilion }
+  return { label: `快 ${hourLabel}`, color: JianColors.amber }
 }
 
 function AttemptRow({ attempt, title, onPress }: { attempt: ExerciseSession; title: string; onPress: () => void }) {
   const pct = Math.round((attempt.score / attempt.total_points) * 100)
-  const barColor = pct >= 80 ? "bg-amber-500" : pct >= 50 ? "bg-amber-300" : "bg-slate-300"
+  const progressVariant = pct >= 80 ? "jade" : pct >= 50 ? "amber" : "vermilion"
   const delta = attempt.total_seconds != null && attempt.expected_seconds != null
     ? timeDelta(attempt.total_seconds, attempt.expected_seconds)
     : null
 
-  // Exercise type badge
   const badge =
     attempt.kind === "dse-training" ? "🎓" :
     attempt.kind === "weight-training" ? "💪" :
@@ -104,43 +95,54 @@ function AttemptRow({ attempt, title, onPress }: { attempt: ExerciseSession; tit
     null
 
   return (
-    <Pressable
-      onPress={onPress}
-      className="bg-white rounded-2xl border border-slate-100 px-4 py-3 gap-2 active:opacity-70"
-    >
-      <View className="flex-row justify-between items-start">
-        <View className="flex-row items-center gap-1.5 flex-1 mr-2">
-          {badge && <Text className="text-base">{badge}</Text>}
-          <Text
-            className="text-sm font-bold text-slate-800 flex-1"
-            style={{ fontFamily: "Georgia" }}
-            numberOfLines={1}
-          >
-            {title}
-          </Text>
-        </View>
-        <Text className="text-xs text-slate-400">{formatDate(attempt.finished_at)}</Text>
-      </View>
-      <View className="flex-row items-center gap-2">
-        <View className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-          <View
-            className={`h-full rounded-full ${barColor}`}
-            style={{ width: `${pct}%` }}
-          />
-        </View>
-        <Text className="text-xs font-semibold text-slate-600">
-          {attempt.score}/{attempt.total_points}
-        </Text>
-      </View>
-      {attempt.total_seconds != null && (
-        <View className="flex-row items-center gap-2">
-          <Text className="text-xs text-slate-400">{formatSeconds(attempt.total_seconds)}</Text>
-          {delta && (
-            <Text className={`text-xs font-medium ${delta.color}`}>{delta.label}</Text>
+    <Pressable onPress={onPress}>
+      {({ pressed }) => (
+        <Card variant="default" style={{ marginBottom: 12, opacity: pressed ? 0.7 : 1 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, marginRight: 8 }}>
+              {badge && <Text style={{ fontSize: 16 }}>{badge}</Text>}
+              <Text
+                style={{
+                  fontFamily: JianTypography.serif,
+                  fontSize: JianTypography.bodySmall,
+                  fontWeight: JianTypography.bold,
+                  color: JianColors.ink,
+                  flex: 1
+                }}
+                numberOfLines={1}
+              >
+                {title}
+              </Text>
+            </View>
+            <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink3 }}>
+              {formatDate(attempt.finished_at)}
+            </Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <View style={{ flex: 1 }}>
+              <ProgressBar value={pct} variant={progressVariant} height={6} />
+            </View>
+            <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, fontWeight: JianTypography.semibold, color: JianColors.ink2 }}>
+              {attempt.score}/{attempt.total_points}
+            </Text>
+          </View>
+          {attempt.total_seconds != null && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink3 }}>
+                {formatSeconds(attempt.total_seconds)}
+              </Text>
+              {delta && (
+                <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, fontWeight: JianTypography.medium, color: delta.color }}>
+                  {delta.label}
+                </Text>
+              )}
+            </View>
           )}
-        </View>
+          <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink3, textAlign: 'right', marginTop: 4 }}>
+            查看詳情 →
+          </Text>
+        </Card>
       )}
-      <Text className="text-xs text-slate-300 text-right">查看詳情 →</Text>
     </Pressable>
   )
 }
@@ -172,7 +174,6 @@ export default function AccountScreen() {
         setLoadingAttempts(false)
       })
 
-    // Fetch revision summary
     if (!isAnonymous) {
       fetch(`${API_URL}/api/revision/summary?userId=${user.id}`)
         .then(res => res.json())
@@ -189,8 +190,8 @@ export default function AccountScreen() {
   }, [user, isAnonymous])
 
   if (loading) return (
-    <SafeAreaView className="flex-1 bg-slate-50 items-center justify-center">
-      <ActivityIndicator size="small" color="#d97706" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper, alignItems: 'center', justifyContent: 'center' }}>
+      <ActivityIndicator size="small" color={JianColors.amber} />
     </SafeAreaView>
   )
 
@@ -252,9 +253,9 @@ export default function AccountScreen() {
   const avatarUrl = isAnonymous ? null : profile?.avatar_url
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-50">
+    <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper }}>
       <ScrollView
-        className="flex-1"
+        style={{ flex: 1 }}
         contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 48 }}
         showsVerticalScrollIndicator={false}
       >
@@ -268,126 +269,138 @@ export default function AccountScreen() {
             }
           }}
           hitSlop={12}
-          className="self-start mb-6"
+          style={{ alignSelf: 'flex-start', marginBottom: 24 }}
         >
-          <Text className="text-amber-600 font-semibold text-sm">← 返回</Text>
+          <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.semibold, color: JianColors.vermilion }}>
+            ← 返回
+          </Text>
         </Pressable>
 
         {/* User card */}
-        <View className="bg-white rounded-2xl border border-slate-100 shadow-sm px-5 py-5 items-center gap-2 mb-6">
+        <Card variant="default" style={{ alignItems: 'center', marginBottom: 24 }}>
           {avatarUrl ? (
             <Image
               source={{ uri: avatarUrl }}
               style={{ width: 72, height: 72, borderRadius: 36 }}
             />
           ) : (
-            <View className="w-18 h-18 rounded-full bg-amber-100 items-center justify-center" style={{ width: 72, height: 72, borderRadius: 36 }}>
-              <Text className="text-3xl">👤</Text>
+            <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: JianColors.amberTint, alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ fontSize: 32 }}>👤</Text>
             </View>
           )}
-          <Text className="text-base font-bold text-slate-800 mt-1">{displayName}</Text>
-          {!isAnonymous && <Text className="text-xs text-slate-400">{user?.email}</Text>}
-          {isAnonymous && (
-            <Pressable
-              onPress={() => router.push("/login")}
-              className="mt-1 bg-amber-500 rounded-xl px-5 py-2 active:opacity-80"
-            >
-              <Text className="text-white font-semibold text-sm">登入 / 建立帳戶</Text>
-            </Pressable>
+          <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.body, fontWeight: JianTypography.bold, color: JianColors.ink, marginTop: 8 }}>
+            {displayName}
+          </Text>
+          {!isAnonymous && (
+            <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink3 }}>
+              {user?.email}
+            </Text>
           )}
-        </View>
+          {isAnonymous && (
+            <View style={{ marginTop: 8 }}>
+              <Button variant="primary" size="medium" onPress={() => router.push("/login")}>
+                登入 / 建立帳戶
+              </Button>
+            </View>
+          )}
+        </Card>
 
         {/* Logged-in only: analytics + history button */}
         {!isAnonymous && (
           <>
             {/* Revision Analytics */}
             {!loadingRevision && revisionSummary && revisionSummary.overall.totalMistakes > 0 && (
-              <View className="mb-6">
-                <View className="bg-gradient-to-br from-amber-50 to-white rounded-2xl border border-amber-200 px-5 py-4">
-                  <Text className="text-2xl font-bold text-slate-800 mb-2">
-                    文言文能力分析
-                  </Text>
-                  <Text className="text-sm text-slate-600 mb-4">
-                    {revisionSummary.overall.totalMistakes} 題失誤
-                    {revisionSummary.overall.weakestPart && (
-                      <>：最弱部分 {STANDARD_PART_TITLES[revisionSummary.overall.weakestPart] || `第 ${revisionSummary.overall.weakestPart} 部分`} ({revisionSummary.overall.weakestPartCount} 題)</>
-                    )}
-                  </Text>
-                  <Pressable
-                    onPress={() => router.push("/revision")}
-                    className="bg-amber-500 rounded-xl py-3 active:opacity-80"
-                  >
-                    <Text className="text-white font-semibold text-center">詳細報告</Text>
-                  </Pressable>
-                </View>
-              </View>
+              <Card variant="near-complete" style={{ marginBottom: 24 }}>
+                <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.title, fontWeight: JianTypography.bold, color: JianColors.ink, marginBottom: 8 }}>
+                  文言文能力分析
+                </Text>
+                <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, color: JianColors.ink, marginBottom: 16 }}>
+                  {revisionSummary.overall.totalMistakes} 題失誤
+                  {revisionSummary.overall.weakestPart && (
+                    <>：最弱部分 {STANDARD_PART_TITLES[revisionSummary.overall.weakestPart] || `第 ${revisionSummary.overall.weakestPart} 部分`} ({revisionSummary.overall.weakestPartCount} 題)</>
+                  )}
+                </Text>
+                <Button variant="primary" size="medium" fullWidth onPress={() => router.push("/revision")}>
+                  詳細報告
+                </Button>
+              </Card>
             )}
 
             {/* Exercise History Button */}
-            <Pressable
-              onPress={() => router.push("/exercise-history")}
-              className="bg-white rounded-2xl border border-slate-100 shadow-sm px-5 py-4 mb-6 active:opacity-70"
-            >
-              <View className="flex-row items-center justify-between">
-                <View>
-                  <Text className="text-lg font-bold text-slate-800 mb-1">所有練習紀錄</Text>
-                  {loadingAttempts ? (
-                    <Text className="text-sm text-slate-500">載入中...</Text>
-                  ) : (
-                    <Text className="text-sm text-slate-500">已完成 {attempts.length} 次練習</Text>
-                  )}
-                </View>
-                <Text className="text-slate-300 text-xl">→</Text>
-              </View>
+            <Pressable onPress={() => router.push("/exercise-history")}>
+              {({ pressed }) => (
+                <Card variant="default" style={{ marginBottom: 24, opacity: pressed ? 0.7 : 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <View>
+                      <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.heading, fontWeight: JianTypography.bold, color: JianColors.ink, marginBottom: 4 }}>
+                        所有練習紀錄
+                      </Text>
+                      {loadingAttempts ? (
+                        <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, color: JianColors.ink2 }}>載入中...</Text>
+                      ) : (
+                        <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, color: JianColors.ink2 }}>
+                          已完成 {attempts.length} 次練習
+                        </Text>
+                      )}
+                    </View>
+                    <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.title, color: JianColors.ink3 }}>→</Text>
+                  </View>
+                </Card>
+              )}
             </Pressable>
 
           </>
         )}
 
         {/* Sync actions */}
-        <View className="mt-8">
-          <Text className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
+        <View style={{ marginTop: 32 }}>
+          <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.tiny, fontWeight: JianTypography.bold, color: JianColors.ink3, letterSpacing: 1.2, marginBottom: 12 }}>
             內容同步
           </Text>
 
           {/* Incremental refresh */}
-          <Pressable
-            onPress={handleRefreshContent}
-            disabled={syncing}
-            className="border border-slate-200 rounded-2xl py-4 items-center active:opacity-70 bg-white mb-3"
-          >
-            {syncing ? (
-              <ActivityIndicator size="small" color="#d97706" />
-            ) : (
-              <View className="items-center">
-                <Text className="text-amber-600 font-semibold text-sm mb-0.5">
-                  {syncMsg ?? "檢查更新"}
-                </Text>
-                <Text className="text-slate-400 text-xs">增量同步（推薦）</Text>
-              </View>
+          <Pressable onPress={handleRefreshContent} disabled={syncing}>
+            {({ pressed }) => (
+              <Card variant="default" style={{ alignItems: 'center', marginBottom: 12, opacity: pressed ? 0.7 : syncing ? 0.5 : 1 }}>
+                {syncing ? (
+                  <ActivityIndicator size="small" color={JianColors.amber} />
+                ) : (
+                  <View style={{ alignItems: 'center' }}>
+                    <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.semibold, color: JianColors.amber, marginBottom: 2 }}>
+                      {syncMsg ?? "檢查更新"}
+                    </Text>
+                    <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink3 }}>增量同步（推薦）</Text>
+                  </View>
+                )}
+              </Card>
             )}
           </Pressable>
 
           {/* Full resync */}
-          <Pressable
-            onPress={handleClearCacheAndResync}
-            disabled={syncing}
-            className="border border-slate-200 rounded-2xl py-4 items-center active:opacity-70 bg-white"
-          >
-            <View className="items-center">
-              <Text className="text-red-500 font-semibold text-sm mb-0.5">清除快取並重新同步</Text>
-              <Text className="text-slate-400 text-xs">完整重新下載（修復用）</Text>
-            </View>
+          <Pressable onPress={handleClearCacheAndResync} disabled={syncing}>
+            {({ pressed }) => (
+              <Card variant="default" style={{ alignItems: 'center', opacity: pressed ? 0.7 : syncing ? 0.5 : 1 }}>
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.semibold, color: JianColors.vermilion, marginBottom: 2 }}>
+                    清除快取並重新同步
+                  </Text>
+                  <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink3 }}>完整重新下載（修復用）</Text>
+                </View>
+              </Card>
+            )}
           </Pressable>
         </View>
 
         {/* Sign out — logged-in only */}
         {!isAnonymous && (
-          <Pressable
-            onPress={handleSignOut}
-            className="border border-slate-200 rounded-2xl py-4 items-center active:opacity-70 bg-white mt-3"
-          >
-            <Text className="text-slate-500 font-semibold text-sm">登出</Text>
+          <Pressable onPress={handleSignOut}>
+            {({ pressed }) => (
+              <Card variant="default" style={{ alignItems: 'center', marginTop: 12, opacity: pressed ? 0.7 : 1 }}>
+                <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.semibold, color: JianColors.ink2 }}>
+                  登出
+                </Text>
+              </Card>
+            )}
           </Pressable>
         )}
       </ScrollView>
