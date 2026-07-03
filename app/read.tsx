@@ -9,6 +9,7 @@ import UpgradeModal from "@/components/UpgradeModal"
 import type { Footnote } from "@/lib/types"
 import ArticleText from "@/components/reading/ArticleText"
 import FootnotePanel from "@/components/reading/FootnotePanel"
+import { Card, Button, JianColors, JianTypography, JianRadius } from "@/components/jian"
 
 type TabMode = "original" | "translation"
 
@@ -41,107 +42,143 @@ export default function ReadScreen() {
 
   if (gated) {
     return (
-      <SafeAreaView className="flex-1 bg-slate-50">
+      <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper }}>
         <UpgradeModal visible={true} onClose={() => router.back()} />
       </SafeAreaView>
     )
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-50">
-      <View className="flex-1">
+    <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper }}>
+      <View style={{ flex: 1 }}>
         <ScrollView
-          className="flex-1 px-5"
-          contentContainerClassName="py-8 pb-12"
+          style={{ flex: 1, paddingHorizontal: 20 }}
+          contentContainerStyle={{ paddingTop: 32, paddingBottom: 48 }}
           onScroll={handleScroll}
           scrollEventThrottle={200}
         >
-          <Pressable onPress={() => router.back()} className="mb-6" hitSlop={12}>
-            <Text className="text-sm text-slate-400">← 返回</Text>
+          <Pressable onPress={() => router.back()} style={{ marginBottom: 24 }} hitSlop={12}>
+            <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.semibold, color: JianColors.vermilion }}>
+              ← 返回
+            </Text>
           </Pressable>
 
-          <View className="flex-row items-baseline mb-1">
-            <Text className="text-xl font-bold text-slate-800" style={{ fontFamily: "Georgia" }}>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', marginBottom: 4 }}>
+            <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.title, fontWeight: JianTypography.bold, color: JianColors.ink }}>
               {article.title}
             </Text>
             {article.titleFootnoteId && (
               <Text
                 onPress={() => handleFootnoteTap(article.titleFootnoteId!)}
-                className="text-amber-600 font-bold text-sm ml-0.5"
+                style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.bold, color: JianColors.vermilion, marginLeft: 2 }}
               >
                 {article.footnotes.find((f) => f.id === article.titleFootnoteId)?.marker ?? `(${article.titleFootnoteId})`}
               </Text>
             )}
           </View>
-          <Text className="text-xs text-slate-400 mb-6">{article.source ?? ""}</Text>
+          <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink3, marginBottom: 24 }}>
+            {article.source ?? ""}
+          </Text>
 
           {/* Tab Selector */}
-          <View className="flex-row gap-2 mb-4">
+          <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
             <Pressable
               onPress={() => setTabMode("original")}
-              className={`flex-1 py-3 rounded-xl items-center ${
-                tabMode === "original" ? "bg-amber-500" : "bg-white border border-slate-200"
-              }`}
+              style={{ flex: 1 }}
             >
-              <Text
-                className={`font-semibold text-base ${
-                  tabMode === "original" ? "text-white" : "text-slate-600"
-                }`}
-                style={{ fontFamily: "Georgia" }}
-              >
-                原文
-              </Text>
+              {({ pressed }) => (
+                <View
+                  style={{
+                    paddingVertical: 12,
+                    borderRadius: JianRadius.button,
+                    alignItems: 'center',
+                    backgroundColor: tabMode === "original" ? JianColors.vermilion : JianColors.surface,
+                    borderWidth: 1,
+                    borderColor: tabMode === "original" ? JianColors.vermilion : JianColors.line,
+                    opacity: pressed ? 0.7 : 1
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontFamily: JianTypography.serif,
+                      fontSize: JianTypography.body,
+                      fontWeight: JianTypography.semibold,
+                      color: tabMode === "original" ? JianColors.paper : JianColors.ink2
+                    }}
+                  >
+                    原文
+                  </Text>
+                </View>
+              )}
             </Pressable>
             <Pressable
               onPress={() => setTabMode("translation")}
-              className={`flex-1 py-3 rounded-xl items-center ${
-                tabMode === "translation" ? "bg-amber-500" : "bg-white border border-slate-200"
-              }`}
+              style={{ flex: 1 }}
             >
-              <Text
-                className={`font-semibold text-base ${
-                  tabMode === "translation" ? "text-white" : "text-slate-600"
-                }`}
-                style={{ fontFamily: "Georgia" }}
-              >
-                白話文語譯
-              </Text>
+              {({ pressed }) => (
+                <View
+                  style={{
+                    paddingVertical: 12,
+                    borderRadius: JianRadius.button,
+                    alignItems: 'center',
+                    backgroundColor: tabMode === "translation" ? JianColors.vermilion : JianColors.surface,
+                    borderWidth: 1,
+                    borderColor: tabMode === "translation" ? JianColors.vermilion : JianColors.line,
+                    opacity: pressed ? 0.7 : 1
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontFamily: JianTypography.serif,
+                      fontSize: JianTypography.body,
+                      fontWeight: JianTypography.semibold,
+                      color: tabMode === "translation" ? JianColors.paper : JianColors.ink2
+                    }}
+                  >
+                    白話文語譯
+                  </Text>
+                </View>
+              )}
             </Pressable>
           </View>
 
           {/* Tab Content */}
           {tabMode === "original" ? (
             <>
-              <View className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+              <Card variant="default" padding={20}>
                 <ArticleText
                   segments={article.segments}
                   footnotes={article.footnotes}
                   onFootnoteTap={handleFootnoteTap}
                 />
-              </View>
+              </Card>
 
               {article.footnotes.length > 0 && (
-                <Text className="text-xs text-slate-400 text-center mt-4">
-                  點擊 <Text className="text-amber-600 font-bold">(1)</Text> 查看注釋
+                <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink3, textAlign: 'center', marginTop: 16 }}>
+                  點擊 <Text style={{ fontFamily: JianTypography.serif, fontWeight: JianTypography.bold, color: JianColors.vermilion }}>(1)</Text> 查看注釋
                 </Text>
               )}
             </>
           ) : (
-            <View className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 gap-3">
+            <Card variant="default" padding={20} style={{ gap: 12 }}>
               {article.modernTranslation.map((p, i) => (
-                <Text key={i} className="text-slate-700 text-sm leading-7">
+                <Text key={i} style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.bodySmall, color: JianColors.ink, lineHeight: 28 }}>
                   {p}
                 </Text>
               ))}
-            </View>
+            </Card>
           )}
 
-          <Pressable
-            onPress={() => router.push({ pathname: "/quiz", params: { id } })}
-            className="mt-8 w-full py-3.5 rounded-xl bg-amber-500 items-center active:opacity-80"
-          >
-            <Text className="text-white font-semibold text-base">開始測驗 →</Text>
-          </Pressable>
+          <View style={{ marginTop: 32 }}>
+            <Button
+              variant="primary"
+              size="large"
+              fullWidth
+              onPress={() => router.push({ pathname: "/quiz", params: { id } })}
+            >
+              開始測驗 →
+            </Button>
+          </View>
         </ScrollView>
 
         {tabMode === "original" && (
