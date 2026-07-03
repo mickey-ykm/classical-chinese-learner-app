@@ -28,19 +28,23 @@ export const JianColors = {
   amber: '#bb8a2e',      // Warning, high progress
 
   // Tints (13-17% opacity mix with paper)
-  vermilionTint: '#f9ebe9',
-  jadeTint: '#ecf1ee',
-  amberTint: '#f7f1e8',
+  vermilionTint: '#f3e9e8',
+  jadeTint: '#e9ede9',
+  amberTint: '#f4f0e6',
 
-  // Borders (34-42% opacity mix with paper)
-  vermilionBorder: '#e5c5c0',
-  jadeBorder: '#d1ddd5',
-  amberBorder: '#e8dcc8',
+  // Border variants (30-34% opacity mix with paper)
+  vermilionBorder: '#dac6c3',
+  jadeBorder: '#d2dcd2',
+  amberBorder: '#e5dcca',
 } as const
 
 export const JianTypography = {
   // Font families - loaded via expo-google-fonts
+  // Use getFontFamily() helper for proper weight handling
   serif: 'NotoSerifTC_400Regular',  // Chinese text with proper serif support
+  serifMedium: 'NotoSerifTC_500Medium',
+  serifSemiBold: 'NotoSerifTC_600SemiBold',
+  serifBold: 'NotoSerifTC_700Bold',
   sans: 'System',                    // Labels, captions, UI text
   number: 'NotoSerifTC_400Regular',  // Numbers, timers, scores
 
@@ -57,7 +61,8 @@ export const JianTypography = {
   // Line heights (for classical Chinese text)
   classicalLineHeight: 2.3,
 
-  // Font weights - use appropriate font variants instead
+  // Font weights - use for reference only
+  // For Noto Serif TC, use the appropriate font variant instead
   regular: '400' as const,
   medium: '500' as const,
   semibold: '600' as const,
@@ -65,68 +70,44 @@ export const JianTypography = {
   black: '900' as const,
 } as const
 
+/**
+ * Get the correct font family name based on weight for Noto Serif TC
+ * System font supports fontWeight, but custom fonts need specific variants
+ */
+export function getSerifFont(weight?: '400' | '500' | '600' | '700'): string {
+  switch (weight) {
+    case '500': return JianTypography.serifMedium
+    case '600': return JianTypography.serifSemiBold
+    case '700': return JianTypography.serifBold
+    default: return JianTypography.serif
+  }
+}
+
 export const JianSpacing = {
   // Base unit: 4px
   xs: 4,
   sm: 8,
   md: 12,
   lg: 16,
-  xl: 24,
-  xxl: 32,
-
-  // Semantic spacing
-  cardPadding: 16,
-  sectionGap: 24,
-  itemGap: 12,
+  xl: 20,
+  xxl: 24,
+  xxxl: 32,
 } as const
 
 export const JianRadius = {
-  // Border radius values
-  chip: 3,
-  badge: 4,
-  button: 6,
-  input: 8,
+  button: 11,
   card: 11,
-  modal: 20,
+  input: 11,
+  badge: 5,
   full: 9999,
 } as const
 
 export const JianShadows = {
   card: {
-    shadowColor: '#2c2722',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  cardLarge: {
-    shadowColor: '#2c2722',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.12,
-    shadowRadius: 20,
-    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
 } as const
-
-export const JianMascotColors = {
-  // Mascot-specific colors (not used in UI)
-  robe: '#46586a',        // 袍 (robe)
-  ink: '#2f2a25',         // 墨 (ink stick)
-  bamboo: '#cba24e',      // 竹金 (bamboo/gold)
-  skin: '#f2ddb0',        // 膚 (skin)
-  jade: '#dce8d6',        // 玉鏡 (jade mirror)
-} as const
-
-/**
- * Utility function to get font family string
- */
-export function getJianFont(type: 'serif' | 'sans' | 'number'): string {
-  switch (type) {
-    case 'serif':
-      return JianTypography.serif
-    case 'sans':
-      return JianTypography.sans
-    case 'number':
-      return JianTypography.number
-  }
-}

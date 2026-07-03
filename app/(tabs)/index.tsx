@@ -10,7 +10,7 @@ import { subscribeToUpdates } from "@/lib/contentStore"
 import { fetchArticleProgress, type ArticleProgressMap } from "@/lib/articleProgress"
 import type { ArticleEntry } from "@/lib/types"
 import Svg, { Circle, Ellipse, Path, Rect, Polygon, Line } from "react-native-svg"
-import { Card, Button, Badge, ProgressBar, JianColors, JianTypography, JianSpacing } from "@/components/jian"
+import { Card, Button, Badge, ProgressBar, JianColors, JianTypography, JianSpacing, getSerifFont } from "@/components/jian"
 
 function DemonMascot({ size = 64 }: { size?: number }) {
   const s = size
@@ -77,9 +77,8 @@ function ArticlePreviewCard({
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
                 <Text
                   style={{
-                    fontFamily: JianTypography.serif,
+                    fontFamily: getSerifFont('700'),
                     fontSize: JianTypography.bodySmall,
-                    fontWeight: JianTypography.bold,
                     color: JianColors.ink,
                     flex: 1,
                     lineHeight: 20
@@ -177,7 +176,7 @@ export default function HomeTab() {
 
         {/* Greeting */}
         <View style={{ marginBottom: 24 }}>
-          <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.title, fontWeight: JianTypography.bold, color: JianColors.ink, marginBottom: 4 }}>
+          <Text style={{ fontFamily: getSerifFont('700'), fontSize: JianTypography.title, color: JianColors.ink, marginBottom: 4 }}>
             你好！
           </Text>
           <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, color: JianColors.ink2 }}>歡迎回到文言文練習平台</Text>
@@ -190,7 +189,7 @@ export default function HomeTab() {
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Text style={{ fontSize: 24 }}>⚡</Text>
-                <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.heading, fontWeight: JianTypography.bold, color: JianColors.paper }}>
+                <Text style={{ fontFamily: getSerifFont('700'), fontSize: JianTypography.heading, color: JianColors.paper }}>
                   DSE 操練
                 </Text>
               </View>
@@ -209,7 +208,7 @@ export default function HomeTab() {
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                       <Text style={{ fontSize: 20, marginRight: 12 }}>📝</Text>
-                      <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.semibold, color: JianColors.ink }}>
+                      <Text style={{ fontFamily: getSerifFont('600'), fontSize: JianTypography.bodySmall, color: JianColors.ink }}>
                         DSE 模擬考題
                       </Text>
                     </View>
@@ -225,7 +224,7 @@ export default function HomeTab() {
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                       <Text style={{ fontSize: 20, marginRight: 12 }}>📚</Text>
-                      <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.semibold, color: JianColors.ink }}>
+                      <Text style={{ fontFamily: getSerifFont('600'), fontSize: JianTypography.bodySmall, color: JianColors.ink }}>
                         文章錯題重溫
                       </Text>
                     </View>
@@ -241,7 +240,7 @@ export default function HomeTab() {
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                       <Text style={{ fontSize: 20, marginRight: 12 }}>🎯</Text>
-                      <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.semibold, color: JianColors.ink }}>
+                      <Text style={{ fontFamily: getSerifFont('600'), fontSize: JianTypography.bodySmall, color: JianColors.ink }}>
                         語基能力錯題重溫
                       </Text>
                     </View>
@@ -257,7 +256,7 @@ export default function HomeTab() {
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                       <Text style={{ fontSize: 20, marginRight: 12 }}>💪</Text>
-                      <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.semibold, color: JianColors.ink }}>
+                      <Text style={{ fontFamily: getSerifFont('600'), fontSize: JianTypography.bodySmall, color: JianColors.ink }}>
                         針對性難題訓練
                       </Text>
                     </View>
@@ -272,7 +271,7 @@ export default function HomeTab() {
         {/* 繼續篇章 section (combines DSE + Other) */}
         <View style={{ marginBottom: 24 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.body, fontWeight: JianTypography.bold, color: JianColors.ink }}>
+            <Text style={{ fontFamily: getSerifFont('700'), fontSize: JianTypography.body, color: JianColors.ink }}>
               📖 繼續篇章
             </Text>
             <Pressable onPress={() => router.push("/(tabs)/chapters")} hitSlop={8}>
@@ -302,7 +301,7 @@ export default function HomeTab() {
         {/* Recent history */}
         <View style={{ marginBottom: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.body, fontWeight: JianTypography.bold, color: JianColors.ink }}>
+            <Text style={{ fontFamily: getSerifFont('700'), fontSize: JianTypography.body, color: JianColors.ink }}>
               最近練習
             </Text>
             {user && (
