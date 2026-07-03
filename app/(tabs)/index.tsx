@@ -56,6 +56,15 @@ function ArticleRow({ article, progress, onPress }: {
 }) {
   const isPaid = !article.isFree
 
+  // Get article type badge text
+  const getArticleTypeBadge = () => {
+    if (article.articleType === 'dse-exam') return 'DSE 甲部'
+    if (article.articleType === 'dse-non-exam') return '高中課文'
+    return null
+  }
+
+  const badgeText = getArticleTypeBadge()
+
   return (
     <Pressable onPress={onPress}>
       {({ pressed }) => (
@@ -68,19 +77,50 @@ function ArticleRow({ article, progress, onPress }: {
           borderBottomColor: JianColors.line,
           opacity: pressed ? 0.7 : 1
         }}>
-          <View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Text style={{ fontFamily: getSerifFont('600'), fontSize: 20, color: JianColors.ink }}>
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <Text style={{
+                fontFamily: getSerifFont('600'),
+                fontSize: 20,
+                color: isPaid ? JianColors.ink3 : JianColors.ink
+              }}>
                 {article.title}
               </Text>
-              {isPaid && <Badge type="lock" text="付費" />}
+              {badgeText && (
+                <View style={{
+                  paddingHorizontal: 8,
+                  paddingVertical: 2,
+                  backgroundColor: JianColors.surface2,
+                  borderRadius: 4
+                }}>
+                  <Text style={{
+                    fontFamily: JianTypography.sans,
+                    fontSize: 11,
+                    color: JianColors.vermilion
+                  }}>
+                    {badgeText}
+                  </Text>
+                </View>
+              )}
             </View>
-            <Text style={{ fontFamily: JianTypography.serif, fontSize: 12, color: JianColors.ink3, marginTop: 3 }}>
+            <Text style={{ fontFamily: JianTypography.serif, fontSize: 12, color: isPaid ? JianColors.ink3 : JianColors.ink3, marginTop: 3 }}>
               {article.source} · {article.totalQuestions}+ 題
             </Text>
           </View>
-          <View style={{ textAlign: 'right' }}>
-            {progress && progress.seenCount > 0 ? (
+          <View style={{ alignItems: 'flex-end', marginLeft: 12 }}>
+            {isPaid ? (
+              <>
+                <Badge type="lock" text="付費" />
+                <Text style={{
+                  fontFamily: JianTypography.sans,
+                  fontSize: 10,
+                  color: JianColors.vermilion,
+                  marginTop: 4
+                }}>
+                  註冊解鎖
+                </Text>
+              </>
+            ) : progress && progress.seenCount > 0 ? (
               <>
                 <Text style={{ fontFamily: JianTypography.number, fontSize: 15, color: JianColors.jade }}>
                   {progress.seenCount}
