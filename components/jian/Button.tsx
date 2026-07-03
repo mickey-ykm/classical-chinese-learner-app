@@ -84,13 +84,11 @@ export function Button({
           alignItems: 'center',
           justifyContent: 'center',
           opacity: pressed ? 0.8 : 1,
+          paddingVertical: currentSize.paddingVertical,
+          paddingHorizontal: currentSize.paddingHorizontal,
           ...(fullWidth && { width: '100%' }),
         },
         variantStyles,
-        {
-          paddingVertical: currentSize.paddingVertical,
-          paddingHorizontal: currentSize.paddingHorizontal,
-        },
       ]}
     >
       {loading ? (
