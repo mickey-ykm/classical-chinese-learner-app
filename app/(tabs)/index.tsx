@@ -233,17 +233,17 @@ export default function HomeTab() {
           </View>
         )}
 
-        {/* 繼續練習 section - list with borders */}
+        {/* 篇章練習 section - list with borders */}
         <View style={{ marginBottom: 26 }}>
           <Text style={{ fontFamily: JianTypography.sans, fontSize: 11, letterSpacing: 2, color: JianColors.ink3, marginBottom: 4 }}>
-            繼 續 篇 章
+            篇 章 練 習
           </Text>
-          {[...dseArticles, ...otherArticles].slice(0, 3).length === 0 ? (
+          {[...dseArticles, ...otherArticles].slice(0, 5).length === 0 ? (
             <Text style={{ fontFamily: JianTypography.serif, fontSize: 14, color: JianColors.ink3, textAlign: 'center', paddingVertical: 20 }}>
               暫無文章
             </Text>
           ) : (
-            [...dseArticles, ...otherArticles].slice(0, 3).map((article) => (
+            [...dseArticles, ...otherArticles].slice(0, 5).map((article) => (
               <ArticleRow
                 key={article.id}
                 article={article}
