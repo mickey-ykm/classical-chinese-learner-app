@@ -1,7 +1,7 @@
 import { ScrollView, View, Text, Pressable } from "react-native"
 import { useRouter } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
-import { Card, Button, JianColors, JianTypography, JianSpacing } from "@/components/jian"
+import { Card, Button, JianColors, JianTypography, JianSpacing, getSerifFont } from "@/components/jian"
 
 export default function PracticeTab() {
   const router = useRouter()
@@ -11,7 +11,7 @@ export default function PracticeTab() {
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 32 }}>
         {/* Header */}
         <View style={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 8 }}>
-          <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.title, fontWeight: JianTypography.bold, color: JianColors.ink }}>
+          <Text style={{ fontFamily: getSerifFont('700'), fontSize: JianTypography.title, color: JianColors.ink }}>
             操練
           </Text>
           <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink2, marginTop: 4 }}>
@@ -26,7 +26,7 @@ export default function PracticeTab() {
               <Card variant="ink" style={{ opacity: pressed ? 0.9 : 1 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.heading, fontWeight: JianTypography.bold, color: JianColors.paper, lineHeight: 24 }}>
+                    <Text style={{ fontFamily: getSerifFont('700'), fontSize: JianTypography.heading, color: JianColors.paper, lineHeight: 24 }}>
                       DSE 模擬考題
                     </Text>
                     <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink3, marginTop: 4 }}>
@@ -55,7 +55,7 @@ export default function PracticeTab() {
                 {/* Placeholder for icon */}
                 <View style={{ width: 48, height: 48, backgroundColor: JianColors.vermilionTint, borderRadius: 24, marginRight: 12 }} />
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.body, fontWeight: JianTypography.semibold, color: JianColors.ink }}>
+                  <Text style={{ fontFamily: getSerifFont('600'), fontSize: JianTypography.body, color: JianColors.ink }}>
                     文章錯題重溫
                   </Text>
                   <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink2, marginTop: 2 }}>
@@ -76,7 +76,7 @@ export default function PracticeTab() {
                 {/* Placeholder for icon */}
                 <View style={{ width: 48, height: 48, backgroundColor: JianColors.jadeTint, borderRadius: 24, marginRight: 12 }} />
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.body, fontWeight: JianTypography.semibold, color: JianColors.ink }}>
+                  <Text style={{ fontFamily: getSerifFont('600'), fontSize: JianTypography.body, color: JianColors.ink }}>
                     語基能力錯題重溫
                   </Text>
                   <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink2, marginTop: 2 }}>
@@ -97,7 +97,7 @@ export default function PracticeTab() {
                 {/* Placeholder for icon */}
                 <View style={{ width: 48, height: 48, backgroundColor: JianColors.amberTint, borderRadius: 24, marginRight: 12 }} />
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.body, fontWeight: JianTypography.semibold, color: JianColors.ink }}>
+                  <Text style={{ fontFamily: getSerifFont('600'), fontSize: JianTypography.body, color: JianColors.ink }}>
                     針對性難題訓練
                   </Text>
                   <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink2, marginTop: 2 }}>
