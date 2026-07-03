@@ -76,9 +76,10 @@ export function Button({
 
   return (
     <Pressable
-      {...props}
       disabled={isDisabled}
+      {...props}
       style={({ pressed }) => [
+        props.style,
         {
           borderRadius: JianRadius.button,
           alignItems: 'center',
@@ -87,8 +88,10 @@ export function Button({
           paddingVertical: currentSize.paddingVertical,
           paddingHorizontal: currentSize.paddingHorizontal,
           ...(fullWidth && { width: '100%' }),
+          backgroundColor: variantStyles.backgroundColor,
+          borderWidth: variantStyles.borderWidth,
+          borderColor: variantStyles.borderColor,
         },
-        variantStyles,
       ]}
     >
       {loading ? (
