@@ -4,7 +4,7 @@ import { useRouter } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { Logo } from "@/components/Logo"
 import { useAuth } from "@/hooks/useAuth"
-import { Button, Card, JianColors, JianTypography, JianRadius } from "@/components/jian"
+import { Button, Card, JianColors, JianTypography, JianRadius, getSerifFont } from "@/components/jian"
 
 export default function LoginScreen() {
   const router = useRouter()
@@ -85,7 +85,7 @@ export default function LoginScreen() {
       {/* Back button */}
       <View style={{ paddingHorizontal: 20, paddingTop: 16 }}>
         <Pressable onPress={() => router.back()} hitSlop={12} style={{ alignSelf: 'flex-start' }}>
-          <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.semibold, color: JianColors.vermilion }}>
+          <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, fontWeight: '600', color: JianColors.vermilion }}>
             ← 返回
           </Text>
         </Pressable>
@@ -94,7 +94,7 @@ export default function LoginScreen() {
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 32 }}>
         <View style={{ alignItems: 'center', gap: 12 }}>
           <Logo size={96} />
-          <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.title, fontWeight: JianTypography.bold, color: JianColors.ink }}>
+          <Text style={{ fontFamily: getSerifFont('700'), fontSize: JianTypography.title, color: JianColors.ink }}>
             文言教室
           </Text>
           <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, color: JianColors.ink3, textAlign: 'center' }}>
@@ -115,7 +115,7 @@ export default function LoginScreen() {
                   ) : (
                     <>
                       <Text style={{ fontSize: 24 }}>G</Text>
-                      <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.body, fontWeight: JianTypography.semibold, color: JianColors.ink }}>
+                      <Text style={{ fontFamily: getSerifFont('600'), fontSize: JianTypography.body, color: JianColors.ink }}>
                         以 Google 帳號登入
                       </Text>
                     </>
@@ -169,7 +169,7 @@ export default function LoginScreen() {
             </>
           ) : (
             <Card variant="near-complete">
-              <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.body, fontWeight: JianTypography.semibold, color: JianColors.ink, textAlign: 'center' }}>
+              <Text style={{ fontFamily: getSerifFont('600'), fontSize: JianTypography.body, color: JianColors.ink, textAlign: 'center' }}>
                 ✉️ 登入連結已發送
               </Text>
               <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, color: JianColors.ink, textAlign: 'center', marginTop: 8 }}>
