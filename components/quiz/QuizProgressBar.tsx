@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react"
 import { View, Text, Animated } from "react-native"
+import { JianColors, JianTypography } from "@/components/jian"
 
 interface Props {
   current: number
@@ -18,17 +19,21 @@ export default function QuizProgressBar({ current, total }: Props) {
   }, [current, total])
 
   return (
-    <View className="w-full">
-      <View className="flex-row justify-between mb-1">
-        <Text className="text-xs text-slate-400">題目進度</Text>
-        <Text className="text-xs text-slate-400">
+    <View style={{ width: '100%' }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+        <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink3 }}>
+          題目進度
+        </Text>
+        <Text style={{ fontFamily: JianTypography.number, fontSize: JianTypography.caption, color: JianColors.ink3 }}>
           {current} / {total}
         </Text>
       </View>
-      <View className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+      <View style={{ height: 8, width: '100%', backgroundColor: JianColors.line, borderRadius: 4, overflow: 'hidden' }}>
         <Animated.View
-          className="h-full bg-amber-400 rounded-full"
           style={{
+            height: '100%',
+            backgroundColor: JianColors.amber,
+            borderRadius: 4,
             width: widthAnim.interpolate({
               inputRange: [0, 1],
               outputRange: ["0%", "100%"],

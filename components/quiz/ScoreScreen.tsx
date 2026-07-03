@@ -4,6 +4,7 @@ import type { Question, QuizAnswer } from "@/lib/types"
 import { calculateScore, getPartScore } from "@/lib/quiz"
 import { getNextQuizId, getArticleIndex, STANDARD_PART_TITLES } from "@/lib/data"
 import { Mascot } from "@/components/Mascot"
+import { Card, Button, JianColors, JianTypography, JianSpacing } from "@/components/jian"
 
 interface Props {
   questions: Question[]
@@ -30,62 +31,87 @@ export default function ScoreScreen({ questions, answers, partTitles, articleId,
       ? "不錯！繼續努力！"
       : percentage >= 40
       ? "加油！多讀原文！"
-      : "再接再厲！"
+      : "再接再厵！"
 
   const parts = [...new Set(questions.map((q) => q.part))].sort() as (1 | 2 | 3 | 4)[]
 
   return (
-    <ScrollView className="flex-1" contentContainerClassName="items-center gap-6 py-6 px-5">
+    <ScrollView style={{ flex: 1, backgroundColor: JianColors.paper }} contentContainerStyle={{ alignItems: 'center', gap: 24, paddingVertical: 24, paddingHorizontal: 20 }}>
       <Mascot mood={percentage >= 60 ? "happy" : "sad"} size={110} />
 
-      <View className="items-center gap-1">
-        <Text className="text-4xl font-bold text-slate-800">{percentage}%</Text>
-        <Text className="text-slate-500 text-sm">
+      <View style={{ alignItems: 'center', gap: 4 }}>
+        <Text style={{ fontFamily: JianTypography.number, fontSize: 48, fontWeight: JianTypography.bold, color: JianColors.ink }}>
+          {percentage}%
+        </Text>
+        <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, color: JianColors.ink2 }}>
           {earned} / {total} 分
         </Text>
-        <Text className="text-amber-700 font-medium mt-1">{message}</Text>
+        <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.body, fontWeight: JianTypography.medium, color: JianColors.amber, marginTop: 4 }}>
+          {message}
+        </Text>
       </View>
 
-      <View className="w-full border border-slate-100 rounded-xl overflow-hidden">
-        <View className="bg-slate-50 flex-row px-4 py-2">
-          <Text className="flex-1 text-slate-500 font-medium text-sm">部分</Text>
-          <Text className="text-slate-500 font-medium text-sm">得分</Text>
+      <Card variant="default" style={{ width: '100%' }}>
+        <View style={{ flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 8, backgroundColor: JianColors.surface2 }}>
+          <Text style={{ flex: 1, fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.medium, color: JianColors.ink2 }}>
+            部分
+          </Text>
+          <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.medium, color: JianColors.ink2 }}>
+            得分
+          </Text>
         </View>
-        {parts.map((part) => {
+        {parts.map((part, idx) => {
           const { earned: pe, total: pt } = getPartScore(part, questions, answers)
           return (
-            <View key={part} className="flex-row px-4 py-2 border-t border-slate-100">
-              <Text className="flex-1 text-slate-700 text-sm">
+            <View
+              key={part}
+              style={{
+                flexDirection: 'row',
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                borderTopWidth: idx > 0 ? 1 : 0,
+                borderTopColor: JianColors.line
+              }}
+            >
+              <Text style={{ flex: 1, fontFamily: JianTypography.serif, fontSize: JianTypography.bodySmall, color: JianColors.ink }}>
                 {partTitles[part] ?? STANDARD_PART_TITLES[part] ?? `第${part}部分`}
               </Text>
-              <Text className="font-medium text-slate-800 text-sm">{pe} / {pt}</Text>
+              <Text style={{ fontFamily: JianTypography.number, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.medium, color: JianColors.ink }}>
+                {pe} / {pt}
+              </Text>
             </View>
           )
         })}
-      </View>
+      </Card>
 
-      <View className="w-full gap-3">
+      <View style={{ width: '100%', gap: 12 }}>
         {nextTitle && (
-          <Pressable
-            onPress={() => router.replace({ pathname: "/read", params: { id: nextQuizId! } })}
-            className="w-full py-3.5 rounded-xl bg-amber-500 items-center active:opacity-80"
-          >
-            <Text className="text-white font-semibold text-base">下一課 →</Text>
-            <Text className="text-amber-100 text-xs mt-0.5">{nextTitle}</Text>
+          <Pressable onPress={() => router.replace({ pathname: "/read", params: { id: nextQuizId! } })}>
+            {({ pressed }) => (
+              <View style={{
+                width: '100%',
+                paddingVertical: 14,
+                borderRadius: 11,
+                backgroundColor: JianColors.vermilion,
+                alignItems: 'center',
+                opacity: pressed ? 0.8 : 1
+              }}>
+                <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.body, fontWeight: JianTypography.semibold, color: JianColors.paper }}>
+                  下一課 →
+                </Text>
+                <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.surface2, marginTop: 2 }}>
+                  {nextTitle}
+                </Text>
+              </View>
+            )}
           </Pressable>
         )}
-        <Pressable
-          onPress={onRestart}
-          className="w-full py-3.5 rounded-xl border-2 border-slate-200 items-center active:opacity-80"
-        >
-          <Text className="text-slate-700 font-semibold text-base">重新挑戰</Text>
-        </Pressable>
-        <Pressable
-          onPress={() => onExit ? onExit() : router.push("/")}
-          className="w-full py-3.5 rounded-xl border-2 border-slate-200 items-center active:opacity-80"
-        >
-          <Text className="text-slate-700 font-semibold text-base">返回</Text>
-        </Pressable>
+        <Button variant="outline" size="large" fullWidth onPress={onRestart}>
+          重新挑戰
+        </Button>
+        <Button variant="outline" size="large" fullWidth onPress={() => onExit ? onExit() : router.push("/")}>
+          返回
+        </Button>
       </View>
     </ScrollView>
   )

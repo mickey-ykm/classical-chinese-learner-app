@@ -13,6 +13,7 @@ import FillBlankQuestion from "./FillBlankQuestion"
 import SentenceOrderQuestion from "./SentenceOrderQuestion"
 import ScoreScreen from "./ScoreScreen"
 import ArticlePopup from "./ArticlePopup"
+import { JianColors, JianTypography, JianRadius } from "@/components/jian"
 
 interface Props {
   questions: Question[]

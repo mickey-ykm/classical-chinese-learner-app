@@ -1,6 +1,7 @@
 import { useRef } from "react"
 import { Pressable, Text, View, Animated } from "react-native"
 import type { OptionKey } from "@/lib/types"
+import { JianColors, JianTypography, JianRadius } from "@/components/jian"
 
 interface Props {
   optionKey: OptionKey
@@ -30,21 +31,35 @@ export default function OptionButton({
     Animated.spring(scale, { toValue: 1, useNativeDriver: true }).start()
   }
 
-  let bgColor = "bg-white"
-  let borderColor = "border-slate-200"
-  let textColor = "text-slate-800"
+  let bgColor = JianColors.surface
+  let borderColor = JianColors.line
+  let textColor = JianColors.ink
+  let keyBgColor = JianColors.surface2
+  let keyTextColor = JianColors.ink2
   let opacity = 1
 
   if (revealAnswer) {
     if (isCorrect) {
-      bgColor = "bg-green-100"; borderColor = "border-green-500"; textColor = "text-green-900"
+      bgColor = JianColors.jadeTint
+      borderColor = JianColors.jade
+      textColor = JianColors.ink
+      keyBgColor = JianColors.jade
+      keyTextColor = JianColors.paper
     } else if (isSelected) {
-      bgColor = "bg-red-100"; borderColor = "border-red-500"; textColor = "text-red-900"
+      bgColor = JianColors.vermilionTint
+      borderColor = JianColors.vermilion
+      textColor = JianColors.ink
+      keyBgColor = JianColors.vermilion
+      keyTextColor = JianColors.paper
     } else {
       opacity = 0.4
     }
   } else if (isSelected) {
-    bgColor = "bg-slate-100"; borderColor = "border-blue-400"; textColor = "text-blue-900"
+    bgColor = JianColors.amberTint
+    borderColor = JianColors.amberBorder
+    textColor = JianColors.ink
+    keyBgColor = JianColors.amber
+    keyTextColor = JianColors.paper
   }
 
   const icon = revealAnswer ? (isCorrect ? "✓" : isSelected ? "✗" : "") : ""
@@ -56,14 +71,58 @@ export default function OptionButton({
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         disabled={disabled}
-        className={`flex-row items-start gap-3 px-4 py-3 rounded-xl border-2 ${bgColor} ${borderColor}`}
-        style={{ minHeight: 44 }}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'flex-start',
+          gap: 12,
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+          borderRadius: JianRadius.card,
+          borderWidth: 2,
+          borderColor,
+          backgroundColor: bgColor,
+          minHeight: 44
+        }}
       >
-        <View className="w-6 h-6 rounded-full bg-slate-100 border border-slate-300 items-center justify-center shrink-0">
-          <Text className="text-xs font-bold text-slate-600">{optionKey}</Text>
+        <View style={{
+          width: 24,
+          height: 24,
+          borderRadius: 12,
+          backgroundColor: keyBgColor,
+          borderWidth: 1,
+          borderColor: borderColor,
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0
+        }}>
+          <Text style={{
+            fontFamily: JianTypography.serif,
+            fontSize: JianTypography.caption,
+            fontWeight: JianTypography.bold,
+            color: keyTextColor
+          }}>
+            {optionKey}
+          </Text>
         </View>
-        <Text className={`flex-1 text-sm leading-snug ${textColor}`}>{text}</Text>
-        {icon ? <Text className={`font-bold ${textColor}`}>{icon}</Text> : null}
+        <Text style={{
+          fontFamily: JianTypography.serif,
+          fontSize: JianTypography.bodySmall,
+          lineHeight: 20,
+          color: textColor,
+          flex: 1
+        }}>
+          {text}
+        </Text>
+        {icon ? (
+          <Text style={{
+            fontFamily: JianTypography.serif,
+            fontWeight: JianTypography.bold,
+            color: textColor,
+            fontSize: JianTypography.body
+          }}>
+            {icon}
+          </Text>
+        ) : null}
       </Pressable>
     </Animated.View>
   )
