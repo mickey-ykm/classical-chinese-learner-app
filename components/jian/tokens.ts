@@ -39,10 +39,10 @@ export const JianColors = {
 } as const
 
 export const JianTypography = {
-  // Font families
-  serif: 'Noto Serif TC',      // Titles, body text, buttons
-  sans: 'Noto Sans TC',         // Labels, captions, UI text
-  number: 'Newsreader',         // Numbers, timers, scores
+  // Font families - using system fonts that are actually available
+  serif: 'Georgia',             // Chinese text - system fallback that works
+  sans: 'System',               // Labels, captions, UI text
+  number: 'Georgia',            // Numbers, timers, scores
 
   // Font sizes
   display: 31,
