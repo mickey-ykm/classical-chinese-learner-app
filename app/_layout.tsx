@@ -6,6 +6,13 @@ import { Animated, ActivityIndicator } from "react-native"
 import { Logo } from "@/components/Logo"
 import { AuthProvider } from "@/contexts/AuthContext"
 import { init, backgroundFetch } from "@/lib/contentStore"
+import { useFonts } from "expo-font"
+import {
+  NotoSerifTC_400Regular,
+  NotoSerifTC_500Medium,
+  NotoSerifTC_600SemiBold,
+  NotoSerifTC_700Bold,
+} from "@expo-google-fonts/noto-serif-tc"
 import "../global.css"
 
 function SplashOverlay() {
@@ -44,6 +51,18 @@ function SplashOverlay() {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    NotoSerifTC_400Regular,
+    NotoSerifTC_500Medium,
+    NotoSerifTC_600SemiBold,
+    NotoSerifTC_700Bold,
+  })
+
+  useEffect(() => {
+    if (fontError) console.error("Font loading error:", fontError)
+  }, [fontError])
+
+  // Don't block app rendering on font loading - let it degrade gracefully
   return (
     <SafeAreaProvider>
       <AuthProvider>

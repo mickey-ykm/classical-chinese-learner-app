@@ -39,10 +39,10 @@ export const JianColors = {
 } as const
 
 export const JianTypography = {
-  // Font families - using system fonts that are actually available
-  serif: 'Georgia',             // Chinese text - system fallback that works
-  sans: 'System',               // Labels, captions, UI text
-  number: 'Georgia',            // Numbers, timers, scores
+  // Font families - loaded via expo-google-fonts
+  serif: 'NotoSerifTC_400Regular',  // Chinese text with proper serif support
+  sans: 'System',                    // Labels, captions, UI text
+  number: 'NotoSerifTC_400Regular',  // Numbers, timers, scores
 
   // Font sizes
   display: 31,
@@ -57,7 +57,7 @@ export const JianTypography = {
   // Line heights (for classical Chinese text)
   classicalLineHeight: 2.3,
 
-  // Font weights
+  // Font weights - use appropriate font variants instead
   regular: '400' as const,
   medium: '500' as const,
   semibold: '600' as const,
