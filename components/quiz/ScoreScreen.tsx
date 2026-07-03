@@ -4,7 +4,7 @@ import type { Question, QuizAnswer } from "@/lib/types"
 import { calculateScore, getPartScore } from "@/lib/quiz"
 import { getNextQuizId, getArticleIndex, STANDARD_PART_TITLES } from "@/lib/data"
 import { Mascot } from "@/components/Mascot"
-import { Card, Button, JianColors, JianTypography, JianSpacing } from "@/components/jian"
+import { Card, Button, JianColors, JianTypography, JianSpacing, getSerifFont } from "@/components/jian"
 
 interface Props {
   questions: Question[]
@@ -40,23 +40,23 @@ export default function ScoreScreen({ questions, answers, partTitles, articleId,
       <Mascot mood={percentage >= 60 ? "happy" : "sad"} size={110} />
 
       <View style={{ alignItems: 'center', gap: 4 }}>
-        <Text style={{ fontFamily: JianTypography.number, fontSize: 48, fontWeight: JianTypography.bold, color: JianColors.ink }}>
+        <Text style={{ fontFamily: JianTypography.number, fontSize: 48, fontWeight: '700', color: JianColors.ink }}>
           {percentage}%
         </Text>
         <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, color: JianColors.ink2 }}>
           {earned} / {total} 分
         </Text>
-        <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.body, fontWeight: JianTypography.medium, color: JianColors.amber, marginTop: 4 }}>
+        <Text style={{ fontFamily: getSerifFont('500'), fontSize: JianTypography.body, color: JianColors.amber, marginTop: 4 }}>
           {message}
         </Text>
       </View>
 
       <Card variant="default" style={{ width: '100%' }}>
         <View style={{ flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 8, backgroundColor: JianColors.surface2 }}>
-          <Text style={{ flex: 1, fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.medium, color: JianColors.ink2 }}>
+          <Text style={{ flex: 1, fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, fontWeight: '500', color: JianColors.ink2 }}>
             部分
           </Text>
-          <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.medium, color: JianColors.ink2 }}>
+          <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, fontWeight: '500', color: JianColors.ink2 }}>
             得分
           </Text>
         </View>
@@ -76,7 +76,7 @@ export default function ScoreScreen({ questions, answers, partTitles, articleId,
               <Text style={{ flex: 1, fontFamily: JianTypography.serif, fontSize: JianTypography.bodySmall, color: JianColors.ink }}>
                 {partTitles[part] ?? STANDARD_PART_TITLES[part] ?? `第${part}部分`}
               </Text>
-              <Text style={{ fontFamily: JianTypography.number, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.medium, color: JianColors.ink }}>
+              <Text style={{ fontFamily: JianTypography.number, fontSize: JianTypography.bodySmall, fontWeight: '500', color: JianColors.ink }}>
                 {pe} / {pt}
               </Text>
             </View>
@@ -96,7 +96,7 @@ export default function ScoreScreen({ questions, answers, partTitles, articleId,
                 alignItems: 'center',
                 opacity: pressed ? 0.8 : 1
               }}>
-                <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.body, fontWeight: JianTypography.semibold, color: JianColors.paper }}>
+                <Text style={{ fontFamily: getSerifFont('600'), fontSize: JianTypography.body, color: JianColors.paper }}>
                   下一課 →
                 </Text>
                 <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.surface2, marginTop: 2 }}>

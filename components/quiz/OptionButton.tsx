@@ -1,7 +1,7 @@
 import { useRef } from "react"
 import { Pressable, Text, View, Animated } from "react-native"
 import type { OptionKey } from "@/lib/types"
-import { JianColors, JianTypography, JianRadius } from "@/components/jian"
+import { JianColors, JianTypography, JianRadius, getSerifFont } from "@/components/jian"
 
 interface Props {
   optionKey: OptionKey
@@ -98,7 +98,7 @@ export default function OptionButton({
           <Text style={{
             fontFamily: JianTypography.serif,
             fontSize: JianTypography.caption,
-            fontWeight: JianTypography.bold,
+            fontWeight: '700',
             color: keyTextColor
           }}>
             {optionKey}
@@ -116,7 +116,7 @@ export default function OptionButton({
         {icon ? (
           <Text style={{
             fontFamily: JianTypography.serif,
-            fontWeight: JianTypography.bold,
+            fontWeight: '700',
             color: textColor,
             fontSize: JianTypography.body
           }}>
