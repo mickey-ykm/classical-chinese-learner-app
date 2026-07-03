@@ -37,9 +37,9 @@ export function Button({
       fontSize: JianTypography.body,
     },
     large: {
-      paddingVertical: 14,
+      paddingVertical: 16,
       paddingHorizontal: 24,
-      fontSize: JianTypography.heading,
+      fontSize: JianTypography.body,
     },
   }
 
@@ -50,11 +50,13 @@ export function Button({
         return {
           backgroundColor: isDisabled ? JianColors.line : JianColors.vermilion,
           color: JianColors.white,
+          borderWidth: 0,
         }
       case 'ink':
         return {
           backgroundColor: isDisabled ? JianColors.line : JianColors.ink,
           color: JianColors.paper,
+          borderWidth: 0,
         }
       case 'outline':
         return {
@@ -67,6 +69,7 @@ export function Button({
         return {
           backgroundColor: 'transparent',
           color: isDisabled ? JianColors.ink3 : JianColors.vermilion,
+          borderWidth: 0,
         }
     }
   }
@@ -78,34 +81,36 @@ export function Button({
     <Pressable
       disabled={isDisabled}
       {...props}
-      style={({ pressed }) => [
-        props.style,
-        {
-          borderRadius: JianRadius.button,
-          alignItems: 'center',
-          justifyContent: 'center',
-          opacity: pressed ? 0.8 : 1,
-          paddingVertical: currentSize.paddingVertical,
-          paddingHorizontal: currentSize.paddingHorizontal,
-          ...(fullWidth && { width: '100%' }),
-          backgroundColor: variantStyles.backgroundColor,
-          borderWidth: variantStyles.borderWidth,
-          borderColor: variantStyles.borderColor,
-        },
-      ]}
     >
-      {loading ? (
-        <ActivityIndicator size="small" color={variantStyles.color} />
-      ) : (
-        <Text
+      {({ pressed }) => (
+        <View
           style={{
-            fontFamily: getSerifFont('600'),
-            fontSize: currentSize.fontSize,
-            color: variantStyles.color,
+            backgroundColor: variantStyles.backgroundColor,
+            borderRadius: JianRadius.button,
+            borderWidth: variantStyles.borderWidth,
+            borderColor: variantStyles.borderColor,
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: pressed ? 0.8 : 1,
+            paddingVertical: currentSize.paddingVertical,
+            paddingHorizontal: currentSize.paddingHorizontal,
+            ...(fullWidth && { width: '100%' }),
           }}
         >
-          {children}
-        </Text>
+          {loading ? (
+            <ActivityIndicator size="small" color={variantStyles.color} />
+          ) : (
+            <Text
+              style={{
+                fontFamily: getSerifFont('600'),
+                fontSize: currentSize.fontSize,
+                color: variantStyles.color,
+              }}
+            >
+              {children}
+            </Text>
+          )}
+        </View>
       )}
     </Pressable>
   )
