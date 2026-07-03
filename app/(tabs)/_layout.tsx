@@ -53,6 +53,25 @@ export default function TabsLayout() {
           tabBarIcon: ({ focused }) => <TabIcon emoji="👤" label="帳戶" focused={focused} />,
         }}
       />
+      {/* Hide old tabs but keep them accessible for navigation */}
+      <Tabs.Screen
+        name="dse-learner"
+        options={{
+          href: null, // Hide from tab bar
+        }}
+      />
+      <Tabs.Screen
+        name="extra-articles"
+        options={{
+          href: null, // Hide from tab bar
+        }}
+      />
+      <Tabs.Screen
+        name="dse-training"
+        options={{
+          href: null, // Hide from tab bar (accessed via practice hub)
+        }}
+      />
     </Tabs>
   )
 }
