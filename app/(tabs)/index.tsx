@@ -177,27 +177,61 @@ export default function HomeTab() {
           </Pressable>
         </View>
 
-        {/* DSE 操練 section with mascot */}
-        <View style={{ marginBottom: 26, paddingTop: 22, borderTopWidth: 2, borderTopColor: JianColors.ink }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 11 }}>
-            <View>
-              <Text style={{ fontFamily: JianTypography.sans, fontSize: 11, letterSpacing: 2, color: JianColors.ink3 }}>
-                接 下 來
-              </Text>
-              <Text style={{ fontFamily: getSerifFont('700'), fontSize: 31, lineHeight: 37, color: JianColors.ink, marginTop: 11 }}>
-                DSE 操練
+        {/* Guest Sign-up Module - Right after header for non-logged-in users */}
+        {!user && (
+          <View style={{ marginBottom: 26, paddingTop: 22, borderTopWidth: 2, borderTopColor: JianColors.ink }}>
+            {/* Greeting */}
+            <View style={{ marginBottom: 18 }}>
+              <Text style={{ fontFamily: getSerifFont('700'), fontSize: 31, lineHeight: 37, color: JianColors.ink }}>
+                你好！
               </Text>
               <Text style={{ fontFamily: JianTypography.serif, fontSize: 13, color: JianColors.ink2, marginTop: 7 }}>
-                重點操練，準備應試
+                與經典同行，今日開卷有益。
               </Text>
             </View>
-            <DemonMascot size={56} />
-          </View>
 
-          <Button variant="primary" size="large" fullWidth onPress={() => router.push("/(tabs)/practice")} style={{ marginTop: 18 }}>
-            前往操練　→
-          </Button>
-        </View>
+            {/* Divider */}
+            <View style={{ height: 1, backgroundColor: JianColors.line, marginBottom: 18 }} />
+
+            {/* Sign-up Section */}
+            <Text style={{ fontFamily: JianTypography.sans, fontSize: 11, letterSpacing: 2, color: JianColors.ink3, marginBottom: 12 }}>
+              免 費 註 冊
+            </Text>
+            <Text style={{ fontFamily: getSerifFont('700'), fontSize: 28, lineHeight: 36, color: JianColors.ink, marginBottom: 12 }}>
+              開啟你的{'\n'}備試之路
+            </Text>
+            <Text style={{ fontFamily: JianTypography.serif, fontSize: 14, lineHeight: 22, color: JianColors.ink2, marginBottom: 20 }}>
+              一鍵註冊解鎖高階功能，分析弱項，針對性重點訓練，還邊提升語文能力。
+            </Text>
+            <Button variant="primary" size="large" fullWidth onPress={() => router.push("/login")}>
+              免費註冊　→
+            </Button>
+          </View>
+        )}
+
+        {/* DSE 操練 section - Only for logged-in users */}
+        {user && (
+          <View style={{ marginBottom: 26, paddingTop: 22, borderTopWidth: 2, borderTopColor: JianColors.ink }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 11 }}>
+              <View>
+                <Text style={{ fontFamily: JianTypography.sans, fontSize: 11, letterSpacing: 2, color: JianColors.ink3 }}>
+                  接 下 來
+                </Text>
+                <Text style={{ fontFamily: getSerifFont('700'), fontSize: 31, lineHeight: 37, color: JianColors.ink, marginTop: 11 }}>
+                  DSE 操練
+                </Text>
+                <Text style={{ fontFamily: JianTypography.serif, fontSize: 13, color: JianColors.ink2, marginTop: 7 }}>
+                  重點操練，準備應試
+                </Text>
+              </View>
+              <DemonMascot size={56} />
+            </View>
+
+            <Button variant="primary" size="large" fullWidth onPress={() => router.push("/(tabs)/practice")} style={{ marginTop: 18 }}>
+              前往操練　→
+            </Button>
+          </View>
+        )}
 
         {/* 繼續練習 section - list with borders */}
         <View style={{ marginBottom: 26 }}>
@@ -266,38 +300,6 @@ export default function HomeTab() {
                 </Pressable>
               )
             })}
-          </View>
-        )}
-
-        {/* Guest Sign-up Module */}
-        {!user && (
-          <View style={{ marginTop: 26, paddingTop: 22, borderTopWidth: 2, borderTopColor: JianColors.ink }}>
-            {/* Greeting */}
-            <View style={{ marginBottom: 18 }}>
-              <Text style={{ fontFamily: getSerifFont('700'), fontSize: 31, lineHeight: 37, color: JianColors.ink }}>
-                你好！
-              </Text>
-              <Text style={{ fontFamily: JianTypography.serif, fontSize: 13, color: JianColors.ink2, marginTop: 7 }}>
-                與經典同行，今日開卷有益。
-              </Text>
-            </View>
-
-            {/* Divider */}
-            <View style={{ height: 1, backgroundColor: JianColors.line, marginBottom: 18 }} />
-
-            {/* Sign-up Section */}
-            <Text style={{ fontFamily: JianTypography.sans, fontSize: 11, letterSpacing: 2, color: JianColors.ink3, marginBottom: 12 }}>
-              免 費 註 冊
-            </Text>
-            <Text style={{ fontFamily: getSerifFont('700'), fontSize: 28, lineHeight: 36, color: JianColors.ink, marginBottom: 12 }}>
-              開啟你的{'\n'}備試之路
-            </Text>
-            <Text style={{ fontFamily: JianTypography.serif, fontSize: 14, lineHeight: 22, color: JianColors.ink2, marginBottom: 20 }}>
-              一鍵註冊解鎖高階功能，分析弱項，針對性重點訓練，還邊提升語文能力。
-            </Text>
-            <Button variant="primary" size="large" fullWidth onPress={() => router.push("/login")}>
-              免費註冊　→
-            </Button>
           </View>
         )}
 
