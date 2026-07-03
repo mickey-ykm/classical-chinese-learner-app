@@ -1,0 +1,259 @@
+import { ScrollView, View, Text, Pressable } from "react-native"
+import { useRouter, useFocusEffect } from "expo-router"
+import { SafeAreaView } from "react-native-safe-area-context"
+import { useCallback, useEffect, useState } from "react"
+import { getArticleIndex } from "@/lib/data"
+import { subscribeToUpdates } from "@/lib/contentStore"
+import { getReadArticles } from "@/lib/readProgress"
+import { useAuth } from "@/hooks/useAuth"
+import { fetchArticleProgress, type ArticleProgressMap } from "@/lib/articleProgress"
+import UpgradeModal from "@/components/UpgradeModal"
+import type { ArticleEntry } from "@/lib/types"
+
+type SegmentType = "dse-exam" | "dse-non-exam" | "other"
+
+function ArticleTypeBadge({ articleType }: { articleType?: string }) {
+  if (articleType === "dse-exam") {
+    return (
+      <View className="self-start bg-amber-100 border border-amber-200 rounded px-2 py-0.5 mb-2">
+        <Text className="text-[10px] font-bold tracking-wide text-amber-700">DSE甲部指定篇章</Text>
+      </View>
+    )
+  }
+  if (articleType === "dse-non-exam") {
+    return (
+      <View className="self-start bg-blue-50 border border-blue-200 rounded px-2 py-0.5 mb-2">
+        <Text className="text-[10px] font-bold tracking-wide text-blue-600">高中教學課文</Text>
+      </View>
+    )
+  }
+  return null
+}
+
+interface CardProps {
+  article: ArticleEntry
+  progress?: ArticleProgressMap[string]
+  onStart: () => void
+}
+
+function ProgressStats({ progress, totalQuestions }: { progress?: ArticleProgressMap[string]; totalQuestions: number }) {
+  if (!progress) return null
+  return (
+    <View className="flex-row gap-3 mb-3 flex-wrap">
+      <Text className="text-xs text-amber-600 font-medium">
+        已完成 {progress.seenCount} / {progress.totalInPool} 題
+      </Text>
+      {progress.attemptCount > 0 && (
+        <>
+          <Text className="text-xs text-slate-300">·</Text>
+          <Text className="text-xs text-slate-400">練習 {progress.attemptCount} 次</Text>
+          <Text className="text-xs text-slate-300">·</Text>
+          <Text className="text-xs text-slate-400">正確率 {progress.correctRate}%</Text>
+        </>
+      )}
+    </View>
+  )
+}
+
+function LessonCard({ article, progress, onStart }: CardProps) {
+  const isPaid = !article.isFree
+
+  return (
+    <View className="bg-white rounded-2xl border border-slate-100 shadow-sm px-4 pt-4 pb-3 mb-3">
+      <View className="flex-row items-center justify-between mb-2">
+        <ArticleTypeBadge articleType={article.articleType} />
+        {isPaid && (
+          <View className="flex-row items-center gap-0.5 bg-amber-50 border border-amber-200 rounded-md px-1.5 py-0.5">
+            <Text className="text-xs">🔒</Text>
+            <Text className="text-xs font-semibold text-amber-700">付費練習</Text>
+          </View>
+        )}
+      </View>
+      <Text className="text-base font-bold text-slate-800 leading-snug mb-0.5" style={{ fontFamily: "Georgia" }}>
+        {article.title}
+      </Text>
+      <Text className="text-xs text-slate-400 mb-1">{article.source}</Text>
+      <Text className="text-xs text-slate-400 mb-2">共 {article.totalQuestions} 題 · {article.totalPoints} 分</Text>
+      <ProgressStats progress={progress} totalQuestions={article.totalQuestions} />
+      <Pressable onPress={onStart} className="py-2.5 rounded-xl bg-amber-500 items-center active:opacity-80">
+        <Text className="text-white font-semibold text-sm">立即開始</Text>
+      </Pressable>
+    </View>
+  )
+}
+
+function ChallengeCard({ article, progress, onStart }: CardProps) {
+  const isPaid = !article.isFree
+
+  return (
+    <View className="rounded-2xl px-4 pt-4 pb-3 border border-slate-700 bg-slate-800 mb-3">
+      <View className="flex-row items-center gap-2 mb-2.5">
+        <ArticleTypeBadge articleType={article.articleType} />
+        <View className="bg-amber-500 rounded px-2 py-0.5 mb-2">
+          <Text className="text-white text-[10px] font-bold tracking-widest">章節挑戰</Text>
+        </View>
+        {isPaid && (
+          <View className="flex-row items-center gap-0.5 bg-amber-50 border border-amber-200 rounded-md px-1.5 py-0.5 mb-2">
+            <Text className="text-xs">🔒</Text>
+            <Text className="text-xs font-semibold text-amber-700">付費練習</Text>
+          </View>
+        )}
+      </View>
+      <Text className="text-base font-bold text-white leading-snug mb-0.5" style={{ fontFamily: "Georgia" }}>
+        {article.title}
+      </Text>
+      <Text className="text-xs text-slate-400 mb-1">{article.source}</Text>
+      <Text className="text-xs text-slate-500 mb-2">共 {article.totalQuestions} 題 · {article.totalPoints} 分</Text>
+      <ProgressStats progress={progress} totalQuestions={article.totalQuestions} />
+      <Pressable onPress={onStart} className="py-2.5 rounded-xl bg-amber-500 items-center active:opacity-80">
+        <Text className="text-white font-semibold text-sm">接受挑戰</Text>
+      </Pressable>
+    </View>
+  )
+}
+
+export default function ChaptersTab() {
+  const router = useRouter()
+  const { user } = useAuth()
+  const [segment, setSegment] = useState<SegmentType>("dse-exam")
+  const [readIds, setReadIds] = useState<Set<string>>(new Set())
+  const [showUpgrade, setShowUpgrade] = useState(false)
+  const [allArticles, setAllArticles] = useState<ArticleEntry[]>(() => getArticleIndex())
+  const [progressMap, setProgressMap] = useState<ArticleProgressMap>({})
+
+  useFocusEffect(
+    useCallback(() => {
+      getReadArticles().then((ids) => setReadIds(new Set(ids)))
+      setAllArticles(getArticleIndex())
+      if (user && !user.is_anonymous) {
+        fetchArticleProgress(user.id).then(setProgressMap).catch(() => {})
+      }
+    }, [user])
+  )
+
+  useEffect(() => subscribeToUpdates(() => setAllArticles(getArticleIndex())), [])
+
+  function handleStart(article: ArticleEntry) {
+    if (!article.isFree && !user) {
+      setShowUpgrade(true)
+      return
+    }
+    router.push(`/read?id=${article.id}`)
+  }
+
+  // Filter articles based on selected segment
+  const filteredArticles = allArticles.filter((article) => {
+    if (segment === "dse-exam") {
+      return article.articleType === "dse-exam"
+    } else if (segment === "dse-non-exam") {
+      return article.articleType === "dse-non-exam"
+    } else {
+      // "other" segment: show articles explicitly typed as "other", or articles with no articleType (seed data)
+      return article.articleType === "other" || !article.articleType
+    }
+  })
+
+  const dseExamCount = allArticles.filter((a) => a.articleType === "dse-exam").length
+  const dseNonExamCount = allArticles.filter((a) => a.articleType === "dse-non-exam").length
+  const otherCount = allArticles.filter((a) => a.articleType === "other" || !a.articleType).length
+
+  return (
+    <SafeAreaView className="flex-1 bg-slate-50">
+      {/* Header */}
+      <View className="px-5 pt-4 pb-3">
+        <Text className="text-2xl font-bold text-slate-800" style={{ fontFamily: "Georgia" }}>
+          篇章
+        </Text>
+        <Text className="text-xs text-slate-500 mt-1">
+          共 {allArticles.length} 篇
+        </Text>
+      </View>
+
+      {/* Segmented Control */}
+      <View className="px-5 pb-3">
+        <View className="flex-row bg-slate-100 rounded-lg p-1">
+          <Pressable
+            className={`flex-1 py-2 rounded-md ${segment === "dse-exam" ? "bg-amber-500" : ""}`}
+            onPress={() => setSegment("dse-exam")}
+          >
+            <Text
+              className={`text-center text-xs ${
+                segment === "dse-exam" ? "text-white font-semibold" : "text-slate-600"
+              }`}
+              style={{ fontFamily: "Georgia" }}
+            >
+              甲部指定
+            </Text>
+          </Pressable>
+          <Pressable
+            className={`flex-1 py-2 rounded-md ${segment === "dse-non-exam" ? "bg-amber-500" : ""}`}
+            onPress={() => setSegment("dse-non-exam")}
+          >
+            <Text
+              className={`text-center text-xs ${
+                segment === "dse-non-exam" ? "text-white font-semibold" : "text-slate-600"
+              }`}
+              style={{ fontFamily: "Georgia" }}
+            >
+              高中課文
+            </Text>
+          </Pressable>
+          <Pressable
+            className={`flex-1 py-2 rounded-md ${segment === "other" ? "bg-amber-500" : ""}`}
+            onPress={() => setSegment("other")}
+          >
+            <Text
+              className={`text-center text-xs ${
+                segment === "other" ? "text-white font-semibold" : "text-slate-600"
+              }`}
+              style={{ fontFamily: "Georgia" }}
+            >
+              其他範文
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+
+      {/* Info Banner - only show for DSE segments */}
+      {(segment === "dse-exam" || segment === "dse-non-exam") && (
+        <View className="px-5">
+          <View className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-3">
+            <Text className="text-xs text-amber-800 leading-5">
+              DSE 考試共含 <Text className="font-bold">{dseExamCount} 篇甲部指定篇章</Text>，<Text className="font-bold">{dseNonExamCount} 篇高中課文</Text>。
+              每次練習隨機抽出 <Text className="font-bold">22 題</Text>，約使用 <Text className="font-bold">10 分鐘</Text>完成。
+            </Text>
+          </View>
+        </View>
+      )}
+
+      {/* Article List */}
+      <ScrollView className="flex-1 px-5" contentContainerStyle={{ paddingBottom: 32 }}>
+        {filteredArticles.map((article) =>
+          article.type === "challenge" ? (
+            <ChallengeCard
+              key={article.id}
+              article={article}
+              progress={progressMap[article.id]}
+              onStart={() => handleStart(article)}
+            />
+          ) : (
+            <LessonCard
+              key={article.id}
+              article={article}
+              progress={progressMap[article.id]}
+              onStart={() => handleStart(article)}
+            />
+          )
+        )}
+        {filteredArticles.length === 0 && (
+          <Text className="text-slate-400 text-sm text-center mt-8">
+            {segment === "dse-exam" && "暫無甲部指定篇章"}
+            {segment === "dse-non-exam" && "暫無高中課文"}
+            {segment === "other" && "暫無其他範文"}
+          </Text>
+        )}
+      </ScrollView>
+      <UpgradeModal visible={showUpgrade} onClose={() => setShowUpgrade(false)} />
+    </SafeAreaView>
+  )
+}

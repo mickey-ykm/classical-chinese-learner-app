@@ -33,24 +33,24 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="dse-learner"
+        name="chapters"
         options={{
-          title: "DSE文章",
-          tabBarIcon: ({ focused }) => <TabIcon emoji="📖" label="DSE文章" focused={focused} />,
+          title: "篇章",
+          tabBarIcon: ({ focused }) => <TabIcon emoji="📖" label="篇章" focused={focused} />,
         }}
       />
       <Tabs.Screen
-        name="extra-articles"
+        name="practice"
         options={{
-          title: "其他文章",
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🏋️" label="其他文章" focused={focused} />,
+          title: "操練",
+          tabBarIcon: ({ focused }) => <TabIcon emoji="⚡" label="操練" focused={focused} />,
         }}
       />
       <Tabs.Screen
-        name="dse-training"
+        name="account"
         options={{
-          title: "DSE操練",
-          tabBarIcon: ({ focused }) => <TabIcon emoji="⚡" label="DSE操練" focused={focused} />,
+          title: "帳戶",
+          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" label="帳戶" focused={focused} />,
         }}
       />
     </Tabs>
