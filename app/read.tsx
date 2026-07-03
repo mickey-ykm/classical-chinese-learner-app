@@ -9,7 +9,7 @@ import UpgradeModal from "@/components/UpgradeModal"
 import type { Footnote } from "@/lib/types"
 import ArticleText from "@/components/reading/ArticleText"
 import FootnotePanel from "@/components/reading/FootnotePanel"
-import { Card, Button, JianColors, JianTypography, JianRadius } from "@/components/jian"
+import { Card, Button, JianColors, JianTypography, JianRadius, getSerifFont } from "@/components/jian"
 
 type TabMode = "original" | "translation"
 
@@ -58,19 +58,19 @@ export default function ReadScreen() {
           scrollEventThrottle={200}
         >
           <Pressable onPress={() => router.back()} style={{ marginBottom: 24 }} hitSlop={12}>
-            <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.semibold, color: JianColors.vermilion }}>
+            <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, fontWeight: '600', color: JianColors.vermilion }}>
               ← 返回
             </Text>
           </Pressable>
 
           <View style={{ flexDirection: 'row', alignItems: 'baseline', marginBottom: 4 }}>
-            <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.title, fontWeight: JianTypography.bold, color: JianColors.ink }}>
+            <Text style={{ fontFamily: getSerifFont('700'), fontSize: JianTypography.title, color: JianColors.ink }}>
               {article.title}
             </Text>
             {article.titleFootnoteId && (
               <Text
                 onPress={() => handleFootnoteTap(article.titleFootnoteId!)}
-                style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.bold, color: JianColors.vermilion, marginLeft: 2 }}
+                style={{ fontFamily: getSerifFont('700'), fontSize: JianTypography.bodySmall, color: JianColors.vermilion, marginLeft: 2 }}
               >
                 {article.footnotes.find((f) => f.id === article.titleFootnoteId)?.marker ?? `(${article.titleFootnoteId})`}
               </Text>
@@ -102,7 +102,7 @@ export default function ReadScreen() {
                     style={{
                       fontFamily: JianTypography.serif,
                       fontSize: JianTypography.body,
-                      fontWeight: JianTypography.semibold,
+                      fontWeight: '600',
                       color: tabMode === "original" ? JianColors.paper : JianColors.ink2
                     }}
                   >
@@ -131,7 +131,7 @@ export default function ReadScreen() {
                     style={{
                       fontFamily: JianTypography.serif,
                       fontSize: JianTypography.body,
-                      fontWeight: JianTypography.semibold,
+                      fontWeight: '600',
                       color: tabMode === "translation" ? JianColors.paper : JianColors.ink2
                     }}
                   >
@@ -155,7 +155,7 @@ export default function ReadScreen() {
 
               {article.footnotes.length > 0 && (
                 <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink3, textAlign: 'center', marginTop: 16 }}>
-                  點擊 <Text style={{ fontFamily: JianTypography.serif, fontWeight: JianTypography.bold, color: JianColors.vermilion }}>(1)</Text> 查看注釋
+                  點擊 <Text style={{ fontFamily: getSerifFont('700'), color: JianColors.vermilion }}>(1)</Text> 查看注釋
                 </Text>
               )}
             </>
