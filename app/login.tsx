@@ -4,6 +4,7 @@ import { useRouter } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { Logo } from "@/components/Logo"
 import { useAuth } from "@/hooks/useAuth"
+import { Button, Card, JianColors, JianTypography, JianRadius } from "@/components/jian"
 
 export default function LoginScreen() {
   const router = useRouter()
@@ -80,48 +81,55 @@ export default function LoginScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-50">
+    <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper }}>
       {/* Back button */}
-      <View className="px-5 pt-4">
-        <Pressable onPress={() => router.back()} hitSlop={12} className="self-start">
-          <Text className="text-amber-600 font-semibold text-sm">← 返回</Text>
+      <View style={{ paddingHorizontal: 20, paddingTop: 16 }}>
+        <Pressable onPress={() => router.back()} hitSlop={12} style={{ alignSelf: 'flex-start' }}>
+          <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.semibold, color: JianColors.vermilion }}>
+            ← 返回
+          </Text>
         </Pressable>
       </View>
 
-      <View className="flex-1 items-center justify-center px-8 gap-8">
-        <View className="items-center gap-3">
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 32 }}>
+        <View style={{ alignItems: 'center', gap: 12 }}>
           <Logo size={96} />
-          <Text className="text-2xl font-bold text-slate-800" style={{ fontFamily: "Georgia" }}>
+          <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.title, fontWeight: JianTypography.bold, color: JianColors.ink }}>
             文言教室
           </Text>
-          <Text className="text-sm text-slate-400 text-center">
+          <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, color: JianColors.ink3, textAlign: 'center' }}>
             登入以記錄學習進度及錯題分析
           </Text>
         </View>
 
-        <View className="w-full gap-3">
+        <View style={{ width: '100%', gap: 12 }}>
           <Pressable
             onPress={handleGoogleSignIn}
             disabled={signingIn}
-            className="bg-white border border-slate-200 rounded-2xl py-4 flex-row items-center justify-center gap-3 active:opacity-70 shadow-sm"
           >
-            {signingIn ? (
-              <ActivityIndicator size="small" color="#475569" />
-            ) : (
-              <>
-                <Text className="text-2xl">G</Text>
-                <Text className="text-slate-700 font-semibold text-base">
-                  以 Google 帳號登入
-                </Text>
-              </>
+            {({ pressed }) => (
+              <Card variant="default" style={{ opacity: pressed ? 0.7 : 1, opacity: signingIn ? 0.5 : 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, paddingVertical: 4 }}>
+                  {signingIn ? (
+                    <ActivityIndicator size="small" color={JianColors.ink2} />
+                  ) : (
+                    <>
+                      <Text style={{ fontSize: 24 }}>G</Text>
+                      <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.body, fontWeight: JianTypography.semibold, color: JianColors.ink }}>
+                        以 Google 帳號登入
+                      </Text>
+                    </>
+                  )}
+                </View>
+              </Card>
             )}
           </Pressable>
 
           {/* Divider */}
-          <View className="flex-row items-center gap-3">
-            <View className="flex-1 h-px bg-slate-200" />
-            <Text className="text-slate-400 text-sm">或</Text>
-            <View className="flex-1 h-px bg-slate-200" />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <View style={{ flex: 1, height: 1, backgroundColor: JianColors.line }} />
+            <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, color: JianColors.ink3 }}>或</Text>
+            <View style={{ flex: 1, height: 1, backgroundColor: JianColors.line }} />
           </View>
 
           {/* Email input section */}
@@ -135,42 +143,51 @@ export default function LoginScreen() {
                 autoCapitalize="none"
                 autoComplete="email"
                 editable={!sendingEmail}
-                className="bg-white border border-slate-200 rounded-2xl px-4 py-4 text-slate-700"
+                style={{
+                  fontFamily: JianTypography.sans,
+                  fontSize: JianTypography.body,
+                  color: JianColors.ink,
+                  backgroundColor: JianColors.surface,
+                  borderWidth: 1,
+                  borderColor: JianColors.line,
+                  borderRadius: JianRadius.card,
+                  paddingHorizontal: 16,
+                  paddingVertical: 16,
+                }}
+                placeholderTextColor={JianColors.ink3}
               />
-              <Pressable
-                onPress={handleEmailSignIn}
+              <Button
+                variant="primary"
+                size="large"
+                fullWidth
+                loading={sendingEmail}
                 disabled={sendingEmail || !email.trim()}
-                className="bg-amber-500 rounded-2xl py-4 items-center active:opacity-80"
-                style={{ opacity: sendingEmail || !email.trim() ? 0.5 : 1 }}
+                onPress={handleEmailSignIn}
               >
-                {sendingEmail ? (
-                  <ActivityIndicator size="small" color="white" />
-                ) : (
-                  <Text className="text-white font-semibold text-base">
-                    發送登入連結
-                  </Text>
-                )}
-              </Pressable>
+                發送登入連結
+              </Button>
             </>
           ) : (
-            <View className="bg-amber-50 border border-amber-200 rounded-2xl p-4 gap-2">
-              <Text className="text-amber-800 font-semibold text-center">
+            <Card variant="near-complete">
+              <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.body, fontWeight: JianTypography.semibold, color: JianColors.ink, textAlign: 'center' }}>
                 ✉️ 登入連結已發送
               </Text>
-              <Text className="text-amber-700 text-sm text-center">
+              <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, color: JianColors.ink, textAlign: 'center', marginTop: 8 }}>
                 請檢查你的電郵收件箱（{email}）並點擊連結以登入
               </Text>
-              <Pressable onPress={() => setEmailSent(false)} className="mt-2">
-                <Text className="text-amber-600 text-sm text-center underline">
+              <Pressable onPress={() => setEmailSent(false)} style={{ marginTop: 8 }}>
+                <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, color: JianColors.amber, textAlign: 'center', textDecorationLine: 'underline' }}>
                   重新輸入電郵地址
                 </Text>
               </Pressable>
-            </View>
+            </Card>
           )}
         </View>
 
         <Pressable onPress={() => router.back()} hitSlop={12}>
-          <Text className="text-sm text-slate-400 underline">以訪客身份繼續</Text>
+          <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, color: JianColors.ink3, textDecorationLine: 'underline' }}>
+            以訪客身份繼續
+          </Text>
         </Pressable>
       </View>
     </SafeAreaView>
