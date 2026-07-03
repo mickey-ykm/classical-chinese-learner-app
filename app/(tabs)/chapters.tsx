@@ -18,6 +18,7 @@ import {
   JianColors,
   JianTypography,
   JianSpacing,
+  getSerifFont,
   type SegmentOption,
 } from "@/components/jian"
 
@@ -47,7 +48,7 @@ function ProgressStats({ progress, totalQuestions }: { progress?: ArticleProgres
   return (
     <>
       <View style={{ flexDirection: 'row', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
-        <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.amber, fontWeight: JianTypography.medium }}>
+        <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.amber,  }}>
           已完成 {progress.seenCount} / {progress.totalInPool} 題
         </Text>
         {progress.attemptCount > 0 && (
@@ -77,7 +78,7 @@ function LessonCard({ article, progress, onStart }: CardProps) {
         <ArticleTypeBadge articleType={article.articleType} />
         {isPaid && <Badge type="lock" />}
       </View>
-      <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.heading, fontWeight: JianTypography.bold, color: JianColors.ink, lineHeight: 24, marginBottom: 2 }}>
+      <Text style={{ fontFamily: getSerifFont('700'), fontSize: JianTypography.heading, color: JianColors.ink, lineHeight: 24, marginBottom: 2 }}>
         {article.title}
       </Text>
       <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink3, marginBottom: 4 }}>
@@ -108,7 +109,7 @@ function ChallengeCard({ article, progress, onStart }: CardProps) {
         </View>
         {isPaid && <Badge type="lock" />}
       </View>
-      <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.heading, fontWeight: JianTypography.bold, color: JianColors.paper, lineHeight: 24, marginBottom: 2 }}>
+      <Text style={{ fontFamily: getSerifFont('700'), fontSize: JianTypography.heading, color: JianColors.paper, lineHeight: 24, marginBottom: 2 }}>
         {article.title}
       </Text>
       <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink3, marginBottom: 4 }}>
@@ -179,7 +180,7 @@ export default function ChaptersTab() {
     <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper }}>
       {/* Header */}
       <View style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 }}>
-        <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.title, fontWeight: JianTypography.bold, color: JianColors.ink }}>
+        <Text style={{ fontFamily: getSerifFont('700'), fontSize: JianTypography.title, color: JianColors.ink }}>
           篇章
         </Text>
         <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink2, marginTop: 4 }}>
@@ -197,10 +198,10 @@ export default function ChaptersTab() {
         <View style={{ paddingHorizontal: 20 }}>
           <Card variant="near-complete" style={{ marginBottom: 12 }}>
             <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink, lineHeight: 20 }}>
-              DSE 考試共含 <Text style={{ fontWeight: JianTypography.bold }}>{dseExamCount} 篇甲部指定篇章</Text>，
-              <Text style={{ fontWeight: JianTypography.bold }}>{dseNonExamCount} 篇高中課文</Text>。
-              每次練習隨機抽出 <Text style={{ fontWeight: JianTypography.bold }}>22 題</Text>，約使用{' '}
-              <Text style={{ fontWeight: JianTypography.bold }}>10 分鐘</Text>完成。
+              DSE 考試共含 <Text style={{ fontWeight: '600' }}>{dseExamCount} 篇甲部指定篇章</Text>，
+              <Text style={{ fontWeight: '600' }}>{dseNonExamCount} 篇高中課文</Text>。
+              每次練習隨機抽出 <Text style={{ fontWeight: '600' }}>22 題</Text>，約使用{' '}
+              <Text style={{ fontWeight: '600' }}>10 分鐘</Text>完成。
             </Text>
           </Card>
         </View>
