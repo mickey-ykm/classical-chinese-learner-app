@@ -49,7 +49,7 @@ export function Button({
       case 'primary':
         return {
           backgroundColor: isDisabled ? JianColors.line : JianColors.vermilion,
-          color: '#ffffff',
+          color: JianColors.white,
         }
       case 'ink':
         return {

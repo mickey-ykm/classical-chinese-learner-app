@@ -36,6 +36,9 @@ export const JianColors = {
   vermilionBorder: '#dac6c3',
   jadeBorder: '#d2dcd2',
   amberBorder: '#e5dcca',
+
+  // Special colors
+  white: '#ffffff',      // Pure white for button text on dark backgrounds
 } as const
 
 export const JianTypography = {
