@@ -10,6 +10,7 @@ import { subscribeToUpdates } from "@/lib/contentStore"
 import { fetchArticleProgress, type ArticleProgressMap } from "@/lib/articleProgress"
 import type { ArticleEntry } from "@/lib/types"
 import Svg, { Circle, Ellipse, Path, Rect, Polygon, Line } from "react-native-svg"
+import { Card, Button, Badge, ProgressBar, JianColors, JianTypography, JianSpacing } from "@/components/jian"
 
 function DemonMascot({ size = 64 }: { size?: number }) {
   const s = size
@@ -68,40 +69,46 @@ function ArticlePreviewCard({
   const isPaid = !article.isFree
 
   return (
-    <Pressable
-      onPress={onStart}
-      className="bg-white rounded-2xl border border-slate-100 shadow-sm px-4 py-3 mb-2 active:opacity-70"
-    >
-      <View className="flex-row items-center justify-between">
-        <View className="flex-1 mr-3">
-          <View className="flex-row items-center gap-1.5 mb-0.5">
-            <Text
-              className="text-sm font-bold text-slate-800 leading-snug flex-1"
-              style={{ fontFamily: "Georgia" }}
-              numberOfLines={1}
-            >
-              {article.title}
-            </Text>
-            {isPaid && (
-              <View className="flex-row items-center gap-0.5 bg-amber-50 border border-amber-200 rounded-md px-1.5 py-0.5">
-                <Text className="text-xs">🔒</Text>
-                <Text className="text-xs font-semibold text-amber-700">付費</Text>
+    <Pressable onPress={onStart}>
+      {({ pressed }) => (
+        <Card variant="default" style={{ marginBottom: 8, opacity: pressed ? 0.7 : 1 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ flex: 1, marginRight: 12 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                <Text
+                  style={{
+                    fontFamily: JianTypography.serif,
+                    fontSize: JianTypography.bodySmall,
+                    fontWeight: JianTypography.bold,
+                    color: JianColors.ink,
+                    flex: 1,
+                    lineHeight: 20
+                  }}
+                  numberOfLines={1}
+                >
+                  {article.title}
+                </Text>
+                {isPaid && <Badge type="lock" text="付費" />}
               </View>
-            )}
+              <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink3 }}>
+                {article.source}
+              </Text>
+            </View>
+            <View style={{ alignItems: 'flex-end', gap: 2 }}>
+              {progress ? (
+                <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, fontWeight: JianTypography.semibold, color: JianColors.amber }}>
+                  {progress.seenCount}/{progress.totalInPool}
+                </Text>
+              ) : (
+                <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, fontWeight: JianTypography.semibold, color: JianColors.amber }}>
+                  {article.totalQuestions} 題
+                </Text>
+              )}
+              <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink3 }}>開始 →</Text>
+            </View>
           </View>
-          <Text className="text-xs text-slate-400">{article.source}</Text>
-        </View>
-        <View className="items-end gap-0.5">
-          {progress ? (
-            <Text className="text-xs text-amber-600 font-semibold">
-              已完成 {progress.seenCount} / {progress.totalInPool} 題
-            </Text>
-          ) : (
-            <Text className="text-xs text-amber-600 font-semibold">{article.totalQuestions} 題</Text>
-          )}
-          <Text className="text-slate-300 text-xs">開始 →</Text>
-        </View>
-      </View>
+        </Card>
+      )}
     </Pressable>
   )
 }
@@ -151,141 +158,137 @@ export default function HomeTab() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-50">
-      <ScrollView className="flex-1 px-5" contentContainerStyle={{ paddingBottom: 40 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper }}>
+      <ScrollView style={{ flex: 1, paddingHorizontal: 20 }} contentContainerStyle={{ paddingBottom: 40 }}>
 
         {/* Header */}
-        <View className="flex-row items-center justify-between mt-4 mb-6">
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 16, marginBottom: 24 }}>
           <Logo size={48} />
-          <Pressable
-            onPress={() => router.push("/account")}
-            className="bg-white border border-slate-200 rounded-xl px-4 py-2 active:opacity-70"
-          >
-            <Text className="text-slate-700 font-semibold text-sm">
-              {user ? "帳戶" : "登入"}
-            </Text>
+          <Pressable onPress={() => router.push("/account")}>
+            {({ pressed }) => (
+              <Card variant="default" style={{ paddingHorizontal: 16, paddingVertical: 8, opacity: pressed ? 0.7 : 1 }}>
+                <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.semibold, color: JianColors.ink }}>
+                  {user ? "帳戶" : "登入"}
+                </Text>
+              </Card>
+            )}
           </Pressable>
         </View>
 
         {/* Greeting */}
-        <View className="mb-6">
-          <Text className="text-2xl font-bold text-slate-800 mb-1" style={{ fontFamily: "Georgia" }}>
+        <View style={{ marginBottom: 24 }}>
+          <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.title, fontWeight: JianTypography.bold, color: JianColors.ink, marginBottom: 4 }}>
             你好！
           </Text>
-          <Text className="text-sm text-slate-500">歡迎回到文言文練習平台</Text>
+          <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, color: JianColors.ink2 }}>歡迎回到文言文練習平台</Text>
         </View>
 
         {/* DSE 操練 section */}
-        <View className="mb-6">
-          <View className="bg-slate-800 rounded-2xl px-5 py-4 shadow-sm">
+        <View style={{ marginBottom: 24 }}>
+          <Card variant="ink">
             {/* Header */}
-            <View className="flex-row items-center justify-between mb-3">
-              <View className="flex-row items-center gap-2">
-                <Text className="text-amber-400 text-2xl">⚡</Text>
-                <Text className="text-white font-bold text-lg">DSE 操練</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Text style={{ fontSize: 24 }}>⚡</Text>
+                <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.heading, fontWeight: JianTypography.bold, color: JianColors.paper }}>
+                  DSE 操練
+                </Text>
               </View>
-              <View className="ml-2">
+              <View style={{ marginLeft: 8 }}>
                 <DemonMascot size={56} />
               </View>
             </View>
-            <Text className="text-slate-400 text-sm mb-4">重點操練，準備應試</Text>
+            <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, color: JianColors.ink3, marginBottom: 16 }}>
+              重點操練，準備應試
+            </Text>
 
-            {/* DSE Mock Exam Button */}
-            <Pressable
-              onPress={() => router.push({ pathname: "/(tabs)/dse-training", params: { mode: "mock" } })}
-              className="bg-white rounded-xl px-4 py-3 mb-2 active:opacity-70 flex-row items-center justify-between"
-            >
-              <View className="flex-row items-center flex-1">
-                <Text className="text-xl mr-3">📝</Text>
-                <Text className="text-sm font-semibold text-slate-800" style={{ fontFamily: "Georgia" }}>
-                  DSE 模擬考題
-                </Text>
-              </View>
-              <Text className="text-slate-400 text-xs">→</Text>
+            {/* Practice buttons */}
+            <Pressable onPress={() => router.push("/(tabs)/dse-training?mode=mock")}>
+              {({ pressed }) => (
+                <Card variant="default" style={{ marginBottom: 8, opacity: pressed ? 0.7 : 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                      <Text style={{ fontSize: 20, marginRight: 12 }}>📝</Text>
+                      <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.semibold, color: JianColors.ink }}>
+                        DSE 模擬考題
+                      </Text>
+                    </View>
+                    <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink3 }}>→</Text>
+                  </View>
+                </Card>
+              )}
             </Pressable>
 
-            {/* Article Revision Button */}
-            <Pressable
-              onPress={() => router.push("/revision-article")}
-              className="bg-white rounded-xl px-4 py-3 mb-2 active:opacity-70 flex-row items-center justify-between"
-            >
-              <View className="flex-row items-center flex-1">
-                <Text className="text-xl mr-3">📚</Text>
-                <Text className="text-sm font-semibold text-slate-800" style={{ fontFamily: "Georgia" }}>
-                  文章錯題重溫
-                </Text>
-              </View>
-              <Text className="text-slate-400 text-xs">→</Text>
+            <Pressable onPress={() => router.push("/revision-article")}>
+              {({ pressed }) => (
+                <Card variant="default" style={{ marginBottom: 8, opacity: pressed ? 0.7 : 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                      <Text style={{ fontSize: 20, marginRight: 12 }}>📚</Text>
+                      <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.semibold, color: JianColors.ink }}>
+                        文章錯題重溫
+                      </Text>
+                    </View>
+                    <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink3 }}>→</Text>
+                  </View>
+                </Card>
+              )}
             </Pressable>
 
-            {/* Part Revision Button */}
-            <Pressable
-              onPress={() => router.push("/revision-part")}
-              className="bg-white rounded-xl px-4 py-3 mb-2 active:opacity-70 flex-row items-center justify-between"
-            >
-              <View className="flex-row items-center flex-1">
-                <Text className="text-xl mr-3">🎯</Text>
-                <Text className="text-sm font-semibold text-slate-800" style={{ fontFamily: "Georgia" }}>
-                  語基能力錯題重溫
-                </Text>
-              </View>
-              <Text className="text-slate-400 text-xs">→</Text>
+            <Pressable onPress={() => router.push("/revision-part")}>
+              {({ pressed }) => (
+                <Card variant="default" style={{ marginBottom: 8, opacity: pressed ? 0.7 : 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                      <Text style={{ fontSize: 20, marginRight: 12 }}>🎯</Text>
+                      <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.semibold, color: JianColors.ink }}>
+                        語基能力錯題重溫
+                      </Text>
+                    </View>
+                    <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink3 }}>→</Text>
+                  </View>
+                </Card>
+              )}
             </Pressable>
 
-            {/* Weight Training Button (針對性難題訓練) */}
-            <Pressable
-              onPress={() => router.push("/weight-training")}
-              className="bg-white rounded-xl px-4 py-3 flex-row items-center justify-between active:opacity-70"
-            >
-              <View className="flex-row items-center flex-1">
-                <Text className="text-xl mr-3">💪</Text>
-                <Text className="text-sm font-semibold text-slate-800" style={{ fontFamily: "Georgia" }}>
-                  針對性難題訓練
-                </Text>
-              </View>
-              <Text className="text-slate-400 text-xs">→</Text>
+            <Pressable onPress={() => router.push("/weight-training")}>
+              {({ pressed }) => (
+                <Card variant="default" style={{ opacity: pressed ? 0.7 : 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                      <Text style={{ fontSize: 20, marginRight: 12 }}>💪</Text>
+                      <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.semibold, color: JianColors.ink }}>
+                        針對性難題訓練
+                      </Text>
+                    </View>
+                    <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink3 }}>→</Text>
+                  </View>
+                </Card>
+              )}
             </Pressable>
-          </View>
+          </Card>
         </View>
 
-        {/* DSE 文章 preview */}
-        <View className="mb-6">
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-base font-bold text-slate-800">📖 DSE 文章</Text>
-            <Pressable onPress={() => router.push("/(tabs)/dse-learner")} hitSlop={8}>
-              <Text className="text-amber-600 font-semibold text-sm">更多 →</Text>
+        {/* 繼續篇章 section (combines DSE + Other) */}
+        <View style={{ marginBottom: 24 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.body, fontWeight: JianTypography.bold, color: JianColors.ink }}>
+              📖 繼續篇章
+            </Text>
+            <Pressable onPress={() => router.push("/(tabs)/chapters")} hitSlop={8}>
+              <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.semibold, color: JianColors.vermilion }}>
+                更多 →
+              </Text>
             </Pressable>
           </View>
-          {dseArticles.length === 0 ? (
-            <View className="bg-white rounded-2xl border border-slate-100 px-4 py-4">
-              <Text className="text-slate-400 text-sm text-center">暫無 DSE 文章</Text>
-            </View>
+          {[...dseArticles, ...otherArticles].slice(0, 3).length === 0 ? (
+            <Card variant="default">
+              <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, color: JianColors.ink3, textAlign: 'center' }}>
+                暫無文章
+              </Text>
+            </Card>
           ) : (
-            dseArticles.map((article) => (
-              <ArticlePreviewCard
-                key={article.id}
-                article={article}
-                progress={progressMap[article.id]}
-                onStart={() => router.push(`/read?id=${article.id}`)}
-              />
-            ))
-          )}
-        </View>
-
-        {/* 其他文章 preview */}
-        <View className="mb-6">
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-base font-bold text-slate-800">📄 其他文章</Text>
-            <Pressable onPress={() => router.push("/(tabs)/extra-articles")} hitSlop={8}>
-              <Text className="text-amber-600 font-semibold text-sm">更多 →</Text>
-            </Pressable>
-          </View>
-          {otherArticles.length === 0 ? (
-            <View className="bg-white rounded-2xl border border-slate-100 px-4 py-4">
-              <Text className="text-slate-400 text-sm text-center">暫無其他文章</Text>
-            </View>
-          ) : (
-            otherArticles.map((article) => (
+            [...dseArticles, ...otherArticles].slice(0, 3).map((article) => (
               <ArticlePreviewCard
                 key={article.id}
                 article={article}
@@ -297,61 +300,77 @@ export default function HomeTab() {
         </View>
 
         {/* Recent history */}
-        <View className="mb-4">
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-base font-bold text-slate-800">最近練習</Text>
+        <View style={{ marginBottom: 16 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <Text style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.body, fontWeight: JianTypography.bold, color: JianColors.ink }}>
+              最近練習
+            </Text>
             {user && (
               <Pressable onPress={() => router.push("/account")} hitSlop={8}>
-                <Text className="text-amber-600 font-semibold text-sm">更多 →</Text>
+                <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, fontWeight: JianTypography.semibold, color: JianColors.vermilion }}>
+                  更多 →
+                </Text>
               </Pressable>
             )}
           </View>
 
           {!user && (
-            <View className="bg-white rounded-2xl border border-slate-100 px-4 py-4 items-center">
-              <Text className="text-slate-500 text-sm mb-3">登入後可查看練習記錄</Text>
-              <Pressable
-                onPress={() => router.push("/account")}
-                className="bg-amber-500 px-6 py-2 rounded-xl active:opacity-80"
-              >
-                <Text className="text-white font-semibold text-sm">立即登入</Text>
-              </Pressable>
-            </View>
+            <Card variant="default">
+              <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, color: JianColors.ink2, marginBottom: 12, textAlign: 'center' }}>
+                登入後可查看練習記錄
+              </Text>
+              <Button variant="primary" size="medium" fullWidth onPress={() => router.push("/account")}>
+                立即登入
+              </Button>
+            </Card>
           )}
           {user && recentAttempts.length === 0 && (
-            <View className="bg-white rounded-2xl border border-slate-100 px-4 py-4">
-              <Text className="text-slate-400 text-sm text-center">尚未有練習記錄</Text>
-            </View>
+            <Card variant="default">
+              <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, color: JianColors.ink3, textAlign: 'center' }}>
+                尚未有練習記錄
+              </Text>
+            </Card>
           )}
           {user && recentAttempts.map((attempt) => {
             const pct = attempt.total_points > 0
               ? Math.round((attempt.score / attempt.total_points) * 100)
               : 0
-            const barColor = pct >= 80 ? "bg-amber-500" : pct >= 50 ? "bg-amber-300" : "bg-slate-300"
+            const progressVariant = pct >= 80 ? "jade" : pct >= 50 ? "amber" : "vermilion"
             return (
               <Pressable
                 key={attempt.id}
                 onPress={() => router.push({ pathname: "/attempt", params: { id: attempt.id } })}
-                className="bg-white rounded-2xl border border-slate-100 px-4 py-3 mb-2 active:opacity-70"
               >
-                <View className="flex-row justify-between items-start mb-1.5">
-                  <Text
-                    className="text-sm font-bold text-slate-800 flex-1 mr-2"
-                    style={{ fontFamily: "Georgia" }}
-                    numberOfLines={1}
-                  >
-                    {titleById[attempt.article_id] ?? attempt.article_id}
-                  </Text>
-                  <Text className="text-xs text-slate-400">{formatDate(attempt.finished_at)}</Text>
-                </View>
-                <View className="flex-row items-center gap-2">
-                  <View className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                    <View className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
-                  </View>
-                  <Text className="text-xs font-semibold text-slate-600">
-                    {attempt.score}/{attempt.total_points}
-                  </Text>
-                </View>
+                {({ pressed }) => (
+                  <Card variant="default" style={{ marginBottom: 8, opacity: pressed ? 0.7 : 1 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                      <Text
+                        style={{
+                          fontFamily: JianTypography.serif,
+                          fontSize: JianTypography.bodySmall,
+                          fontWeight: JianTypography.bold,
+                          color: JianColors.ink,
+                          flex: 1,
+                          marginRight: 8
+                        }}
+                        numberOfLines={1}
+                      >
+                        {titleById[attempt.article_id] ?? attempt.article_id}
+                      </Text>
+                      <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink3 }}>
+                        {formatDate(attempt.finished_at)}
+                      </Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <View style={{ flex: 1 }}>
+                        <ProgressBar value={pct} variant={progressVariant} height={6} />
+                      </View>
+                      <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, fontWeight: JianTypography.semibold, color: JianColors.ink2 }}>
+                        {attempt.score}/{attempt.total_points}
+                      </Text>
+                    </View>
+                  </Card>
+                )}
               </Pressable>
             )
           })}
