@@ -3,146 +3,139 @@ import Svg, {
   Ellipse,
   Path,
   Rect,
-  Line,
   G,
+  Text as SvgText,
+  Defs,
+  Filter,
+  FeDropShadow,
 } from 'react-native-svg';
 
 interface MascotProps {
-  mood: 'happy' | 'sad';
+  mood: 'happy' | 'sad' | 'thinking';
   size?: number;
 }
 
-export function Mascot({ mood, size = 120 }: MascotProps) {
-  const happy = mood === 'happy';
-
+export function Mascot({ mood, size = 80 }: MascotProps) {
   return (
-    <Svg width={size} height={(size * 130) / 100} viewBox="0 0 100 130">
-      {/* ── Hair base (dark cap over top of head) ── */}
-      <Circle cx="50" cy="44" r="27" fill="#2C1810" />
+    <Svg width={size} height={size * 1.3125} viewBox="0 0 160 210">
+      <Defs>
+        <Filter id="mascot-shadow" x="-25%" y="-25%" width="150%" height="150%">
+          <FeDropShadow dx="0" dy="2.5" stdDeviation="1.6" floodColor="#5a3f2a" floodOpacity="0.3" />
+        </Filter>
+      </Defs>
 
-      {/* ── Face ── */}
-      <Circle cx="50" cy="48" r="24" fill="#FDDBB4" />
+      {/* Body - robe */}
+      <G filter="url(#mascot-shadow)">
+        <Rect x="52" y="30" width="56" height="168" rx="24" fill="#2f2a25" />
+        <Rect x="52" y="30" width="56" height="20" rx="18" fill="#cba24e" />
+      </G>
 
-      {/* ── Topknot stem ── */}
-      <Rect x="47" y="19" width="6" height="12" rx="3" fill="#2C1810" />
+      {/* Badge */}
+      <Circle cx="80" cy="170" r="15" fill="none" stroke="#cba24e" strokeWidth="2.4" />
+      <SvgText
+        x="80"
+        y="177"
+        textAnchor="middle"
+        fontSize="16"
+        fontFamily="Noto Serif TC"
+        fontWeight="700"
+        fill="#cba24e"
+      >
+        墨
+      </SvgText>
 
-      {/* ── Topknot bun ── */}
-      <Ellipse cx="50" cy="16" rx="8" ry="9" fill="#2C1810" />
-
-      {/* ── Ears ── */}
-      <Ellipse cx="26" cy="48" rx="5" ry="7" fill="#FDDBB4" />
-      <Ellipse cx="74" cy="48" rx="5" ry="7" fill="#FDDBB4" />
-
-      {/* ── Eyes ── */}
-      <Circle cx="41" cy="45" r="4" fill="#2C1810" />
-      <Circle cx="59" cy="45" r="4" fill="#2C1810" />
-      <Circle cx="42.5" cy="43.5" r="1.5" fill="white" />
-      <Circle cx="60.5" cy="43.5" r="1.5" fill="white" />
-
-      {/* ── Sad eyebrows (angled inward) ── */}
-      {!happy && (
-        <G>
-          <Path
-            d="M 36 38 L 46 41"
-            stroke="#2C1810"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-          <Path
-            d="M 54 41 L 64 38"
-            stroke="#2C1810"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-        </G>
-      )}
-
-      {/* ── Happy blush ── */}
-      {happy && (
-        <G>
-          <Ellipse cx="33" cy="52" rx="7" ry="4" fill="#F9A8A8" opacity="0.65" />
-          <Ellipse cx="67" cy="52" rx="7" ry="4" fill="#F9A8A8" opacity="0.65" />
-        </G>
-      )}
-
-      {/* ── Mouth ── */}
-      {happy ? (
-        <Path
-          d="M 40 57 Q 50 66 60 57"
-          fill="none"
-          stroke="#2C1810"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
+      {/* Eyebrows */}
+      {mood === 'happy' ? (
+        <>
+          <Path d="M62,84 L70,89" stroke="#1f1c18" strokeWidth="2.2" strokeLinecap="round" />
+          <Path d="M98,84 L90,89" stroke="#1f1c18" strokeWidth="2.2" strokeLinecap="round" />
+        </>
+      ) : mood === 'thinking' ? (
+        <>
+          <G transform="translate(66, 86) rotate(-12) translate(-66, -86)">
+            <Path d="M62,84 L70,89" stroke="#1f1c18" strokeWidth="2.2" strokeLinecap="round" />
+          </G>
+          <Path d="M98,84 L90,89" stroke="#1f1c18" strokeWidth="2.2" strokeLinecap="round" />
+        </>
       ) : (
-        <Path
-          d="M 40 62 Q 50 54 60 62"
-          fill="none"
-          stroke="#2C1810"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
+        <>
+          <G transform="translate(66, 86) rotate(16) translate(-66, -86)">
+            <Path d="M62,84 L70,89" stroke="#1f1c18" strokeWidth="2.2" strokeLinecap="round" />
+          </G>
+          <G transform="translate(94, 86) rotate(-16) translate(-94, -86)">
+            <Path d="M98,84 L90,89" stroke="#1f1c18" strokeWidth="2.2" strokeLinecap="round" />
+          </G>
+        </>
       )}
 
-      {/* ── Sad tear ── */}
-      {!happy && (
-        <Path
-          d="M 38 52 Q 36 57 38 60 Q 40 57 38 52 Z"
-          fill="#93C5FD"
-          opacity="0.9"
-        />
+      {/* Eyes - happy (closed eyes with arc) */}
+      {mood === 'happy' && (
+        <G fill="none" stroke="#1f1c18" strokeWidth="3" strokeLinecap="round">
+          <Path d="M63,98 Q70,88 77,98" />
+          <Path d="M83,98 Q90,88 97,98" />
+        </G>
       )}
 
-      {/* ── Body (amber scholar robe) ── */}
-      <Path d="M 20 75 L 80 75 L 86 130 L 14 130 Z" fill="#F59E0B" />
+      {/* Eyes - thinking (looking up) */}
+      {mood === 'thinking' && (
+        <>
+          <Circle cx="70" cy="94" r="5.4" fill="#f4efe2" />
+          <Circle cx="90" cy="94" r="5.4" fill="#f4efe2" />
+          <Circle cx="71" cy="91" r="2.6" fill="#1f1c18" />
+          <Circle cx="91" cy="91" r="2.6" fill="#1f1c18" />
+        </>
+      )}
 
-      {/* ── Collar V-detail ── */}
-      <Path
-        d="M 38 75 L 50 88 L 62 75"
-        fill="none"
-        stroke="#B45309"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+      {/* Eyes - sad (regular open eyes) */}
+      {mood === 'sad' && (
+        <>
+          <Circle cx="70" cy="97" r="4.8" fill="#f4efe2" />
+          <Circle cx="90" cy="97" r="4.8" fill="#f4efe2" />
+          <Circle cx="70" cy="94" r="2.4" fill="#1f1c18" />
+          <Circle cx="90" cy="94" r="2.4" fill="#1f1c18" />
+        </>
+      )}
 
-      {/* ── Left sleeve / arm ── */}
-      <Path
-        d="M 20 80 Q 5 90 10 106"
-        stroke="#F59E0B"
-        fill="none"
-        strokeWidth="18"
-        strokeLinecap="round"
-      />
+      {/* Blush */}
+      <Ellipse cx="62" cy="106" rx="5" ry="3.2" fill="#5a6a76" opacity="0.5" />
+      <Ellipse cx="98" cy="106" rx="5" ry="3.2" fill="#5a6a76" opacity="0.5" />
 
-      {/* ── Right sleeve / arm ── */}
-      <Path
-        d="M 80 80 Q 95 90 90 106"
-        stroke="#F59E0B"
-        fill="none"
-        strokeWidth="18"
-        strokeLinecap="round"
-      />
+      {/* Mouth - happy (open smile) */}
+      {mood === 'happy' && (
+        <G>
+          <Ellipse cx="80" cy="114" rx="6" ry="6.6" fill="#131110" />
+          <Ellipse cx="80" cy="117" rx="3.4" ry="2.6" fill="#5a6a76" />
+        </G>
+      )}
 
-      {/* ── Scroll in right hand ── */}
-      <Rect
-        x="82"
-        y="98"
-        width="14"
-        height="20"
-        rx="1"
-        fill="#FEF3C7"
-        stroke="#92400E"
-        strokeWidth="0.8"
-      />
-      {/* Scroll roller top */}
-      <Rect x="80" y="95" width="18" height="6" rx="3" fill="#92400E" />
-      {/* Scroll roller bottom */}
-      <Rect x="80" y="114" width="18" height="6" rx="3" fill="#92400E" />
-      {/* Scroll lines (text) */}
-      <Line x1="85" y1="102" x2="93" y2="102" stroke="#92400E" strokeWidth="1" opacity="0.5" />
-      <Line x1="85" y1="106" x2="93" y2="106" stroke="#92400E" strokeWidth="1" opacity="0.5" />
-      <Line x1="85" y1="110" x2="93" y2="110" stroke="#92400E" strokeWidth="1" opacity="0.5" />
+      {/* Mouth - thinking (small smile) */}
+      {mood === 'thinking' && (
+        <Path d="M73,112 Q80,116 87,112" fill="none" stroke="#cdbf9e" strokeWidth="2.6" strokeLinecap="round" />
+      )}
+
+      {/* Mouth - sad (frown) */}
+      {mood === 'sad' && (
+        <Path d="M73,119 Q80,113 87,119" fill="none" stroke="#cdbf9e" strokeWidth="2.6" strokeLinecap="round" />
+      )}
+
+      {/* Sparkle (happy) */}
+      {mood === 'happy' && (
+        <Path d="M40,50 l2.6,6 6,2.6 -6,2.6 -2.6,6 -2.6,-6 -6,-2.6 6,-2.6 Z" fill="#cba24e" />
+      )}
+
+      {/* Thought bubbles (thinking) */}
+      {mood === 'thinking' && (
+        <G fill="#6a655e">
+          <Circle cx="112" cy="50" r="2.8" />
+          <Circle cx="120" cy="42" r="2.2" />
+          <Circle cx="126" cy="34" r="1.7" />
+        </G>
+      )}
+
+      {/* Sweat drop (sad) */}
+      {mood === 'sad' && (
+        <Ellipse cx="106" cy="60" rx="3.8" ry="5.2" fill="#8fb4d6" />
+      )}
     </Svg>
   );
 }

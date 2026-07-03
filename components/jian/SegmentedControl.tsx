@@ -1,5 +1,4 @@
 import { View, Pressable, Text, type ViewProps } from 'react-native'
-import { JianColors, JianTypography, JianRadius } from './tokens'
 
 export interface SegmentOption {
   value: string
@@ -19,10 +18,10 @@ export function SegmentedControl({ options, value, onChange, style, ...props }: 
       style={[
         {
           flexDirection: 'row',
-          backgroundColor: JianColors.surface2,
+          backgroundColor: '#faf5ea',
           borderWidth: 1,
-          borderColor: JianColors.line,
-          borderRadius: JianRadius.input,
+          borderColor: '#e7ddc9',
+          borderRadius: 8,
           padding: 3,
         },
         style,
@@ -35,22 +34,20 @@ export function SegmentedControl({ options, value, onChange, style, ...props }: 
           <Pressable
             key={option.value}
             onPress={() => onChange(option.value)}
-            style={({ pressed }) => ({
+            style={{
               flex: 1,
               paddingVertical: 8,
               paddingHorizontal: 2,
-              borderRadius: JianRadius.button,
-              backgroundColor: isSelected ? JianColors.vermilion : 'transparent',
+              borderRadius: 6,
+              backgroundColor: isSelected ? '#b0392c' : 'transparent',
               alignItems: 'center',
-              opacity: pressed ? 0.7 : 1,
-            })}
+            }}
           >
             <Text
               style={{
-                fontFamily: JianTypography.serif,
-                fontSize: JianTypography.label,
-                fontWeight: isSelected ? JianTypography.semibold : JianTypography.regular,
-                color: isSelected ? '#ffffff' : JianColors.ink2,
+                fontFamily: isSelected ? 'NotoSerifTC_600SemiBold' : 'NotoSerifTC_400Regular',
+                fontSize: 11,
+                color: isSelected ? '#ffffff' : '#6f665a',
                 textAlign: 'center',
               }}
             >

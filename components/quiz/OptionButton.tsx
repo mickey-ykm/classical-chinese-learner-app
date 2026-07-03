@@ -31,38 +31,109 @@ export default function OptionButton({
     Animated.spring(scale, { toValue: 1, useNativeDriver: true }).start()
   }
 
+  // Detect if this is a true/false question
+  const isTrueFalse = text === '正確' || text === '錯誤' ||
+                       text.includes('(True)') || text.includes('(False)') ||
+                       text === '是' || text === '否'
+
   let bgColor = JianColors.surface
-  let borderColor = JianColors.line
+  let borderColor = JianColors.line2
+  let borderWidth = 1
   let textColor = JianColors.ink
-  let keyBgColor = JianColors.surface2
-  let keyTextColor = JianColors.ink2
+  let textWeight: '400' | '600' | '700' = '400'
+  let textDecoration: 'none' | 'line-through' = 'none'
+  let radioStyle: 'empty' | 'filled' | 'filledSolid' = 'empty'
+  let radioBorderColor = JianColors.line2
+  let radioBorderWidth = 1.6
+  let radioFillColor = JianColors.vermilion
+  let label = ''
+  let labelColor = JianColors.ink2
+  let icon = ''
+  let iconColor = JianColors.ink
   let opacity = 1
 
   if (revealAnswer) {
     if (isCorrect) {
+      // Correct answer: jade theme
       bgColor = JianColors.jadeTint
       borderColor = JianColors.jade
-      textColor = JianColors.ink
-      keyBgColor = JianColors.jade
-      keyTextColor = JianColors.paper
+      borderWidth = 1.5
+      textColor = JianColors.jade
+      textWeight = '600'
+      radioStyle = 'filledSolid'
+      radioFillColor = JianColors.jade
+      label = '正解'
+      labelColor = JianColors.jade
+      icon = '✓'
+      iconColor = JianColors.jade
     } else if (isSelected) {
+      // Wrong answer: vermilion theme with strikethrough
       bgColor = JianColors.vermilionTint
       borderColor = JianColors.vermilion
-      textColor = JianColors.ink
-      keyBgColor = JianColors.vermilion
-      keyTextColor = JianColors.paper
+      borderWidth = 1.5
+      textColor = JianColors.vermilion
+      textDecoration = 'line-through'
+      radioStyle = 'empty'
+      radioBorderColor = JianColors.vermilion
+      radioBorderWidth = 1.6
+      label = '你的答案'
+      labelColor = JianColors.vermilion
+      icon = '✕'
+      iconColor = JianColors.vermilion
     } else {
-      opacity = 0.4
+      // Other options: dimmed
+      opacity = 0.55
     }
   } else if (isSelected) {
-    bgColor = JianColors.amberTint
-    borderColor = JianColors.amberBorder
-    textColor = JianColors.ink
-    keyBgColor = JianColors.amber
-    keyTextColor = JianColors.paper
+    // Selected but not submitted: vermilion theme
+    bgColor = JianColors.vermilionTint
+    borderColor = JianColors.vermilion
+    borderWidth = 1.5
+    textWeight = '600'
+    radioStyle = 'filled'
+    radioBorderColor = JianColors.vermilion
+    radioFillColor = JianColors.vermilion
   }
 
-  const icon = revealAnswer ? (isCorrect ? "✓" : isSelected ? "✗" : "") : ""
+  // Radio button rendering
+  let radioElement
+  if (radioStyle === 'empty') {
+    radioElement = (
+      <View style={{
+        width: 19,
+        height: 19,
+        borderRadius: 9.5,
+        borderWidth: radioBorderWidth,
+        borderColor: radioBorderColor,
+        flexShrink: 0
+      }} />
+    )
+  } else if (radioStyle === 'filled') {
+    radioElement = (
+      <View style={{
+        width: 19,
+        height: 19,
+        borderRadius: 9.5,
+        borderWidth: 5,
+        borderColor: radioFillColor,
+        backgroundColor: '#fff',
+        flexShrink: 0
+      }} />
+    )
+  } else {
+    // filledSolid
+    radioElement = (
+      <View style={{
+        width: 19,
+        height: 19,
+        borderRadius: 9.5,
+        borderWidth: 5,
+        borderColor: radioFillColor,
+        backgroundColor: '#fff',
+        flexShrink: 0
+      }} />
+    )
+  }
 
   return (
     <Animated.View style={{ transform: [{ scale }], opacity }}>
@@ -73,52 +144,39 @@ export default function OptionButton({
         disabled={disabled}
         style={{
           flexDirection: 'row',
-          alignItems: 'flex-start',
-          gap: 12,
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-          borderRadius: JianRadius.card,
-          borderWidth: 2,
+          alignItems: 'center',
+          gap: 13,
+          paddingHorizontal: 14,
+          paddingVertical: 13,
+          borderRadius: 7,
+          borderWidth,
           borderColor,
-          backgroundColor: bgColor,
-          minHeight: 44
+          backgroundColor: bgColor
         }}
       >
-        <View style={{
-          width: 24,
-          height: 24,
-          borderRadius: 12,
-          backgroundColor: keyBgColor,
-          borderWidth: 1,
-          borderColor: borderColor,
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0
-        }}>
-          <Text style={{
-            fontFamily: JianTypography.serif,
-            fontSize: JianTypography.caption,
-            fontWeight: '700',
-            color: keyTextColor
-          }}>
-            {optionKey}
-          </Text>
-        </View>
+        {radioElement}
         <Text style={{
-          fontFamily: JianTypography.serif,
-          fontSize: JianTypography.bodySmall,
-          lineHeight: 20,
+          fontFamily: getSerifFont(textWeight),
+          fontSize: 16,
           color: textColor,
-          flex: 1
+          flex: 1,
+          textDecorationLine: textDecoration
         }}>
-          {text}
+          {isTrueFalse ? text : `${optionKey}　${text}`}
         </Text>
+        {label ? (
+          <Text style={{
+            fontFamily: JianTypography.sans,
+            fontSize: 11,
+            color: labelColor
+          }}>
+            {label}
+          </Text>
+        ) : null}
         {icon ? (
           <Text style={{
-            fontFamily: JianTypography.serif,
-            fontWeight: '700',
-            color: textColor,
-            fontSize: JianTypography.body
+            color: iconColor,
+            fontSize: 16
           }}>
             {icon}
           </Text>

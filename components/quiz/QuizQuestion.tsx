@@ -1,5 +1,6 @@
 import { useEffect } from "react"
 import { View, Text, Pressable } from "react-native"
+import Svg, { Path, Line } from "react-native-svg"
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -10,7 +11,6 @@ import Animated, {
 import type { Question, OptionKey } from "@/lib/types"
 import { Mascot } from "@/components/Mascot"
 import OptionButton from "./OptionButton"
-import PartHeader from "./PartHeader"
 
 interface Props {
   question: Question
@@ -23,6 +23,7 @@ interface Props {
   isLastQuestion: boolean
   onSelect: (key: OptionKey) => void
   onNext: () => void
+  onShowArticle?: () => void
 }
 
 export default function QuizQuestion({
@@ -36,6 +37,7 @@ export default function QuizQuestion({
   isLastQuestion,
   onSelect,
   onNext,
+  onShowArticle,
 }: Props) {
   const opacity = useSharedValue(0)
   const translateY = useSharedValue(24)
@@ -64,19 +66,80 @@ export default function QuizQuestion({
 
   return (
     <View>
-      {isFirstOfPart && (
-        <PartHeader
-          partNumber={question.part}
-          title={partTitle}
-          pointsPerQuestion={question.points}
-        />
-      )}
+      {/* Question info card with "查看原文" button */}
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 10,
+        backgroundColor: '#faf5ea',
+        borderWidth: 1,
+        borderColor: '#e7ddc9',
+        borderRadius: 8,
+        paddingVertical: 9,
+        paddingLeft: 14,
+        paddingRight: 10,
+        marginBottom: 11
+      }}>
+        <Text style={{
+          fontFamily: "Georgia",
+          fontSize: 13,
+          color: '#6f665a'
+        }}>
+          {partTitle}
+        </Text>
+        {onShowArticle && (
+          <Pressable
+            onPress={onShowArticle}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 5,
+              backgroundColor: '#fdfbf6',
+              borderWidth: 1,
+              borderColor: '#e5c9c2',
+              borderRadius: 7,
+              paddingVertical: 6,
+              paddingHorizontal: 11,
+              shadowColor: '#2c2722',
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.1,
+              shadowRadius: 2
+            }}
+            className="active:opacity-70"
+          >
+            <Svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#b0392c" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <Path d="M12 6.5C10.4 5.3 8 4.5 5 4.5V17c3 0 5.4.8 7 2 1.6-1.2 4-2 7-2V4.5c-3 0-5.4.8-7 2z" />
+              <Line x1="12" y1="6.5" x2="12" y2="19" />
+            </Svg>
+            <Text style={{
+              fontFamily: "Georgia",
+              fontSize: 12,
+              fontWeight: '600',
+              color: '#b0392c'
+            }}>
+              查看原文
+            </Text>
+          </Pressable>
+        )}
+      </View>
       <Text
-        className="text-base font-semibold text-slate-800 mb-4 leading-relaxed"
-        style={{ fontFamily: "Georgia" }}
+        style={{
+          fontFamily: "Georgia",
+          fontSize: 18,
+          lineHeight: 18 * 1.7,
+          color: "#2c2722",
+          marginTop: 11,
+          marginBottom: waitingForNext ? 16 : 8
+        }}
       >
         {question.stem}
       </Text>
+      {!waitingForNext && (
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 10 }}>
+          <Mascot mood="thinking" size={52} />
+        </View>
+      )}
       <View className="gap-2">
         {(question.options ?? []).map((opt) => (
           <OptionButton
@@ -93,26 +156,65 @@ export default function QuizQuestion({
       </View>
 
       {waitingForNext && (
-        <Animated.View style={revealStyle} className="mt-4 items-center gap-3">
-          <Animated.View style={mascotStyle}>
-            <Mascot mood={isCorrect ? "happy" : "sad"} size={90} />
-          </Animated.View>
-
+        <Animated.View style={revealStyle} className="mt-4">
           {question.explanation ? (
-            <View className="w-full bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-              <Text className="text-xs font-semibold text-amber-700 mb-1">解析</Text>
-              <Text className="text-sm text-slate-700 leading-relaxed">
-                {question.explanation}
-              </Text>
+            <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start' }}>
+              <View style={{ flexShrink: 0 }}>
+                <Animated.View style={mascotStyle}>
+                  <Mascot mood={isCorrect ? "happy" : "sad"} size={52} />
+                </Animated.View>
+              </View>
+              <View style={{
+                flex: 1,
+                paddingLeft: 14,
+                borderLeftWidth: 2,
+                borderLeftColor: '#b0392c'
+              }}>
+                <Text style={{
+                  fontFamily: 'Noto Sans TC',
+                  fontSize: 11,
+                  letterSpacing: 0.16 * 11,
+                  color: '#b0392c',
+                  marginBottom: 6
+                }}>
+                  解析
+                </Text>
+                <Text style={{
+                  fontFamily: "Georgia",
+                  fontSize: 14,
+                  lineHeight: 14 * 1.8,
+                  color: '#6f665a'
+                }}>
+                  {question.explanation}
+                </Text>
+              </View>
             </View>
-          ) : null}
+          ) : (
+            <View style={{ alignItems: 'center' }}>
+              <Animated.View style={mascotStyle}>
+                <Mascot mood={isCorrect ? "happy" : "sad"} size={90} />
+              </Animated.View>
+            </View>
+          )}
 
           <Pressable
             onPress={onNext}
-            className="w-full py-3.5 rounded-xl bg-amber-500 items-center active:opacity-80 mt-1"
+            style={{
+              width: '100%',
+              paddingVertical: 13,
+              borderRadius: 6,
+              backgroundColor: '#2c2722',
+              alignItems: 'center',
+              marginTop: 18
+            }}
+            className="active:opacity-80"
           >
-            <Text className="text-white font-semibold text-base">
-              {isLastQuestion ? "查看成績" : "下一題 →"}
+            <Text style={{
+              fontFamily: "Georgia",
+              color: '#f4f0e6',
+              fontSize: 16
+            }}>
+              {isLastQuestion ? "查看成績" : "下一題　›"}
             </Text>
           </Pressable>
         </Animated.View>

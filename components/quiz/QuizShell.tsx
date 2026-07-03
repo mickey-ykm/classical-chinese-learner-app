@@ -217,24 +217,40 @@ export default function QuizShell({
     currentIndex === 0 || questions[currentIndex - 1]?.part !== currentQuestion.part
 
   return (
-    <ScrollView className="flex-1 px-4" contentContainerStyle={{ paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
+    <View style={{ flex: 1, backgroundColor: '#f4f0e6' }}>
+      <ScrollView style={{ flex: 1, paddingHorizontal: 22 }} contentContainerStyle={{ paddingTop: 8, paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
       <View className="gap-6">{/* Gap between major sections */}
-        <View className="flex-row items-center gap-3">
-          <View className="flex-1">
+        {/* Header: Exit | Title | Timer */}
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingVertical: 4,
+          paddingBottom: 11,
+          borderBottomWidth: 1,
+          borderBottomColor: '#e7ddc9'
+        }}>
+          <Pressable onPress={onExit} hitSlop={8}>
+            <Text style={{ fontFamily: "Georgia", fontSize: 14, color: '#6f665a' }}>‹ 離開</Text>
+          </Pressable>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+            <Text style={{ fontFamily: "Georgia", fontSize: 13, fontWeight: '600', color: '#2c2722' }}>
+              {currentArticleTitle}
+            </Text>
+          </View>
+          <Text style={{ fontFamily: 'Newsreader', fontSize: 13, color: timerColor === 'text-amber-600' ? '#bb8a2e' : timerColor === 'text-red-500' ? '#dc2626' : '#94a3b8' }}>
+            ⏱ {formatTimer(elapsedSeconds)}
+          </Text>
+        </View>
+
+        {/* Progress bar */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <View style={{ flex: 1 }}>
             <QuizProgressBar current={currentIndex + 1} total={questions.length} />
           </View>
-          <Text className={`text-sm font-semibold tabular-nums ${timerColor}`}>
-            {formatTimer(elapsedSeconds)}
+          <Text style={{ fontFamily: 'Newsreader', fontSize: 13, color: '#6f665a' }}>
+            {String(currentIndex + 1).padStart(2, '0')} / {questions.length}
           </Text>
-          {currentArticle && !articles && (
-            <Pressable
-              onPress={() => setShowArticle(true)}
-              hitSlop={8}
-              className="bg-amber-100 border border-amber-300 rounded-lg px-3 py-1.5 active:opacity-70"
-            >
-              <Text className="text-amber-700 font-semibold text-xs">📖 文章</Text>
-            </Pressable>
-          )}
         </View>
 
         {/* Article badge for multi-article mode */}
@@ -297,6 +313,7 @@ export default function QuizShell({
           onNext={handleNext}
           revealAnswer={revealAnswer}
           isCorrect={lastAnswerCorrect}
+          onShowArticle={currentArticle ? () => setShowArticle(true) : undefined}
         />
       ) : currentQuestion.format === "sentence-order" ? (
         <SentenceOrderQuestion
@@ -314,6 +331,7 @@ export default function QuizShell({
           onNext={handleNext}
           revealAnswer={revealAnswer}
           isCorrect={lastAnswerCorrect}
+          onShowArticle={currentArticle ? () => setShowArticle(true) : undefined}
         />
       ) : (currentQuestion.selectCount ?? 1) > 1 ? (
         <MCQuestion
@@ -338,6 +356,8 @@ export default function QuizShell({
           }}
           onNext={handleNext}
           isLastQuestion={isLastQuestion}
+          partTitle={partTitles[currentQuestion.part] ?? ""}
+          onShowArticle={currentArticle ? () => setShowArticle(true) : undefined}
         />
       ) : (
         <QuizQuestion
@@ -351,6 +371,7 @@ export default function QuizShell({
           isLastQuestion={isLastQuestion}
           onSelect={handleSelect}
           onNext={handleNext}
+          onShowArticle={currentArticle ? () => setShowArticle(true) : undefined}
         />
       )}
 
@@ -364,5 +385,6 @@ export default function QuizShell({
       />
     </View>
     </ScrollView>
+    </View>
   )
 }

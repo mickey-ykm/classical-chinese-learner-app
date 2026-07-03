@@ -184,7 +184,7 @@ export default function ChaptersTab() {
           篇章
         </Text>
         <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink2, marginTop: 4 }}>
-          共 {allArticles.length} 篇
+          {allArticles.length} 篇 · 題庫 {allArticles.reduce((sum, a) => sum + (a.totalQuestions || 0), 0)}+ 題
         </Text>
       </View>
 

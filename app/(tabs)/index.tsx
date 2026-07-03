@@ -12,6 +12,8 @@ import type { ArticleEntry } from "@/lib/types"
 import Svg, { Circle, Path } from "react-native-svg"
 import { Button, Badge, ProgressBar, JianColors, JianTypography, JianSpacing, getSerifFont } from "@/components/jian"
 
+type TaskType = 'revision' | 'single-article' | 'targeted'
+
 function DemonMascot({ size = 64 }: { size?: number }) {
   const s = size
   return (
@@ -150,6 +152,7 @@ export default function HomeTab() {
   const [dseArticles, setDseArticles] = useState<ArticleEntry[]>([])
   const [otherArticles, setOtherArticles] = useState<ArticleEntry[]>([])
   const [progressMap, setProgressMap] = useState<ArticleProgressMap>({})
+  const [selectedTaskType, setSelectedTaskType] = useState<TaskType>('revision')
 
   const loadArticles = useCallback(() => {
     const index = getArticleIndex()
@@ -249,27 +252,90 @@ export default function HomeTab() {
           </View>
         )}
 
-        {/* DSE 操練 section - Only for logged-in users */}
+        {/* DSE Countdown + Streak - Only for logged-in users */}
         {user && (
           <View style={{ marginBottom: 26, paddingTop: 22, borderTopWidth: 2, borderTopColor: JianColors.ink }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 11 }}>
-              <View>
-                <Text style={{ fontFamily: JianTypography.sans, fontSize: 11, letterSpacing: 2, color: JianColors.ink3 }}>
-                  接 下 來
+            <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 16 }}>
+              <Text style={{ fontFamily: getSerifFont('700'), fontSize: 72, color: JianColors.vermilion, lineHeight: 72 }}>
+                312
+              </Text>
+              <View style={{ paddingBottom: 2 }}>
+                <Text style={{ fontFamily: getSerifFont('600'), fontSize: 17, color: JianColors.ink }}>
+                  天後文憑試
                 </Text>
-                <Text style={{ fontFamily: getSerifFont('700'), fontSize: 31, lineHeight: 37, color: JianColors.ink, marginTop: 11 }}>
-                  DSE 操練
-                </Text>
-                <Text style={{ fontFamily: JianTypography.serif, fontSize: 13, color: JianColors.ink2, marginTop: 7 }}>
-                  重點操練，準備應試
+                <Text style={{ fontFamily: getSerifFont('600'), fontSize: 17, color: JianColors.jade, marginTop: 6 }}>
+                  已連續練習 6 天 🔥
                 </Text>
               </View>
-              <DemonMascot size={56} />
+            </View>
+          </View>
+        )}
+
+        {/* Daily Task Card - Only for logged-in users */}
+        {user && (
+          <View style={{ marginBottom: 26, paddingTop: 22, borderTopWidth: 2, borderTopColor: JianColors.ink }}>
+            <View style={{ marginBottom: 18 }}>
+              <Text style={{ fontFamily: JianTypography.sans, fontSize: 11, letterSpacing: 2, color: JianColors.ink3 }}>
+                接 下 來 · 今 日 第  2／3  項
+              </Text>
+              <Text style={{ fontFamily: getSerifFont('700'), fontSize: 31, lineHeight: 37, color: JianColors.ink, marginTop: 11 }}>
+                模擬一篇文章
+              </Text>
+              <Text style={{ fontFamily: JianTypography.serif, fontSize: 13, color: JianColors.ink2, marginTop: 7 }}>
+                DSE 甲部 · 隨機 22 題 · 約 10 分鐘
+              </Text>
             </View>
 
-            <Button variant="primary" size="large" fullWidth onPress={() => router.push("/(tabs)/practice")} style={{ marginTop: 18 }}>
-              前往操練　→
+            <Button variant="primary" size="large" fullWidth onPress={() => {
+              // Navigate based on selected task type
+              if (selectedTaskType === 'revision') {
+                router.push("/revision-article") // 文章錯題重溫
+              } else if (selectedTaskType === 'single-article') {
+                router.push("/(tabs)/dse-learner") // 篇章listing
+              } else {
+                router.push("/(tabs)/weight-training") // 針對性難題訓練
+              }
+            }}>
+              開始練習　→
             </Button>
+
+            {/* Task type slider */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18, marginTop: 14 }}>
+              <Pressable onPress={() => setSelectedTaskType('revision')}>
+                {({ pressed }) => (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, opacity: pressed ? 0.7 : 1 }}>
+                    <Text style={{ fontSize: 16, color: selectedTaskType === 'revision' ? JianColors.jade : JianColors.ink3 }}>
+                      {selectedTaskType === 'revision' ? '✓' : '○'}
+                    </Text>
+                    <Text style={{ fontFamily: JianTypography.serif, fontSize: 13, color: selectedTaskType === 'revision' ? JianColors.ink2 : JianColors.ink3 }}>
+                      重溫錯題
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
+              <Pressable onPress={() => setSelectedTaskType('single-article')}>
+                {({ pressed }) => (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, opacity: pressed ? 0.7 : 1 }}>
+                    <Text style={{ fontSize: selectedTaskType === 'single-article' ? 11 : 16, color: selectedTaskType === 'single-article' ? JianColors.ink : JianColors.ink3 }}>
+                      {selectedTaskType === 'single-article' ? '●' : '○'}
+                    </Text>
+                    <Text style={{ fontFamily: JianTypography.serif, fontSize: 13, color: selectedTaskType === 'single-article' ? JianColors.ink2 : JianColors.ink3 }}>
+                      單篇練習
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
+              <Pressable onPress={() => setSelectedTaskType('targeted')}>
+                {({ pressed }) => (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, opacity: pressed ? 0.7 : 1 }}>
+                    <Text style={{ fontSize: 16, color: JianColors.ink3 }}>○</Text>
+                    <Text style={{ fontFamily: JianTypography.serif, fontSize: 13, color: JianColors.ink3 }}>
+                      針對性訓練
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
+            </View>
           </View>
         )}
 

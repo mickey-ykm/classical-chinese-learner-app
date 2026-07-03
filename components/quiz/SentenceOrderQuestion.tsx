@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from "react"
 import { View, Text, TouchableOpacity, Pressable } from "react-native"
+import Svg, { Path, Line } from "react-native-svg"
 import type { Question, QuizAnswer } from "@/lib/types"
-import PartHeader from "./PartHeader"
+import { Mascot } from "@/components/Mascot"
 
 interface Props {
   question: Question
@@ -12,6 +13,7 @@ interface Props {
   isCorrect: boolean
   onAnswer: (result: QuizAnswer) => void
   onNext: () => void
+  onShowArticle?: () => void
 }
 
 export default function SentenceOrderQuestion({
@@ -23,6 +25,7 @@ export default function SentenceOrderQuestion({
   isCorrect,
   onAnswer,
   onNext,
+  onShowArticle,
 }: Props) {
   const tokens: string[] = question.sequenceTokens ?? []
   const correctAnswer = question.correctAnswer ?? ""
@@ -69,123 +72,332 @@ export default function SentenceOrderQuestion({
   }, [arranged, tokens.length, correctSeq, submitted, question, onAnswer])
 
   return (
-    <View className="gap-4">
-      {isFirstOfPart && <PartHeader title={partTitle} />}
+    <View>
+      {/* Question info card with "查看原文" button */}
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 10,
+        backgroundColor: '#faf5ea',
+        borderWidth: 1,
+        borderColor: '#e7ddc9',
+        borderRadius: 8,
+        paddingVertical: 9,
+        paddingLeft: 14,
+        paddingRight: 10,
+        marginBottom: 11
+      }}>
+        <Text style={{
+          fontFamily: "Georgia",
+          fontSize: 13,
+          color: '#6f665a'
+        }}>
+          {partTitle}
+        </Text>
+        {onShowArticle && (
+          <Pressable
+            onPress={onShowArticle}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 5,
+              backgroundColor: '#fdfbf6',
+              borderWidth: 1,
+              borderColor: '#e5c9c2',
+              borderRadius: 7,
+              paddingVertical: 6,
+              paddingHorizontal: 11,
+              shadowColor: '#2c2722',
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.1,
+              shadowRadius: 2
+            }}
+            className="active:opacity-70"
+          >
+            <Svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#b0392c" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <Path d="M12 6.5C10.4 5.3 8 4.5 5 4.5V17c3 0 5.4.8 7 2 1.6-1.2 4-2 7-2V4.5c-3 0-5.4.8-7 2z" />
+              <Line x1="12" y1="6.5" x2="12" y2="19" />
+            </Svg>
+            <Text style={{
+              fontFamily: "Georgia",
+              fontSize: 12,
+              fontWeight: '600',
+              color: '#b0392c'
+            }}>
+              查看原文
+            </Text>
+          </Pressable>
+        )}
+      </View>
 
-      <Text className="text-base text-slate-800 leading-relaxed" style={{ fontFamily: "Georgia" }}>
+      {/* Question stem */}
+      <Text style={{
+        fontFamily: "Georgia",
+        fontSize: 18,
+        lineHeight: 18 * 1.7,
+        color: '#2c2722',
+        marginTop: 11,
+        marginBottom: 8
+      }}>
         {question.stem}
       </Text>
 
-      {/* Answer slots */}
-      <View>
-        <Text className="text-sm font-medium text-slate-500 mb-2">已排列順序</Text>
-        <View className="min-h-[56px] flex-row flex-wrap gap-2 bg-slate-100 rounded-xl p-3 border border-slate-200">
-          {arranged.length === 0 && (
-            <Text className="text-slate-400 text-sm self-center">點擊下方字詞加入</Text>
-          )}
-          {arranged.map((token, i) => {
-            const tokenCorrect = submitted ? token === correctSeq[i] : null
-            return (
+      {/* Mascot (thinking state, before answer) */}
+      {!submitted && (
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 10 }}>
+          <Mascot mood="thinking" size={52} />
+        </View>
+      )}
+
+      {/* Instructions */}
+      <Text style={{
+        fontFamily: "Georgia",
+        fontSize: 13,
+        color: '#6f665a',
+        marginBottom: 8
+      }}>
+        點按字詞加入答案，點已選字詞可移回。
+      </Text>
+
+      {/* Section label: 已排列順序 */}
+      <Text style={{
+        fontFamily: 'Noto Sans TC',
+        fontSize: 12,
+        color: '#6f665a',
+        marginBottom: 8,
+        letterSpacing: 0.08 * 12
+      }}>
+        已　排　列　順　序
+      </Text>
+
+      {/* Arranged tokens area */}
+      <View style={{
+        minHeight: 72,
+        borderWidth: 1.5,
+        borderColor: submitted ? (isCorrect ? '#3f6b54' : '#b0392c') : '#ded2ba',
+        borderRadius: 10,
+        backgroundColor: submitted ? (isCorrect ? '#e8f0ec' : '#f8e9e6') : '#fdfbf6',
+        paddingVertical: 11,
+        paddingHorizontal: 13,
+        marginBottom: 16
+      }}>
+        {arranged.length === 0 ? (
+          <Text style={{
+            fontFamily: "Georgia",
+            fontSize: 14,
+            color: '#a59b8b',
+            textAlign: 'center',
+            lineHeight: 50
+          }}>
+            輕按下方字句以排列
+          </Text>
+        ) : (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            {arranged.map((token, idx) => (
               <Pressable
-                key={`arranged-${i}`}
-                onPress={() => handleRemoveToken(i)}
+                key={idx}
+                onPress={() => !submitted && handleRemoveToken(idx)}
                 disabled={submitted}
-                className={`px-3 py-2 rounded-lg border ${
-                  submitted
-                    ? tokenCorrect
-                      ? "bg-green-100 border-green-400"
-                      : "bg-red-100 border-red-400"
-                    : "bg-amber-100 border-amber-400"
-                }`}
+                style={{
+                  width: 46,
+                  height: 46,
+                  borderWidth: 1,
+                  borderColor: '#ded2ba',
+                  backgroundColor: '#fdfbf6',
+                  borderRadius: 8,
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
               >
-                <Text
-                  className={`text-base font-medium ${
-                    submitted
-                      ? tokenCorrect
-                        ? "text-green-700"
-                        : "text-red-700"
-                      : "text-amber-800"
-                  }`}
-                  style={{ fontFamily: "Georgia" }}
-                >
+                <Text style={{
+                  fontFamily: "Georgia",
+                  fontSize: 22,
+                  color: '#2c2722'
+                }}>
                   {token}
                 </Text>
               </Pressable>
-            )
-          })}
-        </View>
+            ))}
+          </View>
+        )}
       </View>
 
-      {/* Remaining tokens */}
-      <View>
-        <Text className="text-sm font-medium text-slate-500 mb-2">可用字詞</Text>
-        <View className="flex-row flex-wrap gap-2">
-          {remaining.map((token, i) => (
-            <Pressable
-              key={`remaining-${i}`}
-              onPress={() => handlePickToken(token, i)}
-              disabled={submitted}
-              className="px-3 py-2 rounded-lg bg-white border border-slate-300"
-            >
-              <Text className="text-base font-medium text-slate-700" style={{ fontFamily: "Georgia" }}>
-                {token}
-              </Text>
-            </Pressable>
-          ))}
-          {remaining.length === 0 && !submitted && (
-            <Text className="text-slate-400 text-sm">所有字詞已排列</Text>
-          )}
-        </View>
-      </View>
-
-      {/* Submit / feedback */}
-      {!submitted ? (
-        <TouchableOpacity
-          onPress={handleSubmit}
-          disabled={arranged.length !== tokens.length}
-          className={`py-3 rounded-xl items-center ${
-            arranged.length === tokens.length ? "bg-amber-500" : "bg-slate-200"
-          }`}
-        >
-          <Text
-            className={`text-base font-semibold ${
-              arranged.length === tokens.length ? "text-white" : "text-slate-400"
-            }`}
-          >
-            提交答案
+      {/* Remaining tokens (unanswered state) */}
+      {!submitted && remaining.length > 0 && (
+        <View>
+          {/* Section label: 可用字詞 */}
+          <Text style={{
+            fontFamily: 'Noto Sans TC',
+            fontSize: 12,
+            color: '#6f665a',
+            marginBottom: 8,
+            letterSpacing: 0.08 * 12
+          }}>
+            可　用　字　詞
           </Text>
-        </TouchableOpacity>
-      ) : (
-        <View className={`rounded-xl p-4 ${isCorrect ? "bg-green-50" : "bg-red-50"}`}>
-          <Text className={`font-semibold text-base mb-1 ${isCorrect ? "text-green-700" : "text-red-700"}`}>
-            {isCorrect ? "✓ 答對了！" : "✗ 答錯了"}
-          </Text>
-          {!isCorrect && (
-            <>
-              <Text className="text-sm text-slate-600 mb-1">正確順序：</Text>
-              <View className="flex-row flex-wrap gap-1">
-                {correctSeq.map((t, i) => (
-                  <Text
-                    key={i}
-                    className="text-base font-medium text-green-700 bg-green-100 px-2 py-1 rounded"
-                    style={{ fontFamily: "Georgia" }}
-                  >
-                    {t}
-                  </Text>
-                ))}
-              </View>
-            </>
-          )}
-          <TouchableOpacity
-            onPress={onNext}
-            className="mt-3 py-2.5 rounded-xl items-center bg-amber-500"
-          >
-            <Text className="text-white font-semibold text-base">
-              {isLastQuestion ? "查看結果" : "下一題"}
-            </Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+            {remaining.map((token, idx) => (
+              <Pressable
+                key={idx}
+                onPress={() => handlePickToken(token, idx)}
+                style={{
+                  width: 46,
+                  height: 46,
+                  borderWidth: 1,
+                  borderColor: '#ded2ba',
+                  backgroundColor: '#fdfbf6',
+                  borderRadius: 8,
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Text style={{
+                  fontFamily: "Georgia",
+                  fontSize: 22,
+                  color: '#2c2722'
+                }}>
+                  {token}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
         </View>
       )}
+
+      {/* Correct answer display (answered state, if wrong) */}
+      {submitted && !isCorrect && (
+        <View style={{
+          paddingVertical: 12,
+          paddingHorizontal: 14,
+          backgroundColor: '#e8f0ec',
+          borderWidth: 1,
+          borderColor: '#7a9b8d',
+          borderRadius: 7,
+          marginBottom: 13
+        }}>
+          <Text style={{
+            fontFamily: 'Noto Sans TC',
+            fontSize: 11,
+            letterSpacing: 0.16 * 11,
+            color: '#3f6b54',
+            marginBottom: 8
+          }}>
+            正確答案
+          </Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            {correctSeq.map((token, idx) => (
+              <View
+                key={idx}
+                style={{
+                  width: 46,
+                  height: 46,
+                  borderWidth: 1,
+                  borderColor: '#7a9b8d',
+                  backgroundColor: '#fdfbf6',
+                  borderRadius: 8,
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Text style={{
+                  fontFamily: "Georgia",
+                  fontSize: 22,
+                  color: '#3f6b54',
+                  fontWeight: '600'
+                }}>
+                  {token}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {/* Explanation with mascot (after answer) */}
+      {submitted && question.explanation && (
+        <View style={{
+          flexDirection: 'row',
+          gap: 10,
+          alignItems: 'flex-start',
+          marginBottom: 18
+        }}>
+          <View style={{ flexShrink: 0 }}>
+            <Mascot mood={isCorrect ? "happy" : "sad"} size={52} />
+          </View>
+          <View style={{
+            flex: 1,
+            paddingLeft: 14,
+            borderLeftWidth: 2,
+            borderLeftColor: isCorrect ? '#3f6b54' : '#b0392c'
+          }}>
+            <Text style={{
+              fontFamily: 'Noto Sans TC',
+              fontSize: 11,
+              letterSpacing: 0.16 * 11,
+              color: isCorrect ? '#3f6b54' : '#b0392c',
+              marginBottom: 6
+            }}>
+              解析
+            </Text>
+            <Text style={{
+              fontFamily: "Georgia",
+              fontSize: 14,
+              lineHeight: 14 * 1.8,
+              color: '#6f665a'
+            }}>
+              {question.explanation}
+            </Text>
+          </View>
+        </View>
+      )}
+
+      {/* Submit/Next button */}
+      <View style={{ marginTop: 18 }}>
+        {!submitted ? (
+          <Pressable
+            onPress={handleSubmit}
+            disabled={arranged.length !== tokens.length}
+            style={{
+              width: '100%',
+              paddingVertical: 13,
+              borderRadius: 6,
+              backgroundColor: arranged.length === tokens.length ? '#b0392c' : '#e5c9c2',
+              alignItems: 'center'
+            }}
+            className="active:opacity-80"
+          >
+            <Text style={{
+              fontFamily: "Georgia",
+              color: arranged.length === tokens.length ? '#fff' : '#b0392c',
+              fontSize: 16,
+              opacity: arranged.length === tokens.length ? 1 : 0.5
+            }}>
+              提交答案
+            </Text>
+          </Pressable>
+        ) : (
+          <Pressable
+            onPress={onNext}
+            style={{
+              width: '100%',
+              paddingVertical: 13,
+              borderRadius: 6,
+              backgroundColor: '#2c2722',
+              alignItems: 'center'
+            }}
+            className="active:opacity-80"
+          >
+            <Text style={{
+              fontFamily: "Georgia",
+              color: '#f4f0e6',
+              fontSize: 16
+            }}>
+              {isLastQuestion ? "查看成績" : "下一題　›"}
+            </Text>
+          </Pressable>
+        )}
+      </View>
     </View>
   )
 }

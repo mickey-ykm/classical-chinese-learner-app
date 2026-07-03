@@ -1,5 +1,6 @@
 import { View, Text, Pressable } from "react-native"
 import type { ArticleSegment, Footnote } from "@/lib/types"
+import { JianColors, getSerifFont } from "@/components/jian"
 
 interface Props {
   segments: ArticleSegment[]
@@ -11,8 +12,7 @@ export default function ArticleText({ segments, footnotes, onFootnoteTap }: Prop
   return (
     <View>
       <Text
-        className="text-lg tracking-wide text-slate-800"
-        style={{ fontFamily: "Georgia", lineHeight: 42 }}
+        style={{ fontFamily: getSerifFont('400'), fontSize: 18, color: JianColors.ink, lineHeight: 42 }}
       >
         {segments.map((seg, i) =>
           seg.footnoteId ? (
@@ -22,7 +22,7 @@ export default function ArticleText({ segments, footnotes, onFootnoteTap }: Prop
                 hitSlop={8}
                 style={{ display: "inline" }}
               >
-                <Text className="text-amber-600 font-bold text-sm">
+                <Text style={{ fontFamily: getSerifFont('700'), fontSize: 14, color: JianColors.vermilion }}>
                   {seg.text}
                 </Text>
               </Pressable>

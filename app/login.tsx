@@ -12,7 +12,6 @@ export default function LoginScreen() {
   const [signingIn, setSigningIn] = useState(false)
   const [email, setEmail] = useState("")
   const [sendingEmail, setSendingEmail] = useState(false)
-  const [emailSent, setEmailSent] = useState(false)
   // Tracks whether we're in the middle of a fresh sign-in attempt,
   // so the success alert only fires after the session is actually confirmed.
   const justSignedIn = useRef(false)
@@ -63,7 +62,8 @@ export default function LoginScreen() {
     justSignedIn.current = true
     try {
       await signInWithEmail(email)
-      setEmailSent(true)
+      // Navigate to magic link sent page
+      router.push(`/magic-link-sent?email=${encodeURIComponent(email)}`)
     } catch (e: unknown) {
       justSignedIn.current = false
       const message = e instanceof Error ? e.message : "發送失敗，請再試一次"
@@ -91,8 +91,8 @@ export default function LoginScreen() {
         </Pressable>
       </View>
 
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 32 }}>
-        <View style={{ alignItems: 'center', gap: 12 }}>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 }}>
+        <View style={{ alignItems: 'center', gap: 12, marginBottom: 32 }}>
           <Logo size={96} />
           <Text style={{ fontFamily: getSerifFont('700'), fontSize: JianTypography.title, color: JianColors.ink }}>
             文言教室
@@ -133,57 +133,42 @@ export default function LoginScreen() {
           </View>
 
           {/* Email input section */}
-          {!emailSent ? (
-            <>
-              <TextInput
-                value={email}
-                onChangeText={setEmail}
-                placeholder="電郵地址"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-                editable={!sendingEmail}
-                style={{
-                  fontFamily: JianTypography.sans,
-                  fontSize: JianTypography.body,
-                  color: JianColors.ink,
-                  backgroundColor: JianColors.surface,
-                  borderWidth: 1,
-                  borderColor: JianColors.line,
-                  borderRadius: JianRadius.card,
-                  paddingHorizontal: 16,
-                  paddingVertical: 16,
-                }}
-                placeholderTextColor={JianColors.ink3}
-              />
-              <Button
-                variant="primary"
-                size="large"
-                fullWidth
-                loading={sendingEmail}
-                disabled={sendingEmail || !email.trim()}
-                onPress={handleEmailSignIn}
-              >
-                發送登入連結
-              </Button>
-            </>
-          ) : (
-            <Card variant="near-complete">
-              <Text style={{ fontFamily: getSerifFont('600'), fontSize: JianTypography.body, color: JianColors.ink, textAlign: 'center' }}>
-                ✉️ 登入連結已發送
-              </Text>
-              <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, color: JianColors.ink, textAlign: 'center', marginTop: 8 }}>
-                請檢查你的電郵收件箱（{email}）並點擊連結以登入
-              </Text>
-              <Pressable onPress={() => setEmailSent(false)} style={{ marginTop: 8 }}>
-                <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, color: JianColors.amber, textAlign: 'center', textDecorationLine: 'underline' }}>
-                  重新輸入電郵地址
-                </Text>
-              </Pressable>
-            </Card>
-          )}
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            placeholder="電郵地址"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="email"
+            editable={!sendingEmail}
+            style={{
+              fontFamily: JianTypography.sans,
+              fontSize: JianTypography.body,
+              color: JianColors.ink,
+              backgroundColor: JianColors.surface,
+              borderWidth: 1,
+              borderColor: JianColors.line,
+              borderRadius: JianRadius.card,
+              paddingHorizontal: 16,
+              paddingVertical: 16,
+            }}
+            placeholderTextColor={JianColors.ink3}
+          />
+          <Button
+            variant="primary"
+            size="large"
+            fullWidth
+            loading={sendingEmail}
+            disabled={sendingEmail || !email.trim()}
+            onPress={handleEmailSignIn}
+          >
+            發送登入連結
+          </Button>
         </View>
+      </View>
 
+      {/* Guest continue button at bottom */}
+      <View style={{ paddingHorizontal: 32, paddingBottom: 32, alignItems: 'center' }}>
         <Pressable onPress={() => router.back()} hitSlop={12}>
           <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.bodySmall, color: JianColors.ink3, textDecorationLine: 'underline' }}>
             以訪客身份繼續

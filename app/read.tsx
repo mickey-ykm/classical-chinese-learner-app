@@ -9,7 +9,7 @@ import UpgradeModal from "@/components/UpgradeModal"
 import type { Footnote } from "@/lib/types"
 import ArticleText from "@/components/reading/ArticleText"
 import FootnotePanel from "@/components/reading/FootnotePanel"
-import { Card, Button, JianColors, JianTypography, JianRadius, getSerifFont } from "@/components/jian"
+import { Card, Button, JianColors, JianTypography, JianRadius, getSerifFont, SegmentedControl } from "@/components/jian"
 
 type TabMode = "original" | "translation"
 
@@ -63,6 +63,27 @@ export default function ReadScreen() {
             </Text>
           </Pressable>
 
+          {/* Category Badge */}
+          {article.meta?.articleType && (
+            <View style={{ marginBottom: 12 }}>
+              <View
+                style={{
+                  alignSelf: 'flex-start',
+                  paddingHorizontal: 12,
+                  paddingVertical: 4,
+                  backgroundColor: JianColors.vermilionLight,
+                  borderRadius: 4,
+                }}
+              >
+                <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, fontWeight: '600', color: JianColors.vermilion }}>
+                  {article.meta.articleType === 'dse-exam' ? 'DSE 甲部指定篇章' :
+                   article.meta.articleType === 'dse-non-exam' ? 'DSE 高中課文' :
+                   '其他範文'}
+                </Text>
+              </View>
+            </View>
+          )}
+
           <View style={{ flexDirection: 'row', alignItems: 'baseline', marginBottom: 4 }}>
             <Text style={{ fontFamily: getSerifFont('700'), fontSize: JianTypography.title, color: JianColors.ink }}>
               {article.title}
@@ -81,77 +102,24 @@ export default function ReadScreen() {
           </Text>
 
           {/* Tab Selector */}
-          <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
-            <Pressable
-              onPress={() => setTabMode("original")}
-              style={{ flex: 1 }}
-            >
-              {({ pressed }) => (
-                <View
-                  style={{
-                    paddingVertical: 12,
-                    borderRadius: JianRadius.button,
-                    alignItems: 'center',
-                    backgroundColor: tabMode === "original" ? JianColors.vermilion : JianColors.surface,
-                    borderWidth: 1,
-                    borderColor: tabMode === "original" ? JianColors.vermilion : JianColors.line,
-                    opacity: pressed ? 0.7 : 1
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: JianTypography.serif,
-                      fontSize: JianTypography.body,
-                      fontWeight: '600',
-                      color: tabMode === "original" ? JianColors.paper : JianColors.ink2
-                    }}
-                  >
-                    原文
-                  </Text>
-                </View>
-              )}
-            </Pressable>
-            <Pressable
-              onPress={() => setTabMode("translation")}
-              style={{ flex: 1 }}
-            >
-              {({ pressed }) => (
-                <View
-                  style={{
-                    paddingVertical: 12,
-                    borderRadius: JianRadius.button,
-                    alignItems: 'center',
-                    backgroundColor: tabMode === "translation" ? JianColors.vermilion : JianColors.surface,
-                    borderWidth: 1,
-                    borderColor: tabMode === "translation" ? JianColors.vermilion : JianColors.line,
-                    opacity: pressed ? 0.7 : 1
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: JianTypography.serif,
-                      fontSize: JianTypography.body,
-                      fontWeight: '600',
-                      color: tabMode === "translation" ? JianColors.paper : JianColors.ink2
-                    }}
-                  >
-                    白話文語譯
-                  </Text>
-                </View>
-              )}
-            </Pressable>
-          </View>
+          <SegmentedControl
+            options={[
+              { label: '原文', value: 'original' },
+              { label: '白話文語譯', value: 'translation' }
+            ]}
+            value={tabMode}
+            onChange={(value) => setTabMode(value as TabMode)}
+            style={{ marginBottom: 16 }}
+          />
 
           {/* Tab Content */}
           {tabMode === "original" ? (
             <>
-              <Card variant="default" padding={20}>
-                <ArticleText
-                  segments={article.segments}
-                  footnotes={article.footnotes}
-                  onFootnoteTap={handleFootnoteTap}
-                />
-              </Card>
+              <ArticleText
+                segments={article.segments}
+                footnotes={article.footnotes}
+                onFootnoteTap={handleFootnoteTap}
+              />
 
               {article.footnotes.length > 0 && (
                 <Text style={{ fontFamily: JianTypography.sans, fontSize: JianTypography.caption, color: JianColors.ink3, textAlign: 'center', marginTop: 16 }}>
@@ -160,26 +128,27 @@ export default function ReadScreen() {
               )}
             </>
           ) : (
-            <Card variant="default" padding={20} style={{ gap: 12 }}>
+            <View style={{ gap: 12 }}>
               {article.modernTranslation.map((p, i) => (
                 <Text key={i} style={{ fontFamily: JianTypography.serif, fontSize: JianTypography.bodySmall, color: JianColors.ink, lineHeight: 28 }}>
                   {p}
                 </Text>
               ))}
-            </Card>
+            </View>
           )}
-
-          <View style={{ marginTop: 32 }}>
-            <Button
-              variant="primary"
-              size="large"
-              fullWidth
-              onPress={() => router.push({ pathname: "/quiz", params: { id } })}
-            >
-              開始測驗 →
-            </Button>
-          </View>
         </ScrollView>
+
+        {/* Sticky Button */}
+        <View style={{ paddingHorizontal: 20, paddingVertical: 16, backgroundColor: JianColors.paper, borderTopWidth: 1, borderTopColor: JianColors.line }}>
+          <Button
+            variant="primary"
+            size="large"
+            fullWidth
+            onPress={() => router.push({ pathname: "/quiz", params: { id } })}
+          >
+            開始測驗 →
+          </Button>
+        </View>
 
         {tabMode === "original" && (
           <FootnotePanel footnote={activeFootnote} onClose={() => setActiveFootnote(null)} />

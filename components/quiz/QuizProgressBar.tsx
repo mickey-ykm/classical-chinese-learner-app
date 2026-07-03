@@ -28,12 +28,12 @@ export default function QuizProgressBar({ current, total }: Props) {
           {current} / {total}
         </Text>
       </View>
-      <View style={{ height: 8, width: '100%', backgroundColor: JianColors.line, borderRadius: 4, overflow: 'hidden' }}>
+      <View style={{ height: 4, width: '100%', backgroundColor: JianColors.line, borderRadius: 2, overflow: 'hidden' }}>
         <Animated.View
           style={{
             height: '100%',
-            backgroundColor: JianColors.amber,
-            borderRadius: 4,
+            backgroundColor: JianColors.vermilion,
+            borderRadius: 2,
             width: widthAnim.interpolate({
               inputRange: [0, 1],
               outputRange: ["0%", "100%"],

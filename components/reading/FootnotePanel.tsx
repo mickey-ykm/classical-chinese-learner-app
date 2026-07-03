@@ -1,9 +1,10 @@
 import { useEffect, useRef } from "react"
-import { View, Text, Pressable, Animated, Dimensions } from "react-native"
+import { View, Text, Pressable, Animated } from "react-native"
 import type { Footnote } from "@/lib/types"
+import { JianColors, getSerifFont } from "@/components/jian"
 
 const PANEL_HEIGHT = 160
-const { height: SCREEN_HEIGHT } = Dimensions.get("window")
+const BUTTON_BAR_HEIGHT = 80 // Height of the sticky button bar
 
 interface Props {
   footnote: Footnote | null
@@ -23,19 +24,39 @@ export default function FootnotePanel({ footnote, onClose }: Props) {
 
   return (
     <Animated.View
-      style={{ transform: [{ translateY }] }}
-      className="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200 rounded-t-2xl shadow-lg"
+      style={{
+        transform: [{ translateY }],
+        position: 'absolute',
+        bottom: BUTTON_BAR_HEIGHT,
+        left: 0,
+        right: 0,
+        backgroundColor: JianColors.surface,
+        borderTopWidth: 1,
+        borderTopColor: JianColors.line,
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 8,
+      }}
       pointerEvents={footnote ? "auto" : "none"}
     >
-      <View className="flex-row items-center justify-between px-5 pt-4 pb-2">
-        <Text className="text-amber-600 font-bold text-base" style={{ fontFamily: "Georgia" }}>
-          「{footnote?.term}」
-        </Text>
-        <Pressable onPress={onClose} hitSlop={12} className="p-1">
-          <Text className="text-slate-400 text-xl">✕</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Text style={{ fontFamily: getSerifFont('700'), fontSize: 14, color: JianColors.vermilion }}>
+            {footnote?.marker}
+          </Text>
+          <Text style={{ fontFamily: getSerifFont('700'), fontSize: 16, color: JianColors.vermilion }}>
+            「{footnote?.term}」
+          </Text>
+        </View>
+        <Pressable onPress={onClose} hitSlop={12} style={{ padding: 4 }}>
+          <Text style={{ color: JianColors.ink3, fontSize: 20 }}>✕</Text>
         </Pressable>
       </View>
-      <Text className="px-5 pb-6 text-slate-700 text-sm leading-relaxed">
+      <Text style={{ paddingHorizontal: 20, paddingBottom: 24, fontSize: 14, color: JianColors.ink2, lineHeight: 22 }}>
         {footnote?.explanation}
       </Text>
     </Animated.View>

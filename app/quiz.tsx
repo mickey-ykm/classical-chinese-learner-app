@@ -57,7 +57,7 @@ export default function QuizScreen() {
 
   if (gated) {
     return (
-      <SafeAreaView className="flex-1 bg-slate-50">
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#f4f0e6' }}>
         <UpgradeModal visible={true} onClose={() => router.back()} />
       </SafeAreaView>
     )
@@ -65,24 +65,25 @@ export default function QuizScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-slate-50 items-center justify-center">
-        <ActivityIndicator size="large" color="#f59e0b" />
-        <Text className="text-slate-500 mt-4 text-sm">載入題目...</Text>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#f4f0e6', alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color="#b0392c" />
+        <Text style={{ color: '#6f665a', marginTop: 16, fontSize: 14 }}>載入題目...</Text>
       </SafeAreaView>
     )
   }
 
   if (error || !result) {
     return (
-      <SafeAreaView className="flex-1 bg-slate-50 items-center justify-center px-6">
-        <Text className="text-slate-700 text-base text-center mb-6">
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#f4f0e6', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
+        <Text style={{ color: '#2c2722', fontSize: 16, textAlign: 'center', marginBottom: 24 }}>
           {error ?? "無法載入題目。"}
         </Text>
         <Pressable
           onPress={fetchSample}
-          className="bg-amber-500 px-6 py-3 rounded-xl active:opacity-80"
+          style={{ backgroundColor: '#b0392c', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 }}
+          className="active:opacity-80"
         >
-          <Text className="text-white font-semibold">重試</Text>
+          <Text style={{ color: '#fff', fontWeight: '600' }}>重試</Text>
         </Pressable>
       </SafeAreaView>
     )
@@ -94,46 +95,18 @@ export default function QuizScreen() {
   const isAnonymous = !user || user.is_anonymous
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-50">
-      <ScrollView className="flex-1 px-5" contentContainerClassName="py-8">
-        <Pressable onPress={() => router.back()} className="mb-6" hitSlop={12}>
-          <Text className="text-sm text-slate-400">← 返回</Text>
-        </Pressable>
-
-        <Text className="text-lg font-bold text-slate-800 mb-4">閱讀理解測驗</Text>
-
-        {/* Pool progress — logged-in users only */}
-        {!isAnonymous && (
-          <View className="mb-5">
-            <Text className="text-sm text-slate-500">
-              已見過{" "}
-              <Text className="text-slate-700 font-medium">
-                {poolProgress.seenCount} / {poolProgress.totalInPool}
-              </Text>{" "}
-              題
-              {poolProgress.estimatedAttemptsToComplete > 0 && (
-                <>
-                  {"　"}
-                  <Text className="text-amber-600">
-                    建議再練習 {poolProgress.estimatedAttemptsToComplete} 次
-                  </Text>
-                </>
-              )}
-            </Text>
-          </View>
-        )}
-
-        <QuizShell
-          questions={questions}
-          partTitles={partTitles}
-          articleId={id}
-          expectedMinutes={expectedMinutes}
-          onFinished={() => {
-            invalidateArticleProgress()
-            setNeedsProgressRefresh(true)
-          }}
-        />
-      </ScrollView>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#f4f0e6' }}>
+      <QuizShell
+        questions={questions}
+        partTitles={partTitles}
+        articleId={id}
+        expectedMinutes={expectedMinutes}
+        onExit={() => router.back()}
+        onFinished={() => {
+          invalidateArticleProgress()
+          setNeedsProgressRefresh(true)
+        }}
+      />
     </SafeAreaView>
   )
 }
