@@ -1,5 +1,5 @@
 import { Pressable, Text, View, ActivityIndicator, type PressableProps } from 'react-native'
-import { JianColors, JianTypography, JianRadius } from './tokens'
+import { JianColors, JianTypography, JianRadius, getSerifFont } from './tokens'
 
 export type ButtonVariant = 'primary' | 'ink' | 'outline' | 'ghost'
 export type ButtonSize = 'small' | 'medium' | 'large'
@@ -98,9 +98,8 @@ export function Button({
       ) : (
         <Text
           style={{
-            fontFamily: JianTypography.serif,
+            fontFamily: getSerifFont('600'),
             fontSize: currentSize.fontSize,
-            fontWeight: JianTypography.semibold,
             color: variantStyles.color,
           }}
         >
