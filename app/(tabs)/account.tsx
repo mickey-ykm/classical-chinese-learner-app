@@ -165,7 +165,7 @@ export default function AccountScreen() {
                     borderWidth: 1,
                     borderColor: JianColors.amberBorder
                   }}>
-                    <Text style={{ fontFamily: JianTypography.sans, fontSize: 9, fontWeight: JianTypography.semibold, color: JianColors.amber }}>
+                    <Text style={{ fontFamily: JianTypography.sans, fontSize: 9, fontWeight: '600', color: JianColors.amber }}>
                       付費會員
                     </Text>
                   </View>
@@ -261,7 +261,7 @@ export default function AccountScreen() {
                   <ActivityIndicator size="small" color={JianColors.amber} />
                 ) : (
                   <>
-                    <Text style={{ fontFamily: JianTypography.sans, fontSize: 14, fontWeight: JianTypography.semibold, color: JianColors.amber }}>
+                    <Text style={{ fontFamily: JianTypography.sans, fontSize: 14, fontWeight: '600', color: JianColors.amber }}>
                       {syncMsg ?? "檢查更新"}
                     </Text>
                     <Text style={{ fontFamily: JianTypography.sans, fontSize: 11, color: JianColors.ink3, marginTop: 2 }}>
@@ -283,7 +283,7 @@ export default function AccountScreen() {
                 borderColor: JianColors.line,
                 opacity: pressed ? 0.7 : syncing ? 0.5 : 1
               }}>
-                <Text style={{ fontFamily: JianTypography.sans, fontSize: 14, fontWeight: JianTypography.semibold, color: JianColors.vermilion }}>
+                <Text style={{ fontFamily: JianTypography.sans, fontSize: 14, fontWeight: '600', color: JianColors.vermilion }}>
                   清除快取並重新同步
                 </Text>
                 <Text style={{ fontFamily: JianTypography.sans, fontSize: 11, color: JianColors.ink3, marginTop: 2 }}>
@@ -306,7 +306,7 @@ export default function AccountScreen() {
                 borderColor: JianColors.line,
                 opacity: pressed ? 0.7 : 1
               }}>
-                <Text style={{ fontFamily: JianTypography.sans, fontSize: 14, fontWeight: JianTypography.semibold, color: JianColors.ink2 }}>
+                <Text style={{ fontFamily: JianTypography.sans, fontSize: 14, fontWeight: '600', color: JianColors.ink2 }}>
                   登出
                 </Text>
               </View>
