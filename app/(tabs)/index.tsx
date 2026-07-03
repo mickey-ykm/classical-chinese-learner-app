@@ -179,7 +179,7 @@ export default function HomeTab() {
 
         {/* Guest Sign-up Module - Right after header for non-logged-in users */}
         {!user && (
-          <View style={{ marginBottom: 26, paddingTop: 22, borderTopWidth: 2, borderTopColor: JianColors.ink }}>
+          <View style={{ marginBottom: 26, paddingTop: 22 }}>
             {/* Greeting */}
             <View style={{ marginBottom: 18 }}>
               <Text style={{ fontFamily: getSerifFont('700'), fontSize: 31, lineHeight: 37, color: JianColors.ink }}>
@@ -189,6 +189,9 @@ export default function HomeTab() {
                 與經典同行，今日開卷有益。
               </Text>
             </View>
+
+            {/* Divider */}
+            <View style={{ height: 2, backgroundColor: JianColors.ink, marginBottom: 18 }} />
 
             {/* Sign-up Section */}
             <Text style={{ fontFamily: JianTypography.sans, fontSize: 11, letterSpacing: 2, color: JianColors.ink3, marginBottom: 12 }}>
