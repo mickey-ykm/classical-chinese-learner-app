@@ -190,9 +190,6 @@ export default function HomeTab() {
               </Text>
             </View>
 
-            {/* Divider */}
-            <View style={{ height: 1, backgroundColor: JianColors.line, marginBottom: 18 }} />
-
             {/* Sign-up Section */}
             <Text style={{ fontFamily: JianTypography.sans, fontSize: 11, letterSpacing: 2, color: JianColors.ink3, marginBottom: 12 }}>
               免 費 註 冊
