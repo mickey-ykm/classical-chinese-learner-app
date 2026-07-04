@@ -10,6 +10,7 @@ import { getArticle } from "@/lib/data"
 import { sampleWeightTraining, saveWeightTrainingSession } from "@/lib/weightTraining"
 import { getWeightTrainingProgressCached, refreshWeightTrainingProgress } from "@/lib/weightTrainingProgress"
 import type { Question, CrossArticleQuestion, WeightTrainingProgress, ExerciseAnswer } from "@/lib/types"
+import { Button, JianColors, JianTypography, JianRadius, getSerifFont } from "@/components/jian"
 
 export default function WeightTrainingScreen() {
   const { user } = useAuth()
@@ -143,77 +144,202 @@ export default function WeightTrainingScreen() {
   // Lobby screen
   if (phase === "lobby") {
     return (
-      <SafeAreaView className="flex-1 bg-slate-50">
-        <View className="px-5 pt-4 pb-2">
-          <Text className="text-xl font-bold text-slate-800" style={{ fontFamily: "Georgia" }}>
-            🎯 重量訓練
-          </Text>
-        </View>
-        <ScrollView className="flex-1 px-5" contentContainerStyle={{ paddingBottom: 32 }}>
-          <Text className="text-sm text-slate-500 mt-2 mb-6 leading-5">
-            跨文章一詞多義 & 文言句式專項訓練
-          </Text>
+      <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper }}>
+        <ScrollView style={{ flex: 1, paddingHorizontal: 24 }} contentContainerStyle={{ paddingBottom: 32 }}>
+          <View style={{ paddingTop: 10 }}>
+            <Pressable onPress={() => router.back()} hitSlop={12}>
+              {({ pressed }) => (
+                <Text style={{
+                  fontFamily: getSerifFont('400'),
+                  fontSize: 14,
+                  lineHeight: 20,
+                  color: JianColors.vermilion,
+                  opacity: pressed ? 0.7 : 1
+                }}>
+                  ‹ 返回
+                </Text>
+              )}
+            </Pressable>
 
-          {/* Progress Card (logged-in users only) */}
-          {user && progress && (
-            <View className="bg-white border border-slate-200 rounded-2xl px-5 py-4 mb-4 shadow-sm">
-              <Text className="text-sm font-semibold text-slate-700 mb-3">練習進度</Text>
-              <View className="flex-row items-center justify-between mb-2">
-                <Text className="text-xs text-slate-500">總題庫</Text>
-                <Text className="text-sm font-bold text-slate-800">
-                  {progress.seenCount} / {progress.totalInPool} 題
+            {/* Header with icon */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11, marginTop: 14 }}>
+              <View style={{
+                width: 34,
+                height: 34,
+                borderRadius: 5,
+                borderWidth: 1.4,
+                borderColor: JianColors.vermilion,
+                backgroundColor: JianColors.vermilionTint,
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Text style={{
+                  fontFamily: getSerifFont('700'),
+                  fontSize: 18,
+                  color: JianColors.vermilion
+                }}>
+                  重
                 </Text>
               </View>
-              <View className="flex-row items-center justify-between mb-2">
-                <Text className="text-xs text-slate-500">Part 7 (一詞多義)</Text>
-                <Text className="text-sm text-slate-600">
-                  {progress.part7Seen} / {progress.part7Total}
-                </Text>
-              </View>
-              <View className="flex-row items-center justify-between">
-                <Text className="text-xs text-slate-500">Part 8 (文言句式)</Text>
-                <Text className="text-sm text-slate-600">
-                  {progress.part8Seen} / {progress.part8Total}
-                </Text>
-              </View>
+              <Text style={{
+                fontFamily: getSerifFont('700'),
+                fontSize: 21,
+                lineHeight: 28,
+                color: JianColors.ink
+              }}>
+                針對性難題訓練
+              </Text>
             </View>
-          )}
 
-          {/* Training Info */}
-          <View className="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 mb-6">
-            <Text className="text-amber-800 text-sm font-semibold mb-2">訓練內容</Text>
-            <Text className="text-amber-700 text-xs leading-5">
-              • 每次練習 10 題（Part 7：5 題，Part 8：5 題）{"\n"}
-              • 橫跨多篇文章的綜合運用{"\n"}
-              • 可隨時查看相關文章內容{"\n"}
-              • 已做過的題目會優先避開
+            <Text style={{
+              fontFamily: getSerifFont('400'),
+              fontSize: 13,
+              lineHeight: 22,
+              color: JianColors.ink2,
+              marginTop: 8
+            }}>
+              跨文章一詞多義 & 文言句式專項訓練（Part 7 & 8）
             </Text>
+
+            {/* Progress Card (logged-in users only) */}
+            {user && progress && (
+              <View style={{
+                backgroundColor: JianColors.surface2,
+                borderWidth: 1,
+                borderColor: JianColors.line,
+                borderRadius: JianRadius.card,
+                padding: 16,
+                marginTop: 16
+              }}>
+                <Text style={{
+                  fontFamily: JianTypography.sans,
+                  fontSize: 10,
+                  letterSpacing: 2,
+                  color: JianColors.ink3,
+                  marginBottom: 9
+                }}>
+                  練 習 進 度
+                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 7 }}>
+                  <Text style={{
+                    fontFamily: getSerifFont('400'),
+                    fontSize: 13,
+                    lineHeight: 20,
+                    color: JianColors.ink2
+                  }}>
+                    總題庫
+                  </Text>
+                  <Text style={{
+                    fontFamily: JianTypography.number,
+                    fontSize: 15,
+                    fontWeight: '600',
+                    color: JianColors.ink
+                  }}>
+                    {progress.seenCount} / {progress.totalInPool} 題
+                  </Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 7 }}>
+                  <Text style={{
+                    fontFamily: getSerifFont('400'),
+                    fontSize: 13,
+                    lineHeight: 20,
+                    color: JianColors.ink2
+                  }}>
+                    Part 7（一詞多義）
+                  </Text>
+                  <Text style={{
+                    fontFamily: JianTypography.number,
+                    fontSize: 14,
+                    color: JianColors.ink2
+                  }}>
+                    {progress.part7Seen} / {progress.part7Total}
+                  </Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Text style={{
+                    fontFamily: getSerifFont('400'),
+                    fontSize: 13,
+                    lineHeight: 20,
+                    color: JianColors.ink2
+                  }}>
+                    Part 8（文言句式）
+                  </Text>
+                  <Text style={{
+                    fontFamily: JianTypography.number,
+                    fontSize: 14,
+                    color: JianColors.ink2
+                  }}>
+                    {progress.part8Seen} / {progress.part8Total}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {/* Training Info */}
+            <View style={{
+              backgroundColor: JianColors.amberTint,
+              borderWidth: 1,
+              borderColor: JianColors.amberBorder,
+              borderRadius: JianRadius.card,
+              padding: 16,
+              marginTop: 16
+            }}>
+              <Text style={{
+                fontFamily: getSerifFont('600'),
+                fontSize: 14,
+                lineHeight: 20,
+                color: JianColors.amber,
+                marginBottom: 8
+              }}>
+                訓練內容
+              </Text>
+              <Text style={{
+                fontFamily: getSerifFont('400'),
+                fontSize: 13,
+                lineHeight: 22,
+                color: JianColors.ink2
+              }}>
+                • 每次練習 10 題（Part 7：5 題，Part 8：5 題）{'\n'}
+                • 橫跨多篇文章的綜合運用{'\n'}
+                • 可隨時查看相關文章內容{'\n'}
+                • 已做過的題目會優先避開
+              </Text>
+            </View>
           </View>
 
           {/* Start Button */}
-          <Pressable
-            onPress={startTraining}
-            disabled={loading}
-            className="bg-amber-500 px-6 py-4 rounded-xl active:opacity-80 items-center shadow-sm"
-          >
-            <Text className="text-white font-bold text-base">
+          <View style={{ marginTop: 24 }}>
+            <Button
+              variant="primary"
+              size="large"
+              fullWidth
+              onPress={startTraining}
+              disabled={loading}
+            >
               {loading ? "載入中..." : "開始訓練"}
-            </Text>
-          </Pressable>
+            </Button>
 
-          {error && (
-            <View className="mt-4 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-              <Text className="text-red-700 text-sm text-center">{error}</Text>
-            </View>
-          )}
-
-          {/* Back Button */}
-          <Pressable
-            onPress={() => router.back()}
-            className="mt-4 py-3 px-6 rounded-xl bg-slate-100 items-center active:opacity-70"
-          >
-            <Text className="text-slate-600 font-semibold text-sm">返回</Text>
-          </Pressable>
+            {error && (
+              <View style={{
+                marginTop: 16,
+                backgroundColor: '#fee',
+                borderWidth: 1,
+                borderColor: '#fcc',
+                borderRadius: 8,
+                padding: 12
+              }}>
+                <Text style={{
+                  fontFamily: getSerifFont('400'),
+                  fontSize: 13,
+                  lineHeight: 20,
+                  color: '#c33',
+                  textAlign: 'center'
+                }}>
+                  {error}
+                </Text>
+              </View>
+            )}
+          </View>
         </ScrollView>
       </SafeAreaView>
     )
@@ -222,9 +348,17 @@ export default function WeightTrainingScreen() {
   // Quiz screen
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-slate-50 items-center justify-center">
-        <ActivityIndicator size="large" color="#f59e0b" />
-        <Text className="text-slate-500 mt-4 text-sm">載入題目...</Text>
+      <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color={JianColors.amber} />
+        <Text style={{
+          fontFamily: JianTypography.serif,
+          fontSize: 13,
+          lineHeight: 20,
+          color: JianColors.ink2,
+          marginTop: 16
+        }}>
+          載入題目...
+        </Text>
       </SafeAreaView>
     )
   }
@@ -242,7 +376,7 @@ export default function WeightTrainingScreen() {
   })
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-50">
+    <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper }}>
       <QuizShell
         questions={questions}
         onSave={handleSave}

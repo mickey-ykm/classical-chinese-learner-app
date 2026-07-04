@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSE 模擬考題 · 箋 Jiān System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700;900&amp;family=Noto+Sans+TC:wght@400;500;700&amp;family=Newsreader:ital,opsz,wght@0,16..72,400;0,16..72,500;0,16..72,600;1,16..72,400&amp;display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f4f0e6;--surface:#fdfbf6;--surface2:#faf5ea;
+    --ink:#2c2722;--ink2:#6f665a;--ink3:#a59b8b;
+    --line:#e7ddc9;--line2:#ded2ba;
+    --verm:#b0392c;--jade:#3f6b54;--amber:#bb8a2e;
+    --verm-tint:color-mix(in srgb,var(--verm) 13%,var(--paper));
+    --verm-bd:color-mix(in srgb,var(--verm) 34%,var(--paper));
+    --jade-tint:color-mix(in srgb,var(--jade) 15%,var(--paper));
+    --jade-bd:color-mix(in srgb,var(--jade) 40%,var(--paper));
+    --amber-tint:color-mix(in srgb,var(--amber) 17%,var(--paper));
+    --amber-bd:color-mix(in srgb,var(--amber) 42%,var(--paper));
+  }
+  *{box-sizing:border-box;}
+  .serif{font-family:'Noto Serif TC',serif;}
+  .sans{font-family:'Noto Sans TC',sans-serif;}
+  .num{font-family:'Newsreader',serif;}
+  .fl{font-family:'Noto Sans TC',sans-serif;font-weight:500;font-size:12px;letter-spacing:.14em;color:#a59b8b;text-transform:uppercase;margin:0 0 12px 6px;}
+  .page{width:372px;min-height:760px;border-radius:38px;overflow:hidden;border:1px solid #e7ddc9;box-shadow:0 22px 55px -14px rgba(44,39,34,.22);background:var(--paper);display:flex;flex-direction:column;}
+  .sb{display:flex;justify-content:space-between;align-items:center;padding:15px 28px 4px;font-family:'Newsreader',serif;font-weight:600;font-size:14px;color:var(--ink);flex:none;}
+  .batt{width:17px;height:9px;border:1.4px solid var(--ink);border-radius:2px;position:relative;display:inline-block;}
+  .batt::after{content:'';position:absolute;right:-3px;top:2.5px;width:2px;height:4px;background:var(--ink);border-radius:0 1px 1px 0;}
+  .navbar{background:var(--surface);border-top:1px solid var(--line);padding:9px 22px 22px;display:flex;justify-content:space-between;margin-top:auto;flex:none;}
+  .foot{margin-top:auto;padding:16px 24px 26px;flex:none;}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--ink3);}
+  .tab span{font-family:'Noto Sans TC',sans-serif;font-size:10px;}
+  .tab.on{color:var(--verm);}
+  .tab.on span{font-weight:500;}
+  .chev{color:var(--verm);font-size:18px;font-family:'Noto Serif TC',serif;}
+  .primary{font-family:'Noto Serif TC',serif;text-align:center;background:var(--verm);color:#fff;padding:13px;border-radius:6px;font-size:16px;}
+  .inkbtn{font-family:'Noto Serif TC',serif;text-align:center;background:var(--ink);color:var(--paper);padding:13px;border-radius:6px;font-size:16px;}
+  .seal{font-family:'Noto Serif TC',serif;display:flex;align-items:center;justify-content:center;border:1.4px solid var(--verm);color:var(--verm);border-radius:5px;font-weight:700;flex:none;}
+  .ptrack{height:4px;background:var(--line);border-radius:2px;overflow:hidden;}
+  .pfill{height:100%;background:var(--jade);border-radius:2px;}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:11px;}
+  .typebadge{display:inline-flex;align-items:center;font-family:'Noto Sans TC',sans-serif;font-size:10px;letter-spacing:.06em;border-radius:3px;padding:3px 8px;font-weight:500;}
+  .lock{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--amber-bd);background:var(--amber-tint);border-radius:3px;padding:2px 7px;font-family:'Noto Sans TC',sans-serif;font-size:10px;color:#8a6420;font-weight:600;}
+  .seclab{font-family:'Noto Sans TC',sans-serif;font-size:11px;letter-spacing:.2em;color:var(--ink3);border-bottom:1px solid var(--line);padding-bottom:8px;}
+  .seg{display:flex;background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:3px;}
+  .seg-item{flex:1;text-align:center;padding:8px 2px;font-size:11px;font-family:'Noto Serif TC',serif;color:var(--ink2);}
+  .seg-on{background:var(--verm);color:#fff;border-radius:6px;}
+  .chk-done{width:22px;height:22px;border-radius:50%;background:var(--jade);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex:none;}
+  .chk-next{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--verm);display:flex;align-items:center;justify-content:center;flex:none;}
+  .chk-todo{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line2);flex:none;}
+  .vtag{font-family:'Noto Serif TC',serif;writing-mode:vertical-rl;font-size:11px;padding:5px 3px;letter-spacing:.12em;border-radius:3px;flex:none;}
+  @keyframes shimmer{0%{background-position:-120px 0;}100%{background-position:120px 0;}}
+  .skel{background:linear-gradient(90deg,var(--line) 25%,var(--line2) 50%,var(--line) 75%);background-size:240px 100%;animation:shimmer 1.4s ease-in-out infinite;flex:none;}
+</style>
+</head>
+<body style="margin:0;background:#efe8d6;min-height:100vh;">
+<div style="margin:36px;display:inline-block;">
+  <div class="fl" data-drags-parent="1">DSE 模擬考題</div>
+  <div class="page">
+    <div class="sb"><span>9:41</span><span class="batt"></span></div>
+    <div style="padding:10px 24px 0;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div style="display:flex;align-items:center;gap:12px;"><span class="serif" style="font-size:14px;color:var(--verm);">‹ 返回</span><span class="serif" style="font-size:18px;font-weight:700;color:var(--ink);">DSE 模擬考題</span></div>
+        <svg viewBox="0 0 160 210" style="width:52px;overflow:visible;flex:none;"><defs><filter id="cutMoDse" x="-25%" y="-25%" width="150%" height="150%"><feDropShadow dx="0" dy="2.5" stdDeviation="1.6" flood-color="#5a3f2a" flood-opacity="0.3"></feDropShadow></filter></defs>
+  <g filter="url(#cutMoDse)"><rect x="52" y="30" width="56" height="168" rx="24" fill="#2f2a25"></rect><rect x="52" y="30" width="56" height="20" rx="18" fill="#cba24e"></rect></g>
+  <circle cx="80" cy="170" r="15" fill="none" stroke="#cba24e" stroke-width="2.4"></circle>
+  <text x="80" y="177" text-anchor="middle" font-size="16" font-family="'Noto Serif TC'" font-weight="700" fill="#cba24e">墨</text>
+  <g style="transform-box:fill-box;transform-origin:66px 86px;transform:rotate(0deg)"><path d="M62,84 L70,89" stroke="#1f1c18" stroke-width="2.2" stroke-linecap="round"></path></g>
+  <g style="transform-box:fill-box;transform-origin:94px 86px;transform:rotate(0deg)"><path d="M98,84 L90,89" stroke="#1f1c18" stroke-width="2.2" stroke-linecap="round"></path></g>
+  <g style="opacity:1">
+    <circle cx="70" cy="96" r="5.4" fill="#f4efe2"></circle><circle cx="90" cy="96" r="5.4" fill="#f4efe2"></circle>
+    <circle cx="70" cy="96" r="2.6" fill="#1f1c18"></circle><circle cx="90" cy="96" r="2.6" fill="#1f1c18"></circle>
+  </g>
+  <g style="opacity:0" fill="none" stroke="#1f1c18" stroke-width="3" stroke-linecap="round"><path d="M63,98 Q70,88 77,98"></path><path d="M83,98 Q90,88 97,98"></path></g>
+  <g style="opacity:0">
+    <circle cx="70" cy="97" r="4.8" fill="#f4efe2"></circle><circle cx="90" cy="97" r="4.8" fill="#f4efe2"></circle>
+    <circle cx="70" cy="94" r="2.4" fill="#1f1c18"></circle><circle cx="90" cy="94" r="2.4" fill="#1f1c18"></circle>
+  </g>
+  <g style="opacity:0">
+    <circle cx="70" cy="94" r="5.4" fill="#f4efe2"></circle><circle cx="90" cy="94" r="5.4" fill="#f4efe2"></circle>
+    <circle cx="71" cy="91" r="2.6" fill="#1f1c18"></circle><circle cx="91" cy="91" r="2.6" fill="#1f1c18"></circle>
+  </g>
+  <ellipse cx="62" cy="106" rx="5" ry="3.2" fill="#5a6a76" opacity=".5"></ellipse><ellipse cx="98" cy="106" rx="5" ry="3.2" fill="#5a6a76" opacity=".5"></ellipse>
+  <path d="M73,112 Q80,116 87,112" fill="none" stroke="#cdbf9e" stroke-width="2.6" stroke-linecap="round" style="opacity:1"></path>
+  <g style="opacity:0"><ellipse cx="80" cy="114" rx="6" ry="6.6" fill="#131110"></ellipse><ellipse cx="80" cy="117" rx="3.4" ry="2.6" fill="#5a6a76"></ellipse></g>
+  <path d="M73,119 Q80,113 87,119" fill="none" stroke="#cdbf9e" stroke-width="2.6" stroke-linecap="round" style="opacity:0"></path>
+  <path d="M40,50 l2.6,6 6,2.6 -6,2.6 -2.6,6 -2.6,-6 -6,-2.6 6,-2.6 Z" fill="#cba24e" style="opacity:0;transform-box:fill-box;transform-origin:center;animation:sparklePulse 1.3s ease-in-out infinite;"></path>
+  <ellipse cx="106" cy="60" rx="3.8" ry="5.2" fill="#8fb4d6" style="opacity:0;transform-box:fill-box;transform-origin:center;animation:sweatDrip 1.6s ease-in infinite;"></ellipse>
+  <g style="opacity:0" fill="#6a655e">
+    <circle cx="112" cy="50" r="2.8" style="transform-box:fill-box;animation:dotPulse 1.2s ease-in-out infinite;"></circle>
+    <circle cx="120" cy="42" r="2.2" style="transform-box:fill-box;animation:dotPulse 1.2s .15s ease-in-out infinite;"></circle>
+    <circle cx="126" cy="34" r="1.7" style="transform-box:fill-box;animation:dotPulse 1.2s .3s ease-in-out infinite;"></circle>
+  </g>
+  <g style="opacity:0">
+    <rect x="34" y="26" width="5" height="5" fill="#b0392c" style="transform-box:fill-box;animation:confettiFall 1.1s ease-in infinite;"></rect>
+    <rect x="118" y="22" width="5" height="5" fill="#3f7a44" style="transform-box:fill-box;animation:confettiFall 1.1s .2s ease-in infinite;"></rect>
+    <rect x="76" y="18" width="5" height="5" fill="#cba24e" style="transform-box:fill-box;animation:confettiFall 1.1s .4s ease-in infinite;"></rect>
+  </g>
+</svg>
+      </div>
+      <div class="serif" style="font-size:13px;color:var(--ink2);line-height:1.7;margin-top:12px;">系統已隨機抽選以下 3 篇核心篇章，點擊展開閱讀後開始答題。</div>
+      <div class="card" style="padding:14px 15px;margin-top:16px;display:flex;align-items:center;gap:12px;"><span class="seal" style="width:28px;height:28px;font-size:15px;background:var(--verm-tint);">一</span><span class="serif" style="font-size:16px;font-weight:600;color:var(--ink);flex:1;">愛蓮說</span><span style="color:var(--ink3);">▾</span></div>
+      <div class="card" style="margin-top:10px;overflow:hidden;">
+        <div style="padding:14px 15px;display:flex;align-items:center;gap:12px;background:var(--surface2);border-bottom:1px solid var(--line);"><span class="seal" style="width:28px;height:28px;font-size:15px;background:var(--verm-tint);">二</span><span class="serif" style="font-size:16px;font-weight:600;color:var(--ink);flex:1;">曹劌論戰</span><span style="color:var(--verm);">▴</span></div>
+        <div style="padding:13px 16px;">
+          <div class="serif" style="font-size:14px;line-height:2;color:var(--ink);text-align:justify;">十年春，齊師伐我<sup style="color:var(--verm);font-size:10px;">⑴</sup>。公將戰，曹劌請見。其鄉人曰：「肉食者謀之，又何間焉<sup style="color:var(--verm);font-size:10px;">⑵</sup>？」劌曰：「肉食者鄙，未能遠謀。」</div>
+          <div class="sans" style="font-size:10px;letter-spacing:.16em;color:var(--ink3);margin:12px 0 8px;">註 釋</div>
+          <div style="display:flex;gap:9px;margin-bottom:6px;"><span class="serif" style="color:var(--verm);font-weight:700;font-size:13px;min-width:22px;">⑴</span><span class="serif" style="font-size:13px;color:var(--ink2);"><b style="color:var(--ink);">伐我</b> — 攻打我國（魯國）。</span></div>
+          <div style="display:flex;gap:9px;"><span class="serif" style="color:var(--verm);font-weight:700;font-size:13px;min-width:22px;">⑵</span><span class="serif" style="font-size:13px;color:var(--ink2);"><b style="color:var(--ink);">間</b> — 參與。</span></div>
+        </div>
+      </div>
+      <div class="card" style="padding:14px 15px;margin-top:10px;display:flex;align-items:center;gap:12px;"><span class="seal" style="width:28px;height:28px;font-size:15px;background:var(--verm-tint);">三</span><span class="serif" style="font-size:16px;font-weight:600;color:var(--ink);flex:1;">陋室銘</span><span style="color:var(--ink3);">▾</span></div>
+      <div style="background:var(--surface2);border:1px solid var(--line);border-radius:7px;padding:11px;text-align:center;margin-top:14px;"><span class="serif" style="font-size:13px;color:var(--ink2);">共 <b class="num" style="color:var(--ink);">22</b> 題・滿分 <b class="num" style="color:var(--ink);">40</b> 分</span></div>
+    </div>
+    <div style="padding:4px 24px 18px;"><div class="primary">開始練習　→</div><div class="serif" style="text-align:center;color:var(--ink3);font-size:11px;margin-top:9px;">完成後成績將自動儲存</div></div>
+    <div class="navbar">
+      <div class="tab"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 11l8-6 8 6"></path><path d="M6 10v9h12v-9"></path></svg><span>首頁</span></div>
+      <div class="tab"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="4" width="14" height="16" rx="1.5"></rect><line x1="9" y1="9" x2="15" y2="9"></line><line x1="9" y1="13" x2="15" y2="13"></line></svg><span>篇章</span></div>
+      <div class="tab on"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="7"></circle><circle cx="12" cy="12" r="2.4"></circle></svg><span>操練</span></div>
+      <div class="tab"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="3.4"></circle><path d="M5.5 20c0-4 3-6 6.5-6s6.5 2 6.5 6"></path></svg><span>帳戶</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     ROW 5 · QUIZ & SCORE
+     ═══════════════════════════════════════════════════ -->
+
+<!-- Score v2 -->
+
+</body>
+</html>

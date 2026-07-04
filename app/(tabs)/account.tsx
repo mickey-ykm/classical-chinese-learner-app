@@ -128,7 +128,7 @@ export default function AccountScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Title */}
-        <Text style={{ fontFamily: getSerifFont('700'), fontSize: 31, color: JianColors.ink, marginBottom: 18 }}>
+        <Text style={{ fontFamily: getSerifFont('700'), fontSize: 31, lineHeight: 40, color: JianColors.ink, marginBottom: 18 }}>
           帳戶
         </Text>
 
@@ -323,7 +323,7 @@ export default function AccountScreen() {
                 <Text style={{ fontFamily: JianTypography.serif, fontSize: 13, color: JianColors.ink2 }}>
                   累計失誤 {revisionSummary.overall.totalMistakes} 題
                 </Text>
-                <Pressable onPress={() => router.push("/revision")} hitSlop={8}>
+                <Pressable onPress={() => router.push("/performance-report")} hitSlop={8}>
                   <Text style={{ fontFamily: JianTypography.serif, fontSize: 13, color: JianColors.vermilion }}>
                     詳細報告 →
                   </Text>
@@ -407,7 +407,7 @@ export default function AccountScreen() {
           <Pressable onPress={handleRefreshContent} disabled={syncing}>
             {({ pressed }) => (
               <View style={{
-                paddingVertical: 14,
+                paddingVertical: 16,
                 borderBottomWidth: 1,
                 borderColor: JianColors.line,
                 flexDirection: 'row',
@@ -439,7 +439,7 @@ export default function AccountScreen() {
           <Pressable onPress={handleClearCacheAndResync} disabled={syncing}>
             {({ pressed }) => (
               <View style={{
-                paddingVertical: 14,
+                paddingVertical: 16,
                 borderBottomWidth: 1,
                 borderColor: JianColors.line,
                 flexDirection: 'row',
@@ -466,7 +466,7 @@ export default function AccountScreen() {
           <Pressable onPress={() => router.push("/about")}>
             {({ pressed }) => (
               <View style={{
-                paddingVertical: 14,
+                paddingVertical: 16,
                 borderBottomWidth: 1,
                 borderColor: JianColors.line,
                 flexDirection: 'row',
@@ -488,7 +488,7 @@ export default function AccountScreen() {
           <Pressable onPress={() => router.push("/terms")}>
             {({ pressed }) => (
               <View style={{
-                paddingVertical: 14,
+                paddingVertical: 16,
                 borderBottomWidth: 1,
                 borderColor: JianColors.line,
                 flexDirection: 'row',
@@ -510,7 +510,7 @@ export default function AccountScreen() {
           <Pressable onPress={() => router.push("/privacy")}>
             {({ pressed }) => (
               <View style={{
-                paddingVertical: 14,
+                paddingVertical: 16,
                 borderBottomWidth: 1,
                 borderColor: JianColors.line,
                 flexDirection: 'row',
@@ -534,7 +534,7 @@ export default function AccountScreen() {
           <Pressable onPress={handleSignOut} style={{ marginTop: 26 }}>
             {({ pressed }) => (
               <View style={{
-                paddingVertical: 14,
+                paddingVertical: 16,
                 alignItems: 'center',
                 borderTopWidth: 1,
                 borderBottomWidth: 1,

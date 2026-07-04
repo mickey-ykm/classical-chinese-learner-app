@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>設計語言 · DESIGN LANGUAGE — 箋 JIĀN EDITORIAL SYSTEM · 箋 Jiān System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700;900&amp;family=Noto+Sans+TC:wght@400;500;700&amp;family=Newsreader:ital,opsz,wght@0,16..72,400;0,16..72,500;0,16..72,600;1,16..72,400&amp;display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f4f0e6;--surface:#fdfbf6;--surface2:#faf5ea;
+    --ink:#2c2722;--ink2:#6f665a;--ink3:#a59b8b;
+    --line:#e7ddc9;--line2:#ded2ba;
+    --verm:#b0392c;--jade:#3f6b54;--amber:#bb8a2e;
+    --verm-tint:color-mix(in srgb,var(--verm) 13%,var(--paper));
+    --verm-bd:color-mix(in srgb,var(--verm) 34%,var(--paper));
+    --jade-tint:color-mix(in srgb,var(--jade) 15%,var(--paper));
+    --jade-bd:color-mix(in srgb,var(--jade) 40%,var(--paper));
+    --amber-tint:color-mix(in srgb,var(--amber) 17%,var(--paper));
+    --amber-bd:color-mix(in srgb,var(--amber) 42%,var(--paper));
+  }
+  *{box-sizing:border-box;}
+  .serif{font-family:'Noto Serif TC',serif;}
+  .sans{font-family:'Noto Sans TC',sans-serif;}
+  .num{font-family:'Newsreader',serif;}
+  .fl{font-family:'Noto Sans TC',sans-serif;font-weight:500;font-size:12px;letter-spacing:.14em;color:#a59b8b;text-transform:uppercase;margin:0 0 12px 6px;}
+  .page{width:372px;min-height:760px;border-radius:38px;overflow:hidden;border:1px solid #e7ddc9;box-shadow:0 22px 55px -14px rgba(44,39,34,.22);background:var(--paper);display:flex;flex-direction:column;}
+  .sb{display:flex;justify-content:space-between;align-items:center;padding:15px 28px 4px;font-family:'Newsreader',serif;font-weight:600;font-size:14px;color:var(--ink);flex:none;}
+  .batt{width:17px;height:9px;border:1.4px solid var(--ink);border-radius:2px;position:relative;display:inline-block;}
+  .batt::after{content:'';position:absolute;right:-3px;top:2.5px;width:2px;height:4px;background:var(--ink);border-radius:0 1px 1px 0;}
+  .navbar{background:var(--surface);border-top:1px solid var(--line);padding:9px 22px 22px;display:flex;justify-content:space-between;margin-top:auto;flex:none;}
+  .foot{margin-top:auto;padding:16px 24px 26px;flex:none;}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--ink3);}
+  .tab span{font-family:'Noto Sans TC',sans-serif;font-size:10px;}
+  .tab.on{color:var(--verm);}
+  .tab.on span{font-weight:500;}
+  .chev{color:var(--verm);font-size:18px;font-family:'Noto Serif TC',serif;}
+  .primary{font-family:'Noto Serif TC',serif;text-align:center;background:var(--verm);color:#fff;padding:13px;border-radius:6px;font-size:16px;}
+  .inkbtn{font-family:'Noto Serif TC',serif;text-align:center;background:var(--ink);color:var(--paper);padding:13px;border-radius:6px;font-size:16px;}
+  .seal{font-family:'Noto Serif TC',serif;display:flex;align-items:center;justify-content:center;border:1.4px solid var(--verm);color:var(--verm);border-radius:5px;font-weight:700;flex:none;}
+  .ptrack{height:4px;background:var(--line);border-radius:2px;overflow:hidden;}
+  .pfill{height:100%;background:var(--jade);border-radius:2px;}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:11px;}
+  .typebadge{display:inline-flex;align-items:center;font-family:'Noto Sans TC',sans-serif;font-size:10px;letter-spacing:.06em;border-radius:3px;padding:3px 8px;font-weight:500;}
+  .lock{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--amber-bd);background:var(--amber-tint);border-radius:3px;padding:2px 7px;font-family:'Noto Sans TC',sans-serif;font-size:10px;color:#8a6420;font-weight:600;}
+  .seclab{font-family:'Noto Sans TC',sans-serif;font-size:11px;letter-spacing:.2em;color:var(--ink3);border-bottom:1px solid var(--line);padding-bottom:8px;}
+  .seg{display:flex;background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:3px;}
+  .seg-item{flex:1;text-align:center;padding:8px 2px;font-size:11px;font-family:'Noto Serif TC',serif;color:var(--ink2);}
+  .seg-on{background:var(--verm);color:#fff;border-radius:6px;}
+  .chk-done{width:22px;height:22px;border-radius:50%;background:var(--jade);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex:none;}
+  .chk-next{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--verm);display:flex;align-items:center;justify-content:center;flex:none;}
+  .chk-todo{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line2);flex:none;}
+  .vtag{font-family:'Noto Serif TC',serif;writing-mode:vertical-rl;font-size:11px;padding:5px 3px;letter-spacing:.12em;border-radius:3px;flex:none;}
+  @keyframes shimmer{0%{background-position:-120px 0;}100%{background-position:120px 0;}}
+  .skel{background:linear-gradient(90deg,var(--line) 25%,var(--line2) 50%,var(--line) 75%);background-size:240px 100%;animation:shimmer 1.4s ease-in-out infinite;flex:none;}
+</style>
+</head>
+<body style="margin:0;background:#efe8d6;min-height:100vh;">
+<div style="margin:36px;display:inline-block;">
+  <div class="fl" data-drags-parent="1">設計語言 · DESIGN LANGUAGE — 箋 JIĀN EDITORIAL SYSTEM</div>
+  <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:32px 36px;box-shadow:0 10px 28px -16px rgba(44,39,34,.18);">
+    <div class="serif" style="font-size:26px;font-weight:700;color:var(--ink);padding-bottom:24px;margin-bottom:28px;border-bottom:1.5px solid var(--ink);">文言教室 · 設計系統<span style="color:var(--verm);margin-left:14px;">箋</span></div>
+    <div style="display: flex; gap: 36px; flex-wrap: wrap; position: relative">
+      <!-- palette -->
+      <div style="width:268px;">
+        <div class="seclab" style="margin-bottom:14px;">色 彩 · PALETTE</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
+          <div><div style="height:38px;border-radius:6px;background:var(--paper);border:1px solid var(--line);"></div><div class="sans" style="font-size:11px;color:var(--ink);margin-top:4px;">Paper #F4F0E6</div></div>
+          <div><div style="height:38px;border-radius:6px;background:var(--ink);"></div><div class="sans" style="font-size:11px;color:var(--ink);margin-top:4px;">Ink #2C2722</div></div>
+          <div><div style="height:38px;border-radius:6px;background:var(--verm);"></div><div class="sans" style="font-size:11px;color:var(--ink);margin-top:4px;">硃 Vermilion</div></div>
+          <div><div style="height:38px;border-radius:6px;background:var(--jade);"></div><div class="sans" style="font-size:11px;color:var(--ink);margin-top:4px;">玉 Jade</div></div>
+          <div><div style="height:38px;border-radius:6px;background:var(--amber);"></div><div class="sans" style="font-size:11px;color:var(--ink);margin-top:4px;">琥 Amber</div></div>
+          <div><div style="height:38px;border-radius:6px;background:var(--line);border:1px solid var(--line2);"></div><div class="sans" style="font-size:11px;color:var(--ink);margin-top:4px;">Line #E7DDC9</div></div>
+        </div>
+      </div>
+      <!-- type -->
+      <div style="width:340px;border-left:1px solid var(--line);border-right:1px solid var(--line);padding:0 30px;">
+        <div class="seclab" style="margin-bottom:16px;">文 字 · TYPE</div>
+        <div style="border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:10px;"><span class="serif" style="font-size:30px;font-weight:700;color:var(--ink);">你好。</span><div class="sans" style="font-size:11px;color:var(--ink3);margin-top:2px;">Noto Serif TC · Display 30/700</div></div>
+        <div style="border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:10px;"><span class="serif" style="font-size:21px;font-weight:600;color:var(--ink);">愛蓮說</span><div class="sans" style="font-size:11px;color:var(--ink3);margin-top:2px;">Title 21/600</div></div>
+        <div style="border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:10px;"><div class="serif" style="font-size:17px;line-height:1.9;color:var(--ink);">予獨愛蓮之出淤泥而不染。</div><div class="sans" style="font-size:11px;color:var(--ink3);">Body 17 · line-height 1.9</div></div>
+        <div style="display:flex;align-items:baseline;gap:12px;"><span class="num" style="font-size:28px;font-weight:600;color:var(--verm);">34 / 40</span><div class="sans" style="font-size:11px;color:var(--ink3);">Newsreader · 數字計時</div></div>
+      </div>
+      <!-- components -->
+      <div style="flex:1;min-width:480px;">
+        <div class="seclab" style="margin-bottom:14px;">元 件 · COMPONENTS</div>
+        <!-- buttons -->
+        <div style="display:flex;gap:8px;margin-bottom:14px;"><div class="primary" style="flex:1;padding:9px;font-size:13px;">主要操作</div><div class="inkbtn" style="flex:1;padding:9px;font-size:13px;">章節挑戰</div><div style="flex:1;font-family:'Noto Serif TC',serif;text-align:center;border:1px solid var(--verm-bd);color:var(--verm);padding:8px;border-radius:6px;font-size:13px;background:var(--surface);">次要</div></div>
+        <!-- badges & seals -->
+        <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;align-items:center;">
+          <span class="typebadge" style="background:var(--verm-tint);border:1px solid var(--verm-bd);color:var(--verm);">DSE 甲部指定篇章</span>
+          <span class="typebadge" style="background:var(--jade-tint);border:1px solid var(--jade-bd);color:var(--jade);">高中課文</span>
+          <span class="lock">⊘ 付費</span>
+          <span class="typebadge" style="background:var(--verm-tint);border:1px solid var(--verm-bd);color:var(--verm);">⚠ 最弱</span>
+          <span class="seal" style="width:24px;height:24px;font-size:12px;">篇</span>
+          <span class="seal" style="width:24px;height:24px;font-size:12px;">試</span>
+          <span class="seal" style="width:24px;height:24px;font-size:12px;">溫</span>
+          <span class="seal" style="width:24px;height:24px;font-size:12px;">量</span>
+        </div>
+        <!-- segmented control -->
+        <div class="seg" style="margin-bottom:14px;">
+          <div class="seg-item seg-on">甲部指定</div>
+          <div class="seg-item">高中課文</div>
+          <div class="seg-item">其他</div>
+        </div>
+        <!-- option states -->
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid var(--jade-bd);border-radius:5px;background:var(--jade-tint);"><span class="serif" style="color:var(--jade);width:14px;font-weight:700;">B</span><span class="serif" style="font-size:14px;color:var(--jade);font-weight:600;flex:1;">正解選項</span><span style="color:var(--jade);">✓</span></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid var(--verm-bd);border-radius:5px;background:var(--verm-tint);"><span class="serif" style="color:var(--verm);width:14px;">C</span><span class="serif" style="font-size:14px;color:var(--verm);text-decoration:line-through;flex:1;">誤選選項</span><span style="color:var(--verm);">✕</span></div>
+        </div>
+        <!-- pool progress -->
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span class="serif" style="font-size:12px;color:var(--ink);">愛蓮說</span><span class="num" style="font-size:12px;color:var(--jade);">已見過 28/50</span></div><div class="ptrack" style="height:6px;"><div class="pfill" style="width:56%;"></div></div><div class="sans" style="font-size:10px;color:var(--ink3);margin-top:3px;">約再 2 次覆蓋全部題庫</div></div>
+          <div><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span class="serif" style="font-size:12px;color:var(--ink);">曹劌論戰</span><span class="num" style="font-size:12px;color:var(--amber);">44/48</span></div><div class="ptrack" style="height:6px;"><div class="pfill" style="width:91%;background:var(--amber);"></div></div><div class="sans" style="font-size:10px;color:var(--ink3);margin-top:3px;">幾乎覆蓋全部</div></div>
+        </div>
+      </div>
+      <!-- daily plan checklist -->
+      <div style="width:290px;border-left:1px solid var(--line);padding-left:30px;">
+        <div class="seclab" style="margin-bottom:14px;">今日課業 · DAILY PLAN</div>
+        <div class="card" style="padding:15px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:13px;"><span class="sans" style="font-size:11px;letter-spacing:.14em;color:var(--ink3);">今日課業</span><span class="num" style="font-size:12px;color:var(--jade);">1/3 完成</span></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);"><div class="chk-done">✓</div><span class="serif" style="font-size:13px;color:var(--ink3);text-decoration:line-through;">重溫錯題 8 題</span></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);"><div class="chk-next"><span style="width:6px;height:6px;border-radius:50%;background:var(--verm);display:block;"></span></div><div><div class="serif" style="font-size:14px;font-weight:600;color:var(--ink);">模擬一篇</div><div class="sans" style="font-size:10px;color:var(--ink2);">DSE 甲部 · 約 10 分</div></div></div>
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 0;"><div class="chk-todo"></div><span class="serif" style="font-size:13px;color:var(--ink2);">難題訓練 5 題</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:36px;flex-wrap:wrap;margin-top:30px;padding-top:26px;border-top:1px solid var(--line);">
+      <!-- spacing & radius scale -->
+      <div style="width:340px;">
+        <div class="seclab" style="margin-bottom:14px;">間 距 與 圓 角 · SPACING &amp; RADIUS</div>
+        <div style="display:flex;align-items:flex-end;gap:14px;margin-bottom:14px;">
+          <div style="text-align:center;"><div style="width:4px;height:4px;background:var(--verm);margin:0 auto;"></div><div class="sans" style="font-size:10px;color:var(--ink3);margin-top:6px;">4</div></div>
+          <div style="text-align:center;"><div style="width:8px;height:8px;background:var(--verm);margin:0 auto;"></div><div class="sans" style="font-size:10px;color:var(--ink3);margin-top:6px;">8</div></div>
+          <div style="text-align:center;"><div style="width:12px;height:12px;background:var(--verm);margin:0 auto;"></div><div class="sans" style="font-size:10px;color:var(--ink3);margin-top:6px;">12</div></div>
+          <div style="text-align:center;"><div style="width:16px;height:16px;background:var(--verm);margin:0 auto;"></div><div class="sans" style="font-size:10px;color:var(--ink3);margin-top:6px;">16</div></div>
+          <div style="text-align:center;"><div style="width:24px;height:24px;background:var(--verm);margin:0 auto;"></div><div class="sans" style="font-size:10px;color:var(--ink3);margin-top:6px;">24</div></div>
+          <div style="text-align:center;"><div style="width:32px;height:32px;background:var(--verm);margin:0 auto;"></div><div class="sans" style="font-size:10px;color:var(--ink3);margin-top:6px;">32</div></div>
+        </div>
+        <div class="sans" style="font-size:11px;color:var(--ink2);line-height:1.7;margin-bottom:16px;">間距一律取 4 的倍數；元件內距多為 12–16px，區塊間距 20–30px。</div>
+        <div style="display:flex;align-items:flex-end;gap:14px;">
+          <div style="text-align:center;"><div style="width:30px;height:30px;background:var(--surface2);border:1px solid var(--line2);border-radius:4px;"></div><div class="sans" style="font-size:10px;color:var(--ink3);margin-top:6px;">4 · chip</div></div>
+          <div style="text-align:center;"><div style="width:30px;height:30px;background:var(--surface2);border:1px solid var(--line2);border-radius:8px;"></div><div class="sans" style="font-size:10px;color:var(--ink3);margin-top:6px;">8 · btn</div></div>
+          <div style="text-align:center;"><div style="width:30px;height:30px;background:var(--surface2);border:1px solid var(--line2);border-radius:12px;"></div><div class="sans" style="font-size:10px;color:var(--ink3);margin-top:6px;">12 · card</div></div>
+          <div style="text-align:center;"><div style="width:30px;height:30px;background:var(--surface2);border:1px solid var(--line2);border-radius:20px;"></div><div class="sans" style="font-size:10px;color:var(--ink3);margin-top:6px;">20 · sheet</div></div>
+          <div style="text-align:center;"><div style="width:30px;height:30px;background:var(--surface2);border:1px solid var(--line2);border-radius:50%;"></div><div class="sans" style="font-size:10px;color:var(--ink3);margin-top:6px;">full</div></div>
+        </div>
+      </div>
+      <!-- mascot palette -->
+      <div style="flex:1;min-width:340px;border-left:1px solid var(--line);padding-left:30px;">
+        <div class="seclab" style="margin-bottom:14px;">吉 祥 物 色 彩 · MASCOT PALETTE</div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:9px;max-width:460px;">
+          <div><div style="height:34px;border-radius:6px;background:#46586a;"></div><div class="sans" style="font-size:10px;color:var(--ink);margin-top:4px;">袍 #46586A</div></div>
+          <div><div style="height:34px;border-radius:6px;background:#2f2a25;"></div><div class="sans" style="font-size:10px;color:var(--ink);margin-top:4px;">墨 #2F2A25</div></div>
+          <div><div style="height:34px;border-radius:6px;background:#cba24e;"></div><div class="sans" style="font-size:10px;color:var(--ink);margin-top:4px;">竹金 #CBA24E</div></div>
+          <div><div style="height:34px;border-radius:6px;background:#f2ddb0;border:1px solid var(--line2);"></div><div class="sans" style="font-size:10px;color:var(--ink);margin-top:4px;">膚 #F2DDB0</div></div>
+          <div><div style="height:34px;border-radius:6px;background:#dce8d6;border:1px solid var(--line2);"></div><div class="sans" style="font-size:10px;color:var(--ink);margin-top:4px;">玉鏡 #DCE8D6</div></div>
+        </div>
+        <div class="sans" style="font-size:11px;color:var(--ink2);line-height:1.7;margin-top:12px;">吉祥物專用色，非 UI 色票的延伸——供插畫／素材輸出對照，維持五寶用色統一。角色尺寸統一為 3 級：52px 隨文配角、60px 版面焦點、96px 慶祝主視覺。</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     ROW 2 · HOME STATES
+     ═══════════════════════════════════════════════════ -->
+
+<!-- Home · 已登入 -->
+
+</body>
+</html>

@@ -51,6 +51,9 @@ export default function TabsLayout() {
           backgroundColor: "#f4f0e6",
           borderTopColor: "#e7ddc9",
           borderTopWidth: 1,
+          height: 64,
+          paddingBottom: 8,
+          paddingTop: 8,
         },
         tabBarActiveTintColor: "#b0392c",
         tabBarInactiveTintColor: "#a59b8b",
@@ -58,7 +61,8 @@ export default function TabsLayout() {
           fontFamily: "System",
           fontSize: 10,
           fontWeight: "600",
-          marginBottom: 2,
+          marginBottom: 4,
+          marginTop: 2,
         },
       }}
     >

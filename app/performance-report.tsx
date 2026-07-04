@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react"
 import { View, Text, Pressable, ActivityIndicator, ScrollView } from "react-native"
-import { useRouter } from "expo-router"
+import { useRouter, useLocalSearchParams } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useAuth } from "@/hooks/useAuth"
-import { STANDARD_PART_TITLES } from "@/lib/data"
+import { getArticleIndex, STANDARD_PART_TITLES } from "@/lib/data"
 import QuizShell from "@/components/quiz/QuizShell"
 import type { Question } from "@/lib/types"
 import { Button, JianColors, JianTypography, JianRadius, getSerifFont } from "@/components/jian"
@@ -16,23 +16,39 @@ interface RevisionSummary {
     weakestPart: number | null
     weakestPartCount: number
   }
+  byArticle: Array<{
+    articleId: string
+    totalMistakes: number
+    byPart: Record<number, number>
+  }>
   byPart: Array<{
     part: number
     totalMistakes: number
     byArticle: Record<string, number>
     isWeightTraining: boolean
   }>
+  weightTraining: {
+    totalMistakes: number
+    byPart: Record<number, number>
+  }
 }
 
-export default function RevisionPartScreen() {
+export default function RevisionScreen() {
   const router = useRouter()
   const { user } = useAuth()
+  const params = useLocalSearchParams()
 
   const [phase, setPhase] = useState<"lobby" | "quiz">("lobby")
+  const [view, setView] = useState<"article" | "part">(
+    params.view === "part" ? "part" : "article"
+  )
   const [loading, setLoading] = useState(true)
   const [summary, setSummary] = useState<RevisionSummary | null>(null)
   const [questions, setQuestions] = useState<Question[]>([])
   const [error, setError] = useState<string | null>(null)
+
+  const articleIndex = getArticleIndex()
+  const titleById = Object.fromEntries(articleIndex.map(a => [a.id, a.title]))
 
   useEffect(() => {
     if (!user || user.is_anonymous) {
@@ -59,14 +75,18 @@ export default function RevisionPartScreen() {
     }
   }
 
-  async function startRevision(part: number) {
+  async function startRevision(options: { articleId?: string; part?: number; limit?: number }) {
     if (!user) return
 
     try {
       setLoading(true)
       setError(null)
 
-      const url = `${API_URL}/api/revision/sample?userId=${user.id}&part=${part}&limit=10`
+      let url = `${API_URL}/api/revision/sample?userId=${user.id}`
+      if (options.articleId) url += `&articleId=${options.articleId}`
+      if (options.part !== undefined) url += `&part=${options.part}`
+      if (options.limit) url += `&limit=${options.limit}`
+
       const res = await fetch(url)
       if (!res.ok) throw new Error("Failed to sample questions")
 
@@ -90,36 +110,45 @@ export default function RevisionPartScreen() {
   function handleQuizExit() {
     setPhase("lobby")
     setQuestions([])
-    loadSummary()
+    loadSummary() // Refresh summary after quiz
   }
 
   // Anonymous user
   if (!user || user.is_anonymous) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
-        <Text style={{
-          fontFamily: getSerifFont('400'),
-          fontSize: 16,
-          lineHeight: 26,
-          color: JianColors.ink,
-          textAlign: 'center',
-          marginBottom: 16
-        }}>
+      <SafeAreaView className="flex-1 bg-slate-50 items-center justify-center px-6">
+        <Text className="text-slate-700 text-base text-center mb-4">
           登入後才能查看錯題重溫
         </Text>
-        <Button variant="primary" size="medium" onPress={() => router.push("/login")}>
-          登入 / 建立帳戶
-        </Button>
+        <Pressable
+          onPress={() => router.push("/login")}
+          className="bg-amber-500 rounded-xl px-6 py-3 active:opacity-80"
+        >
+          <Text className="text-white font-semibold">登入 / 建立帳戶</Text>
+        </Pressable>
       </SafeAreaView>
     )
   }
 
   // Quiz phase
   if (phase === "quiz" && questions.length > 0) {
+    // Build articles map for multi-article support
+    const articlesMap: Record<string, { id: string; title: string }> = {}
+    for (const q of questions) {
+      if (q.articleId && !articlesMap[q.articleId]) {
+        articlesMap[q.articleId] = {
+          id: q.articleId,
+          title: titleById[q.articleId] || q.articleId
+        }
+      }
+    }
+    const articlesArray = Object.values(articlesMap)
+
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper }}>
         <QuizShell
           questions={questions}
+          articles={articlesArray.length > 0 ? articlesArray : undefined}
           exerciseType="regular"
           onExit={handleQuizExit}
         />
@@ -158,7 +187,7 @@ export default function RevisionPartScreen() {
   }
 
   // Empty state
-  if (!summary || summary.byPart.length === 0) {
+  if (!summary || summary.overall.totalMistakes === 0) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper }}>
         <View style={{ paddingHorizontal: 24, paddingTop: 16 }}>
@@ -202,7 +231,6 @@ export default function RevisionPartScreen() {
     )
   }
 
-  // Lobby - Part view only
   // Simplified part titles for display
   const partTitles: Record<number, string> = {
     1: "字詞解釋",
@@ -215,6 +243,7 @@ export default function RevisionPartScreen() {
     8: "文言句式",
   }
 
+  // Lobby - Main analysis view
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper }}>
       <ScrollView style={{ flex: 1, paddingHorizontal: 24 }} contentContainerStyle={{ paddingBottom: 32 }}>
@@ -233,33 +262,24 @@ export default function RevisionPartScreen() {
             )}
           </Pressable>
 
-          {/* Header with icon */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11, marginTop: 14 }}>
-            <View style={{
-              width: 34,
-              height: 34,
-              borderRadius: 5,
-              borderWidth: 1.4,
-              borderColor: JianColors.vermilion,
-              backgroundColor: JianColors.vermilionTint,
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <Text style={{
-                fontFamily: getSerifFont('700'),
-                fontSize: 18,
-                color: JianColors.vermilion
-              }}>
-                基
-              </Text>
-            </View>
+          {/* Header */}
+          <View style={{ marginTop: 14 }}>
             <Text style={{
               fontFamily: getSerifFont('700'),
-              fontSize: 19,
-              lineHeight: 24,
+              fontSize: 21,
+              lineHeight: 28,
               color: JianColors.ink
             }}>
-              文言文語基能力{'\n'}錯題重溫
+              詳細報告 · 能力分析
+            </Text>
+            <Text style={{
+              fontFamily: getSerifFont('400'),
+              fontSize: 13,
+              lineHeight: 22,
+              color: JianColors.ink2,
+              marginTop: 8
+            }}>
+              查看你的錯題分佈與薄弱環節
             </Text>
           </View>
 
@@ -268,7 +288,7 @@ export default function RevisionPartScreen() {
             backgroundColor: JianColors.surface2,
             borderWidth: 1,
             borderColor: JianColors.line,
-            borderRadius: JianRadius.card,
+            borderRadius: 11,
             padding: 16,
             marginTop: 16
           }}>
@@ -277,7 +297,7 @@ export default function RevisionPartScreen() {
               fontSize: 10,
               letterSpacing: 2,
               color: JianColors.ink3,
-              marginBottom: 7
+              marginBottom: 9
             }}>
               整 體 統 計
             </Text>
@@ -297,64 +317,52 @@ export default function RevisionPartScreen() {
                 color: JianColors.ink2,
                 marginTop: 4
               }}>
-                最弱部分：{partTitles[summary.overall.weakestPart]}（{summary.overall.weakestPartCount} 題）
+                最弱部分：{partTitles[summary.overall.weakestPart] || `第${summary.overall.weakestPart}部分`}（{summary.overall.weakestPartCount} 題）
               </Text>
             )}
           </View>
-        </View>
 
-        {/* Part cards */}
-        <View style={{ flexDirection: 'column', gap: 9, marginTop: 13, marginBottom: 18 }}>
-          {summary.byPart.map(partData => {
-            const isWeakest = summary.overall.weakestPart === partData.part
-            const isCompleted = partData.totalMistakes === 0
-            const isHighlighted = partData.part === 7 || partData.part === 8
+          {/* Part-by-part breakdown */}
+          <View style={{ marginTop: 24 }}>
+            <Text style={{
+              fontFamily: JianTypography.sans,
+              fontSize: 10,
+              letterSpacing: 2,
+              color: JianColors.ink3,
+              marginBottom: 11
+            }}>
+              分 部 統 計
+            </Text>
+            <View style={{ flexDirection: 'column', gap: 9 }}>
+              {summary.byPart.map(partData => {
+                const isWeakest = summary.overall.weakestPart === partData.part
+                const isHighlighted = partData.part === 7 || partData.part === 8
 
-            return (
-              <Pressable
-                key={partData.part}
-                onPress={() => !isCompleted && startRevision(partData.part)}
-                disabled={isCompleted}
-                hitSlop={8}
-              >
-                {({ pressed }) => (
-                  <View style={{
+                return (
+                  <View key={partData.part} style={{
                     backgroundColor: isWeakest ? JianColors.vermilionTint : JianColors.surface,
                     borderWidth: 1,
                     borderColor: isHighlighted ? JianColors.vermilionBorder : JianColors.line,
-                    borderRadius: JianRadius.card,
+                    borderRadius: 11,
                     padding: 14,
                     flexDirection: 'row',
                     alignItems: 'center',
-                    gap: 12,
-                    opacity: isCompleted ? 0.6 : pressed ? 0.7 : 1
+                    gap: 12
                   }}>
                     <View style={{
                       width: 26,
                       height: 26,
                       borderRadius: 7,
-                      backgroundColor: isCompleted
-                        ? JianColors.jadeTint
-                        : isHighlighted
-                        ? JianColors.vermilion
-                        : JianColors.surface2,
+                      backgroundColor: isHighlighted ? JianColors.vermilion : JianColors.surface2,
                       borderWidth: 1,
-                      borderColor: isCompleted
-                        ? JianColors.jadeBorder
-                        : isHighlighted
-                        ? JianColors.vermilion
-                        : JianColors.line2,
+                      borderColor: isHighlighted ? JianColors.vermilion : JianColors.line2,
                       alignItems: 'center',
                       justifyContent: 'center'
                     }}>
                       <Text style={{
                         fontFamily: JianTypography.number,
                         fontSize: 13,
-                        color: isCompleted
-                          ? JianColors.jade
-                          : isHighlighted
-                          ? '#fff'
-                          : JianColors.ink2
+                        color: isHighlighted ? '#fff' : JianColors.ink2
                       }}>
                         {partData.part}
                       </Text>
@@ -389,7 +397,7 @@ export default function RevisionPartScreen() {
                             </Text>
                           </View>
                         )}
-                        {isHighlighted && !isWeakest && partData.totalMistakes > 0 && (
+                        {isHighlighted && !isWeakest && (
                           <View style={{
                             paddingHorizontal: 8,
                             paddingVertical: 3,
@@ -414,26 +422,124 @@ export default function RevisionPartScreen() {
                         fontFamily: JianTypography.sans,
                         fontSize: 11,
                         lineHeight: 18,
-                        color: isCompleted ? JianColors.jade : isHighlighted && partData.totalMistakes > 0 ? JianColors.vermilion : JianColors.ink3,
+                        color: isHighlighted ? JianColors.vermilion : JianColors.ink3,
                         marginTop: 2
                       }}>
-                        {isCompleted ? '已全部答對' : `${partData.totalMistakes} 題待重溫`}
+                        {partData.totalMistakes} 題待重溫
                       </Text>
                     </View>
-                    {!isCompleted && (
-                      <Text style={{
-                        fontFamily: getSerifFont('400'),
-                        fontSize: 18,
-                        color: isHighlighted ? JianColors.vermilion : JianColors.vermilion
-                      }}>
-                        ›
-                      </Text>
-                    )}
                   </View>
-                )}
-              </Pressable>
-            )
-          })}
+                )
+              })}
+            </View>
+          </View>
+
+          {/* Navigation buttons */}
+          <View style={{ marginTop: 24, gap: 11 }}>
+            <Pressable onPress={() => router.push("/revision-article")} hitSlop={8}>
+              {({ pressed }) => (
+                <View style={{
+                  backgroundColor: JianColors.surface,
+                  borderWidth: 1,
+                  borderColor: JianColors.line,
+                  borderRadius: 11,
+                  padding: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  opacity: pressed ? 0.7 : 1
+                }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11 }}>
+                    <View style={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: 5,
+                      borderWidth: 1.4,
+                      borderColor: JianColors.vermilion,
+                      backgroundColor: JianColors.vermilionTint,
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <Text style={{
+                        fontFamily: getSerifFont('700'),
+                        fontSize: 18,
+                        color: JianColors.vermilion
+                      }}>
+                        篇
+                      </Text>
+                    </View>
+                    <Text style={{
+                      fontFamily: getSerifFont('600'),
+                      fontSize: 16,
+                      lineHeight: 24,
+                      color: JianColors.ink
+                    }}>
+                      按文章重溫
+                    </Text>
+                  </View>
+                  <Text style={{
+                    fontFamily: getSerifFont('400'),
+                    fontSize: 18,
+                    color: JianColors.vermilion
+                  }}>
+                    ›
+                  </Text>
+                </View>
+              )}
+            </Pressable>
+
+            <Pressable onPress={() => router.push("/revision-part")} hitSlop={8}>
+              {({ pressed }) => (
+                <View style={{
+                  backgroundColor: JianColors.surface,
+                  borderWidth: 1,
+                  borderColor: JianColors.line,
+                  borderRadius: 11,
+                  padding: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  opacity: pressed ? 0.7 : 1
+                }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11 }}>
+                    <View style={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: 5,
+                      borderWidth: 1.4,
+                      borderColor: JianColors.vermilion,
+                      backgroundColor: JianColors.vermilionTint,
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <Text style={{
+                        fontFamily: getSerifFont('700'),
+                        fontSize: 18,
+                        color: JianColors.vermilion
+                      }}>
+                        基
+                      </Text>
+                    </View>
+                    <Text style={{
+                      fontFamily: getSerifFont('600'),
+                      fontSize: 16,
+                      lineHeight: 24,
+                      color: JianColors.ink
+                    }}>
+                      按部分重溫
+                    </Text>
+                  </View>
+                  <Text style={{
+                    fontFamily: getSerifFont('400'),
+                    fontSize: 18,
+                    color: JianColors.vermilion
+                  }}>
+                    ›
+                  </Text>
+                </View>
+              )}
+            </Pressable>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>

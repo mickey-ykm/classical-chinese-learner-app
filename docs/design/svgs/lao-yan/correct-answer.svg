@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 210" width="320" height="420">
+<title>老硯 · 答對鼓勵</title>
+<defs>
+<filter id="cut-lao-yan-correct-answer" x="-25%" y="-25%" width="150%" height="150%">
+<feDropShadow dx="0" dy="2.5" stdDeviation="1.6" flood-color="#5a3f2a" flood-opacity="0.3"></feDropShadow>
+</filter>
+</defs>
+
+  <g filter="url(#cut-lao-yan-correct-answer)">
+    <path d="M28,150 Q16,158 16,172 Q16,180 26,179 Q33,178 33,168 Z" fill="#54606b"></path>
+    <circle cx="24" cy="178" r="7.5" fill="#54606b"></circle>
+    <path d="M132,150 Q144,158 144,172 Q144,180 134,179 Q127,178 127,168 Z" fill="#54606b"></path>
+    <circle cx="136" cy="178" r="7.5" fill="#54606b"></circle>
+    <rect x="26" y="116" width="108" height="80" rx="30" fill="#54606b"></rect>
+  </g>
+  <g filter="url(#cut-lao-yan-correct-answer)"><ellipse cx="80" cy="116" rx="40" ry="14" fill="#1c1a17"></ellipse></g>
+  <ellipse cx="68" cy="112" rx="7" ry="2.6" fill="#7a8a96" opacity=".6"></ellipse>
+  <path d="M46,148 Q58,141 72,148 Q60,150 48,154 Z" fill="#f0ebde"></path>
+  <path d="M114,148 Q102,141 88,148 Q100,150 112,154 Z" fill="#f0ebde"></path>
+  <g style="opacity:0"><path d="M52,162 Q60,154 68,162" fill="none" stroke="#2f2a25" stroke-width="2.8" stroke-linecap="round"></path><path d="M92,162 Q100,154 108,162" fill="none" stroke="#2f2a25" stroke-width="2.8" stroke-linecap="round"></path></g>
+  <g style="opacity:0"><path d="M52,162 Q60,154 68,162" fill="none" stroke="#2f2a25" stroke-width="2.8" stroke-linecap="round"></path><path d="M92,162 Q100,154 108,162" fill="none" stroke="#2f2a25" stroke-width="2.8" stroke-linecap="round"></path></g>
+  <g style="opacity:1"><path d="M48,161 Q60,148 72,161" fill="none" stroke="#2f2a25" stroke-width="3.2" stroke-linecap="round"></path><path d="M88,161 Q100,148 112,161" fill="none" stroke="#2f2a25" stroke-width="3.2" stroke-linecap="round"></path></g>
+  <g style="opacity:0"><path d="M50,158 Q60,167 70,158" fill="none" stroke="#2f2a25" stroke-width="2.8" stroke-linecap="round"></path><path d="M90,158 Q100,167 110,158" fill="none" stroke="#2f2a25" stroke-width="2.8" stroke-linecap="round"></path></g>
+  <circle cx="60" cy="159" r="10" fill="none" stroke="#cba24e" stroke-width="2"></circle>
+  <circle cx="100" cy="159" r="10" fill="none" stroke="#cba24e" stroke-width="2"></circle>
+  <path d="M70,159 L90,159" stroke="#cba24e" stroke-width="2"></path>
+  <path d="M50,157 L43,153" stroke="#cba24e" stroke-width="2" stroke-linecap="round"></path>
+  <path d="M110,157 L117,153" stroke="#cba24e" stroke-width="2" stroke-linecap="round"></path>
+  <ellipse cx="52" cy="173" rx="7" ry="4.4" fill="#e08a76" opacity=".5"></ellipse><ellipse cx="108" cy="173" rx="7" ry="4.4" fill="#e08a76" opacity=".5"></ellipse>
+  <path d="M70,178 Q80,184 90,178" fill="none" stroke="#2f2a25" stroke-width="2.6" stroke-linecap="round" style="opacity:0"></path>
+  <g style="opacity:1"><ellipse cx="80" cy="181" rx="6.5" ry="6" fill="#2f2a25"></ellipse><ellipse cx="80" cy="184" rx="3.6" ry="2.2" fill="#e08a76"></ellipse></g>
+  <path d="M70,183 Q80,177 90,183" fill="none" stroke="#2f2a25" stroke-width="2.6" stroke-linecap="round" style="opacity:0"></path>
+  <path d="M66,190 Q80,210 94,190 Q80,199 66,190 Z" fill="#f0ebde"></path>
+  <path d="M70,194 Q80,205 90,194" fill="none" stroke="#dcd2b8" stroke-width="1.2" opacity=".7"></path>
+  <path d="M30,100 l2.6,6 6,2.6 -6,2.6 -2.6,6 -2.6,-6 -6,-2.6 6,-2.6 Z" fill="#cba24e" style="opacity:1;transform-box:fill-box;transform-origin:center;"></path>
+  <ellipse cx="132" cy="98" rx="4" ry="5.6" fill="#8fb4d6" style="opacity:0;transform-box:fill-box;transform-origin:center;"></ellipse>
+  <g style="opacity:0" fill="#7a8a96">
+    <circle cx="128" cy="92" r="3" style="transform-box:fill-box;"></circle>
+    <circle cx="136" cy="84" r="2.4" style="transform-box:fill-box;"></circle>
+    <circle cx="142" cy="76" r="1.8" style="transform-box:fill-box;"></circle>
+  </g>
+  <g style="opacity:0">
+    <rect x="24" y="86" width="5" height="5" fill="#b0392c" style="transform-box:fill-box;"></rect>
+    <rect x="128" y="82" width="5" height="5" fill="#3f7a44" style="transform-box:fill-box;"></rect>
+    <rect x="76" y="78" width="5" height="5" fill="#cba24e" style="transform-box:fill-box;"></rect>
+  </g>
+
+</svg>

@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 210" width="320" height="420">
+<title>阿墨 · 思考等待</title>
+<defs>
+<filter id="cut-a-mo-thinking" x="-25%" y="-25%" width="150%" height="150%">
+<feDropShadow dx="0" dy="2.5" stdDeviation="1.6" flood-color="#5a3f2a" flood-opacity="0.3"></feDropShadow>
+</filter>
+</defs>
+
+  <g filter="url(#cut-a-mo-thinking)"><rect x="52" y="30" width="56" height="168" rx="24" fill="#2f2a25"></rect><rect x="52" y="30" width="56" height="20" rx="18" fill="#cba24e"></rect></g>
+  <circle cx="80" cy="170" r="15" fill="none" stroke="#cba24e" stroke-width="2.4"></circle>
+  <text x="80" y="177" text-anchor="middle" font-size="16" font-family="&#39;Noto Serif TC&#39;" font-weight="700" fill="#cba24e">墨</text>
+  <g style="transform-box:fill-box;transform-origin:66px 86px;transform:rotate(-12deg)"><path d="M62,84 L70,89" stroke="#1f1c18" stroke-width="2.2" stroke-linecap="round"></path></g>
+  <g style="transform-box:fill-box;transform-origin:94px 86px;transform:rotate(0deg)"><path d="M98,84 L90,89" stroke="#1f1c18" stroke-width="2.2" stroke-linecap="round"></path></g>
+  <g style="opacity:0">
+    <circle cx="70" cy="96" r="5.4" fill="#f4efe2"></circle><circle cx="90" cy="96" r="5.4" fill="#f4efe2"></circle>
+    <circle cx="70" cy="96" r="2.6" fill="#1f1c18"></circle><circle cx="90" cy="96" r="2.6" fill="#1f1c18"></circle>
+  </g>
+  <g style="opacity:0" fill="none" stroke="#1f1c18" stroke-width="3" stroke-linecap="round"><path d="M63,98 Q70,88 77,98"></path><path d="M83,98 Q90,88 97,98"></path></g>
+  <g style="opacity:0">
+    <circle cx="70" cy="97" r="4.8" fill="#f4efe2"></circle><circle cx="90" cy="97" r="4.8" fill="#f4efe2"></circle>
+    <circle cx="70" cy="94" r="2.4" fill="#1f1c18"></circle><circle cx="90" cy="94" r="2.4" fill="#1f1c18"></circle>
+  </g>
+  <g style="opacity:1">
+    <circle cx="70" cy="94" r="5.4" fill="#f4efe2"></circle><circle cx="90" cy="94" r="5.4" fill="#f4efe2"></circle>
+    <circle cx="71" cy="91" r="2.6" fill="#1f1c18"></circle><circle cx="91" cy="91" r="2.6" fill="#1f1c18"></circle>
+  </g>
+  <ellipse cx="62" cy="106" rx="5" ry="3.2" fill="#5a6a76" opacity=".5"></ellipse><ellipse cx="98" cy="106" rx="5" ry="3.2" fill="#5a6a76" opacity=".5"></ellipse>
+  <path d="M73,112 Q80,116 87,112" fill="none" stroke="#cdbf9e" stroke-width="2.6" stroke-linecap="round" style="opacity:1"></path>
+  <g style="opacity:0"><ellipse cx="80" cy="114" rx="6" ry="6.6" fill="#131110"></ellipse><ellipse cx="80" cy="117" rx="3.4" ry="2.6" fill="#5a6a76"></ellipse></g>
+  <path d="M73,119 Q80,113 87,119" fill="none" stroke="#cdbf9e" stroke-width="2.6" stroke-linecap="round" style="opacity:0"></path>
+  <path d="M40,50 l2.6,6 6,2.6 -6,2.6 -2.6,6 -2.6,-6 -6,-2.6 6,-2.6 Z" fill="#cba24e" style="opacity:0;transform-box:fill-box;transform-origin:center;"></path>
+  <ellipse cx="106" cy="60" rx="3.8" ry="5.2" fill="#8fb4d6" style="opacity:0;transform-box:fill-box;transform-origin:center;"></ellipse>
+  <g style="opacity:1" fill="#6a655e">
+    <circle cx="112" cy="50" r="2.8" style="transform-box:fill-box;"></circle>
+    <circle cx="120" cy="42" r="2.2" style="transform-box:fill-box;"></circle>
+    <circle cx="126" cy="34" r="1.7" style="transform-box:fill-box;"></circle>
+  </g>
+  <g style="opacity:0">
+    <rect x="34" y="26" width="5" height="5" fill="#b0392c" style="transform-box:fill-box;"></rect>
+    <rect x="118" y="22" width="5" height="5" fill="#3f7a44" style="transform-box:fill-box;"></rect>
+    <rect x="76" y="18" width="5" height="5" fill="#cba24e" style="transform-box:fill-box;"></rect>
+  </g>
+
+</svg>

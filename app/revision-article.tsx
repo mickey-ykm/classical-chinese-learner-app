@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { getArticleIndex } from "@/lib/data"
 import QuizShell from "@/components/quiz/QuizShell"
 import type { Question } from "@/lib/types"
+import { Button, JianColors, JianTypography, JianRadius, getSerifFont } from "@/components/jian"
 
 const API_URL = process.env.EXPO_PUBLIC_ADMIN_URL || "https://ccladmin.mickey-calligraphy.art"
 
@@ -92,16 +93,20 @@ export default function RevisionArticleScreen() {
   // Anonymous user
   if (!user || user.is_anonymous) {
     return (
-      <SafeAreaView className="flex-1 bg-slate-50 items-center justify-center px-6">
-        <Text className="text-slate-700 text-base text-center mb-4">
+      <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
+        <Text style={{
+          fontFamily: getSerifFont('400'),
+          fontSize: 16,
+          lineHeight: 26,
+          color: JianColors.ink,
+          textAlign: 'center',
+          marginBottom: 16
+        }}>
           登入後才能查看錯題重溫
         </Text>
-        <Pressable
-          onPress={() => router.push("/login")}
-          className="bg-amber-500 rounded-xl px-6 py-3 active:opacity-80"
-        >
-          <Text className="text-white font-semibold">登入 / 建立帳戶</Text>
-        </Pressable>
+        <Button variant="primary" size="medium" onPress={() => router.push("/login")}>
+          登入 / 建立帳戶
+        </Button>
       </SafeAreaView>
     )
   }
@@ -120,12 +125,7 @@ export default function RevisionArticleScreen() {
     const articlesArray = Object.values(articlesMap)
 
     return (
-      <SafeAreaView className="flex-1 bg-slate-50">
-        <View className="px-4 pt-4 pb-2">
-          <Pressable onPress={handleQuizExit} hitSlop={12} className="self-start">
-            <Text className="text-amber-600 font-semibold text-sm">← 退出</Text>
-          </Pressable>
-        </View>
+      <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper }}>
         <QuizShell
           questions={questions}
           articles={articlesArray.length > 0 ? articlesArray : undefined}
@@ -139,8 +139,8 @@ export default function RevisionArticleScreen() {
   // Loading
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-slate-50 items-center justify-center">
-        <ActivityIndicator size="large" color="#d97706" />
+      <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color={JianColors.amber} />
       </SafeAreaView>
     )
   }
@@ -148,11 +148,20 @@ export default function RevisionArticleScreen() {
   // Error
   if (error) {
     return (
-      <SafeAreaView className="flex-1 bg-slate-50 items-center justify-center px-6">
-        <Text className="text-slate-700 text-base text-center mb-4">{error}</Text>
-        <Pressable onPress={loadSummary} className="bg-amber-500 rounded-xl px-6 py-3">
-          <Text className="text-white font-semibold">重試</Text>
-        </Pressable>
+      <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
+        <Text style={{
+          fontFamily: getSerifFont('400'),
+          fontSize: 16,
+          lineHeight: 26,
+          color: JianColors.ink,
+          textAlign: 'center',
+          marginBottom: 16
+        }}>
+          {error}
+        </Text>
+        <Button variant="primary" size="medium" onPress={loadSummary}>
+          重試
+        </Button>
       </SafeAreaView>
     )
   }
@@ -160,51 +169,196 @@ export default function RevisionArticleScreen() {
   // Empty state
   if (!summary || summary.byArticle.length === 0) {
     return (
-      <SafeAreaView className="flex-1 bg-slate-50">
-        <View className="px-5 pt-4">
-          <Pressable onPress={() => router.back()} hitSlop={12} className="self-start mb-6">
-            <Text className="text-amber-600 font-semibold text-sm">← 返回</Text>
+      <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper }}>
+        <View style={{ paddingHorizontal: 24, paddingTop: 16 }}>
+          <Pressable onPress={() => router.back()} hitSlop={12}>
+            {({ pressed }) => (
+              <Text style={{
+                fontFamily: getSerifFont('400'),
+                fontSize: 14,
+                lineHeight: 20,
+                color: JianColors.vermilion,
+                marginBottom: 24,
+                opacity: pressed ? 0.7 : 1
+              }}>
+                ‹ 返回
+              </Text>
+            )}
           </Pressable>
         </View>
-        <View className="flex-1 items-center justify-center px-6">
-          <Text className="text-6xl mb-4">🎉</Text>
-          <Text className="text-xl font-bold text-slate-800 mb-2">太棒了！</Text>
-          <Text className="text-slate-500 text-center">你沒有任何待重溫的錯題</Text>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
+          <Text style={{ fontSize: 60, marginBottom: 16 }}>🎉</Text>
+          <Text style={{
+            fontFamily: getSerifFont('700'),
+            fontSize: 24,
+            lineHeight: 32,
+            color: JianColors.ink,
+            marginBottom: 8
+          }}>
+            太棒了！
+          </Text>
+          <Text style={{
+            fontFamily: JianTypography.serif,
+            fontSize: 14,
+            lineHeight: 22,
+            color: JianColors.ink2,
+            textAlign: 'center'
+          }}>
+            你沒有任何待重溫的錯題
+          </Text>
         </View>
       </SafeAreaView>
     )
   }
 
   // Lobby - Article view only
+  const totalMistakes = summary.byArticle.reduce((sum, a) => sum + a.totalMistakes, 0)
+  const mostMistakesArticle = summary.byArticle.reduce((max, a) =>
+    a.totalMistakes > max.totalMistakes ? a : max
+  , summary.byArticle[0])
+
   return (
-    <SafeAreaView className="flex-1 bg-slate-50">
-      <ScrollView className="flex-1 px-5" contentContainerStyle={{ paddingBottom: 32 }}>
-        <View className="pt-4">
-          <Pressable onPress={() => router.back()} hitSlop={12} className="self-start mb-6">
-            <Text className="text-amber-600 font-semibold text-sm">← 返回</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper }}>
+      <ScrollView style={{ flex: 1, paddingHorizontal: 24 }} contentContainerStyle={{ paddingBottom: 32 }}>
+        <View style={{ paddingTop: 10 }}>
+          <Pressable onPress={() => router.back()} hitSlop={12}>
+            {({ pressed }) => (
+              <Text style={{
+                fontFamily: getSerifFont('400'),
+                fontSize: 14,
+                lineHeight: 20,
+                color: JianColors.vermilion,
+                opacity: pressed ? 0.7 : 1
+              }}>
+                ‹ 返回
+              </Text>
+            )}
           </Pressable>
-          <Text className="text-xl font-bold text-slate-800 mb-2" style={{ fontFamily: "Georgia" }}>
-            📚 文章錯題重溫
+
+          {/* Header with icon */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11, marginTop: 14 }}>
+            <View style={{
+              width: 34,
+              height: 34,
+              borderRadius: 5,
+              borderWidth: 1.4,
+              borderColor: JianColors.vermilion,
+              backgroundColor: JianColors.vermilionTint,
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <Text style={{
+                fontFamily: getSerifFont('700'),
+                fontSize: 18,
+                color: JianColors.vermilion
+              }}>
+                篇
+              </Text>
+            </View>
+            <Text style={{
+              fontFamily: getSerifFont('700'),
+              fontSize: 21,
+              lineHeight: 28,
+              color: JianColors.ink
+            }}>
+              文章錯題重溫
+            </Text>
+          </View>
+
+          <Text style={{
+            fontFamily: getSerifFont('400'),
+            fontSize: 13,
+            lineHeight: 22,
+            color: JianColors.ink2,
+            marginTop: 8
+          }}>
+            按文章分類，針對性重溫各篇章的錯題。
           </Text>
-          <Text className="text-sm text-slate-500 mb-6">按文章分類，針對性重溫各篇章的錯題。</Text>
+
+          {/* Overall stats card */}
+          <View style={{
+            backgroundColor: JianColors.surface2,
+            borderWidth: 1,
+            borderColor: JianColors.line,
+            borderRadius: JianRadius.card,
+            padding: 16,
+            marginTop: 16
+          }}>
+            <Text style={{
+              fontFamily: JianTypography.sans,
+              fontSize: 10,
+              letterSpacing: 2,
+              color: JianColors.ink3,
+              marginBottom: 7
+            }}>
+              整 體 統 計
+            </Text>
+            <Text style={{
+              fontFamily: getSerifFont('700'),
+              fontSize: 18,
+              lineHeight: 26,
+              color: JianColors.ink
+            }}>
+              總計：{totalMistakes} 題待重溫
+            </Text>
+            <Text style={{
+              fontFamily: getSerifFont('400'),
+              fontSize: 13,
+              lineHeight: 20,
+              color: JianColors.ink2,
+              marginTop: 4
+            }}>
+              涉及 {summary.byArticle.length} 篇文章　|　最多：{titleById[mostMistakesArticle.articleId]}（{mostMistakesArticle.totalMistakes} 題）
+            </Text>
+          </View>
         </View>
 
-        {summary.byArticle.map(article => (
-          <View key={article.articleId} className="bg-white rounded-2xl border border-slate-100 px-4 py-3 mb-3">
-            <Text className="text-base font-bold text-slate-800 mb-1" style={{ fontFamily: "Georgia" }}>
-              {titleById[article.articleId] || article.articleId}
-            </Text>
-            <Text className="text-xs text-slate-500 mb-3">
-              {Object.entries(article.byPart).map(([part, count]) => `第${part}部分: ${count}題`).join(" | ")}
-            </Text>
-            <Pressable
-              onPress={() => startRevision(article.articleId)}
-              className="bg-amber-500 rounded-xl py-2 active:opacity-80"
-            >
-              <Text className="text-white font-semibold text-center text-sm">開始重溫 ({article.totalMistakes} 題)</Text>
-            </Pressable>
-          </View>
-        ))}
+        {/* Article cards */}
+        <View style={{ marginTop: 13 }}>
+          {summary.byArticle.map(article => {
+            const partSummary = Object.entries(article.byPart)
+              .map(([part, count]) => `第 ${part} 部分：${count} 題`)
+              .join('　|　')
+
+            return (
+              <View key={article.articleId} style={{
+                backgroundColor: JianColors.surface,
+                borderWidth: 1,
+                borderColor: JianColors.line,
+                borderRadius: JianRadius.card,
+                padding: 15,
+                marginBottom: 11
+              }}>
+                <Text style={{
+                  fontFamily: getSerifFont('600'),
+                  fontSize: 16,
+                  lineHeight: 24,
+                  color: JianColors.ink
+                }}>
+                  {titleById[article.articleId] || article.articleId}
+                </Text>
+                <Text style={{
+                  fontFamily: getSerifFont('400'),
+                  fontSize: 12,
+                  lineHeight: 18,
+                  color: JianColors.ink2,
+                  marginTop: 3,
+                  marginBottom: 11
+                }}>
+                  {partSummary}
+                </Text>
+                <Button
+                  variant="primary"
+                  size="small"
+                  fullWidth
+                  onPress={() => startRevision(article.articleId)}
+                >
+                  開始重溫（{article.totalMistakes} 題）
+                </Button>
+              </View>
+            )
+          })}
+        </View>
       </ScrollView>
     </SafeAreaView>
   )

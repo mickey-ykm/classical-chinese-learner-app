@@ -13,7 +13,7 @@ import FillBlankQuestion from "./FillBlankQuestion"
 import SentenceOrderQuestion from "./SentenceOrderQuestion"
 import ScoreScreen from "./ScoreScreen"
 import ArticlePopup from "./ArticlePopup"
-import { JianColors, JianTypography, JianRadius } from "@/components/jian"
+import { JianColors, JianTypography, JianRadius, getSerifFont } from "@/components/jian"
 
 interface Props {
   questions: Question[]
@@ -23,6 +23,8 @@ interface Props {
   relatedArticlesMap?: Record<string, Array<{ id: string; title: string }>>  // For weight-training
   expectedMinutes?: number
   exerciseType?: "weight-training" | "dse-training" | "regular"
+  hideHeader?: boolean  // Hide the built-in header (for screens with custom headers)
+  hideArticleButton?: boolean  // Hide the article view button
   onSave?: (score: number, total: number, answersOrTotalSeconds: number | Record<string | number, QuizAnswer>) => void
   onExit?: () => void
   onFinished?: () => void
@@ -51,6 +53,8 @@ export default function QuizShell({
   relatedArticlesMap,
   expectedMinutes,
   exerciseType = "regular",
+  hideHeader = false,
+  hideArticleButton = false,
   onSave,
   onExit,
   onFinished
@@ -107,6 +111,11 @@ export default function QuizShell({
   const currentArticleId = articles && currentQuestion?.articleId ? currentQuestion.articleId : articleId
   const currentArticle: Article | null = currentArticleId ? getArticle(currentArticleId) : null
   const currentArticleTitle = articles?.find(a => a.id === currentArticleId)?.title || currentArticle?.title
+
+  // For multi-article mode: show exercise type instead of article title in header
+  const headerTitle = articles && articles.length > 1
+    ? (exerciseType === "dse-training" ? "DSE 模擬考題" : "練習")
+    : currentArticleTitle
 
   // For weight-training: show the selected related article
   const articleToShow = selectedArticleId ? getArticle(selectedArticleId) : currentArticle
@@ -219,32 +228,34 @@ export default function QuizShell({
   return (
     <View style={{ flex: 1, backgroundColor: '#f4f0e6' }}>
       <ScrollView style={{ flex: 1, paddingHorizontal: 22 }} contentContainerStyle={{ paddingTop: 8, paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
-      <View className="gap-6">{/* Gap between major sections */}
+      <View>{/* Container for quiz sections */}
         {/* Header: Exit | Title | Timer */}
-        <View style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingVertical: 4,
-          paddingBottom: 11,
-          borderBottomWidth: 1,
-          borderBottomColor: '#e7ddc9'
-        }}>
-          <Pressable onPress={onExit} hitSlop={8}>
-            <Text style={{ fontFamily: "Georgia", fontSize: 14, color: '#6f665a' }}>‹ 離開</Text>
-          </Pressable>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
-            <Text style={{ fontFamily: "Georgia", fontSize: 13, fontWeight: '600', color: '#2c2722' }}>
-              {currentArticleTitle}
+        {!hideHeader && (
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingVertical: 4,
+            paddingBottom: 11,
+            borderBottomWidth: 1,
+            borderBottomColor: '#e7ddc9'
+          }}>
+            <Pressable onPress={onExit} hitSlop={8}>
+              <Text style={{ fontFamily: "Georgia", fontSize: 14, color: '#6f665a' }}>‹ 離開</Text>
+            </Pressable>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+              <Text style={{ fontFamily: "Georgia", fontSize: 13, fontWeight: '600', color: '#2c2722' }}>
+                {headerTitle}
+              </Text>
+            </View>
+            <Text style={{ fontFamily: 'Newsreader', fontSize: 13, color: timerColor === 'text-amber-600' ? '#bb8a2e' : timerColor === 'text-red-500' ? '#dc2626' : '#94a3b8' }}>
+              ⏱ {formatTimer(elapsedSeconds)}
             </Text>
           </View>
-          <Text style={{ fontFamily: 'Newsreader', fontSize: 13, color: timerColor === 'text-amber-600' ? '#bb8a2e' : timerColor === 'text-red-500' ? '#dc2626' : '#94a3b8' }}>
-            ⏱ {formatTimer(elapsedSeconds)}
-          </Text>
-        </View>
+        )}
 
         {/* Progress bar */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 24 }}>
           <View style={{ flex: 1 }}>
             <QuizProgressBar current={currentIndex + 1} total={questions.length} />
           </View>
@@ -253,50 +264,71 @@ export default function QuizShell({
           </Text>
         </View>
 
-        {/* Article badge for multi-article mode */}
-        {articles && currentArticleTitle && (
+        {/* Article badge for multi-article mode (DSE mock or weight training) */}
+        {!hideArticleButton && (
+          (articles && articles.length > 1) || (relatedArticlesMap && relatedArticlesMap[currentQuestion.id] && relatedArticlesMap[currentQuestion.id].length > 0)
+        ) && (
           <Pressable
             onPress={() => setShowArticle(true)}
-            className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 active:opacity-70"
+            hitSlop={8}
+            style={{ marginTop: 24 }}
           >
-            <View className="flex-row items-center">
-              <Text className="text-amber-600 text-base mr-2">📄</Text>
-              <Text className="text-slate-700 text-sm font-medium flex-1" style={{ fontFamily: "Georgia" }}>
-                {currentArticleTitle}
-              </Text>
-              <Text className="text-amber-500 text-xs">點擊查看</Text>
-            </View>
+            {({ pressed }) => (
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 10,
+                backgroundColor: JianColors.surface2,
+                borderWidth: 1,
+                borderColor: JianColors.line,
+                borderRadius: 8,
+                paddingVertical: 9,
+                paddingLeft: 14,
+                paddingRight: 10,
+                opacity: pressed ? 0.7 : 1
+              }}>
+                <Text style={{
+                  fontFamily: getSerifFont('400'),
+                  fontSize: 13,
+                  lineHeight: 20,
+                  color: JianColors.ink2,
+                  flex: 1
+                }}>
+                  {partTitles[currentQuestion.part] || `第${currentQuestion.part}部分`}
+                </Text>
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 5,
+                  backgroundColor: JianColors.surface,
+                  borderWidth: 1,
+                  borderColor: JianColors.vermilionBorder,
+                  borderRadius: 7,
+                  paddingVertical: 6,
+                  paddingHorizontal: 11,
+                  shadowColor: '#2c2722',
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 2,
+                  elevation: 2
+                }}>
+                  <Text style={{ fontSize: 13, color: JianColors.vermilion }}>📖</Text>
+                  <Text style={{
+                    fontFamily: getSerifFont('600'),
+                    fontSize: 12,
+                    lineHeight: 18,
+                    color: JianColors.vermilion
+                  }}>
+                    查看原文
+                  </Text>
+                </View>
+              </View>
+            )}
           </Pressable>
         )}
 
-        {/* Related articles buttons for weight-training mode */}
-        {relatedArticlesMap && relatedArticlesMap[currentQuestion.id] && (
-          <View className="gap-2">
-            <Text className="text-xs text-slate-500 font-semibold uppercase tracking-wide">相關文章</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="-mx-5 px-5">
-              <View className="flex-row gap-2">
-                {relatedArticlesMap[currentQuestion.id].map((article) => (
-                  <Pressable
-                    key={article.id}
-                    onPress={() => {
-                      setSelectedArticleId(article.id)
-                      setShowArticle(true)
-                    }}
-                    className="bg-white border border-slate-200 rounded-xl px-4 py-2.5 active:opacity-70"
-                  >
-                    <View className="flex-row items-center">
-                      <Text className="text-amber-600 text-sm mr-2">📄</Text>
-                      <Text className="text-slate-700 text-sm font-medium" style={{ fontFamily: "Georgia" }}>
-                        {article.title}
-                      </Text>
-                    </View>
-                  </Pressable>
-                ))}
-              </View>
-            </ScrollView>
-          </View>
-        )}
-
+      <View style={{ marginTop: 24 }}>
       {currentQuestion.format === "fill-blank" ? (
         <FillBlankQuestion
           key={currentQuestion.id}
@@ -374,10 +406,12 @@ export default function QuizShell({
           onShowArticle={currentArticle ? () => setShowArticle(true) : undefined}
         />
       )}
+      </View>
 
       <ArticlePopup
         visible={showArticle}
         article={articleToShow}
+        articles={articles || (relatedArticlesMap && relatedArticlesMap[currentQuestion.id])}
         onClose={() => {
           setShowArticle(false)
           setSelectedArticleId(null)

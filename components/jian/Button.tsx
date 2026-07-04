@@ -27,19 +27,22 @@ export function Button({
   // Size styles
   const sizeStyles = {
     small: {
-      paddingVertical: 8,
+      paddingVertical: 10,
       paddingHorizontal: 16,
       fontSize: JianTypography.caption,
+      minHeight: 36,
     },
     medium: {
-      paddingVertical: 12,
+      paddingVertical: 14,
       paddingHorizontal: 20,
       fontSize: JianTypography.body,
+      minHeight: 44,
     },
     large: {
-      paddingVertical: 16,
+      paddingVertical: 18,
       paddingHorizontal: 24,
       fontSize: JianTypography.body,
+      minHeight: 52,
     },
   }
 
@@ -94,6 +97,7 @@ export function Button({
             opacity: pressed ? 0.8 : 1,
             paddingVertical: currentSize.paddingVertical,
             paddingHorizontal: currentSize.paddingHorizontal,
+            minHeight: currentSize.minHeight,
             ...(fullWidth && { width: '100%' }),
           }}
         >

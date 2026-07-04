@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 210" width="320" height="420">
+<title>小文 · 答對鼓勵</title>
+<defs>
+<filter id="cut-xiaowen-correct-answer" x="-25%" y="-25%" width="150%" height="150%">
+<feDropShadow dx="0" dy="2.5" stdDeviation="1.6" flood-color="#5a3f2a" flood-opacity="0.3"></feDropShadow>
+</filter>
+</defs>
+
+  <g filter="url(#cut-xiaowen-correct-answer)"><path d="M52,100 Q46,130 56,148 Q80,155 104,148 Q114,130 108,100 Q80,92 52,100 Z" fill="#46586a"></path></g>
+  <g filter="url(#cut-xiaowen-correct-answer)"><path d="M58,100 Q53,114 59,128 Q80,134 101,128 Q107,114 102,100 Q80,93 58,100 Z" fill="#5a2f28"></path></g>
+  <path d="M58,100 Q53,114 59,128 Q80,134 101,128 Q107,114 102,100" fill="none" stroke="#cba24e" stroke-width="1.6" opacity=".8"></path>
+  <path d="M70,98 Q80,104 90,98 L90,104 Q80,110 70,104 Z" fill="#4a251f"></path>
+  <circle cx="80" cy="108" r="2.6" fill="#cba24e"></circle><circle cx="80" cy="117" r="2.6" fill="#cba24e"></circle><circle cx="80" cy="126" r="2.6" fill="#cba24e"></circle>
+  <g style="transform-box:view-box;transform-origin:54px 106px;transform:rotate(-40deg)">
+    <path d="M54,104 Q42,112 40,130 Q39,138 48,138 Q56,137 56,128 L56,108 Z" fill="#3a4757"></path>
+    <circle cx="46" cy="136" r="7.5" fill="#f2ddb0"></circle>
+  </g>
+  <g style="transform-box:view-box;transform-origin:106px 106px;transform:rotate(-58deg)">
+    <path d="M106,104 Q118,112 120,130 Q121,138 112,138 Q104,137 104,128 L104,108 Z" fill="#46586a"></path>
+    <circle cx="114" cy="136" r="7.5" fill="#f2ddb0"></circle>
+  </g>
+  <g filter="url(#cut-xiaowen-correct-answer)"><circle cx="37" cy="60" r="7.5" fill="#f2ddb0"></circle><circle cx="123" cy="60" r="7.5" fill="#f2ddb0"></circle><circle cx="80" cy="56" r="44" fill="#f2ddb0"></circle></g>
+  <g filter="url(#cut-xiaowen-correct-answer)"><path d="M36,50 Q36,14 80,10 Q124,14 124,50 Q102,34 80,42 Q58,34 36,50 Z" fill="#2f2a25"></path></g>
+  <g filter="url(#cut-xiaowen-correct-answer)"><circle cx="80" cy="14" r="13" fill="#2f2a25"></circle></g>
+  <g filter="url(#cut-xiaowen-correct-answer)"><ellipse cx="80" cy="13" rx="19" ry="9" fill="#dce8d6"></ellipse></g>
+  <ellipse cx="80" cy="13" rx="19" ry="9" fill="none" stroke="#a9c29d" stroke-width="1.3" opacity=".8"></ellipse>
+  <path d="M65,10 Q80,5 95,10" fill="none" stroke="#c3d6ba" stroke-width="1.6" opacity=".7"></path>
+  <rect x="54" y="10.5" width="52" height="3" rx="1.5" fill="#ece0c4"></rect>
+  <circle cx="54" cy="12" r="2.6" fill="#cba24e"></circle><circle cx="106" cy="12" r="2.6" fill="#cba24e"></circle>
+  <circle cx="80" cy="4" r="6" fill="#2f2a25"></circle>
+  <g style="transform-box:fill-box;transform-origin:center;transform:rotate(0deg)"><path d="M52,60 Q59,56 66,60" fill="none" stroke="#2f2a25" stroke-width="2.8" stroke-linecap="round"></path></g>
+  <g style="transform-box:fill-box;transform-origin:center;transform:rotate(0deg)"><path d="M94,60 Q101,56 108,60" fill="none" stroke="#2f2a25" stroke-width="2.8" stroke-linecap="round"></path></g>
+  <g style="opacity:0">
+    <g filter="url(#cut-xiaowen-correct-answer)"><ellipse cx="60" cy="72" rx="8" ry="9.6" fill="#fff8ea"></ellipse><ellipse cx="100" cy="72" rx="8" ry="9.6" fill="#fff8ea"></ellipse></g>
+    <circle cx="61.6" cy="73.4" r="4.8" fill="#2f2a25"></circle><circle cx="101.6" cy="73.4" r="4.8" fill="#2f2a25"></circle>
+    <circle cx="64" cy="70" r="1.8" fill="#fff"></circle><circle cx="104" cy="70" r="1.8" fill="#fff"></circle>
+  </g>
+  <g style="opacity:1" fill="none" stroke="#2f2a25" stroke-width="3.6" stroke-linecap="round"><path d="M50,74 Q60,60 70,74"></path><path d="M90,74 Q100,60 110,74"></path></g>
+  <g style="opacity:0">
+    <ellipse cx="60" cy="74" rx="7.5" ry="9" fill="#fff8ea"></ellipse><ellipse cx="100" cy="74" rx="7.5" ry="9" fill="#fff8ea"></ellipse>
+    <circle cx="60" cy="69" r="5" fill="#2f2a25"></circle><circle cx="100" cy="69" r="5" fill="#2f2a25"></circle>
+    <circle cx="62" cy="66" r="1.7" fill="#fff"></circle><circle cx="102" cy="66" r="1.7" fill="#fff"></circle>
+  </g>
+  <g style="opacity:0">
+    <ellipse cx="60" cy="72" rx="8" ry="9.6" fill="#fff8ea"></ellipse><ellipse cx="100" cy="72" rx="8" ry="9.6" fill="#fff8ea"></ellipse>
+    <circle cx="61" cy="66" r="5.2" fill="#2f2a25"></circle><circle cx="101" cy="66" r="5.2" fill="#2f2a25"></circle>
+    <circle cx="63" cy="63" r="1.6" fill="#fff"></circle><circle cx="103" cy="63" r="1.6" fill="#fff"></circle>
+  </g>
+  <ellipse cx="46" cy="85" rx="7.5" ry="4.4" fill="#d98a76" opacity=".5"></ellipse><ellipse cx="114" cy="85" rx="7.5" ry="4.4" fill="#d98a76" opacity=".5"></ellipse>
+  <path d="M66,92 Q80,101 94,92" fill="none" stroke="#9a5240" stroke-width="2.6" stroke-linecap="round" style="opacity:0"></path>
+  <g style="opacity:1"><ellipse cx="80" cy="95" rx="7" ry="8" fill="#7e3f33"></ellipse><ellipse cx="80" cy="99" rx="4.2" ry="3.2" fill="#cf6a52"></ellipse></g>
+  <path d="M66,98 Q80,90 94,98" fill="none" stroke="#9a5240" stroke-width="2.6" stroke-linecap="round" style="opacity:0"></path>
+  <path d="M30,44 l3,7 7,3 -7,3 -3,7 -3,-7 -7,-3 7,-3 Z" fill="#cba24e" style="opacity:1;transform-box:fill-box;transform-origin:center;"></path>
+  <ellipse cx="118" cy="38" rx="4.4" ry="6" fill="#8fb4d6" style="opacity:0;transform-box:fill-box;transform-origin:center;"></ellipse>
+  <g style="opacity:0" fill="#46586a">
+    <circle cx="122" cy="30" r="3" style="transform-box:fill-box;transform-origin:center;"></circle>
+    <circle cx="132" cy="22" r="2.4" style="transform-box:fill-box;transform-origin:center;"></circle>
+    <circle cx="140" cy="14" r="1.8" style="transform-box:fill-box;transform-origin:center;"></circle>
+  </g>
+  <g style="opacity:0">
+    <rect x="26" y="8" width="5" height="5" fill="#b0392c" style="transform-box:fill-box;"></rect>
+    <rect x="122" y="4" width="5" height="5" fill="#3f7a44" style="transform-box:fill-box;"></rect>
+    <rect x="72" y="0" width="5" height="5" fill="#cba24e" style="transform-box:fill-box;"></rect>
+  </g>
+
+</svg>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>首頁 · 付費用戶 · 箋 Jiān System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700;900&amp;family=Noto+Sans+TC:wght@400;500;700&amp;family=Newsreader:ital,opsz,wght@0,16..72,400;0,16..72,500;0,16..72,600;1,16..72,400&amp;display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f4f0e6;--surface:#fdfbf6;--surface2:#faf5ea;
+    --ink:#2c2722;--ink2:#6f665a;--ink3:#a59b8b;
+    --line:#e7ddc9;--line2:#ded2ba;
+    --verm:#b0392c;--jade:#3f6b54;--amber:#bb8a2e;
+    --verm-tint:color-mix(in srgb,var(--verm) 13%,var(--paper));
+    --verm-bd:color-mix(in srgb,var(--verm) 34%,var(--paper));
+    --jade-tint:color-mix(in srgb,var(--jade) 15%,var(--paper));
+    --jade-bd:color-mix(in srgb,var(--jade) 40%,var(--paper));
+    --amber-tint:color-mix(in srgb,var(--amber) 17%,var(--paper));
+    --amber-bd:color-mix(in srgb,var(--amber) 42%,var(--paper));
+  }
+  *{box-sizing:border-box;}
+  .serif{font-family:'Noto Serif TC',serif;}
+  .sans{font-family:'Noto Sans TC',sans-serif;}
+  .num{font-family:'Newsreader',serif;}
+  .fl{font-family:'Noto Sans TC',sans-serif;font-weight:500;font-size:12px;letter-spacing:.14em;color:#a59b8b;text-transform:uppercase;margin:0 0 12px 6px;}
+  .page{width:372px;min-height:760px;border-radius:38px;overflow:hidden;border:1px solid #e7ddc9;box-shadow:0 22px 55px -14px rgba(44,39,34,.22);background:var(--paper);display:flex;flex-direction:column;}
+  .sb{display:flex;justify-content:space-between;align-items:center;padding:15px 28px 4px;font-family:'Newsreader',serif;font-weight:600;font-size:14px;color:var(--ink);flex:none;}
+  .batt{width:17px;height:9px;border:1.4px solid var(--ink);border-radius:2px;position:relative;display:inline-block;}
+  .batt::after{content:'';position:absolute;right:-3px;top:2.5px;width:2px;height:4px;background:var(--ink);border-radius:0 1px 1px 0;}
+  .navbar{background:var(--surface);border-top:1px solid var(--line);padding:9px 22px 22px;display:flex;justify-content:space-between;margin-top:auto;flex:none;}
+  .foot{margin-top:auto;padding:16px 24px 26px;flex:none;}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--ink3);}
+  .tab span{font-family:'Noto Sans TC',sans-serif;font-size:10px;}
+  .tab.on{color:var(--verm);}
+  .tab.on span{font-weight:500;}
+  .chev{color:var(--verm);font-size:18px;font-family:'Noto Serif TC',serif;}
+  .primary{font-family:'Noto Serif TC',serif;text-align:center;background:var(--verm);color:#fff;padding:13px;border-radius:6px;font-size:16px;}
+  .inkbtn{font-family:'Noto Serif TC',serif;text-align:center;background:var(--ink);color:var(--paper);padding:13px;border-radius:6px;font-size:16px;}
+  .seal{font-family:'Noto Serif TC',serif;display:flex;align-items:center;justify-content:center;border:1.4px solid var(--verm);color:var(--verm);border-radius:5px;font-weight:700;flex:none;}
+  .ptrack{height:4px;background:var(--line);border-radius:2px;overflow:hidden;}
+  .pfill{height:100%;background:var(--jade);border-radius:2px;}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:11px;}
+  .typebadge{display:inline-flex;align-items:center;font-family:'Noto Sans TC',sans-serif;font-size:10px;letter-spacing:.06em;border-radius:3px;padding:3px 8px;font-weight:500;}
+  .lock{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--amber-bd);background:var(--amber-tint);border-radius:3px;padding:2px 7px;font-family:'Noto Sans TC',sans-serif;font-size:10px;color:#8a6420;font-weight:600;}
+  .seclab{font-family:'Noto Sans TC',sans-serif;font-size:11px;letter-spacing:.2em;color:var(--ink3);border-bottom:1px solid var(--line);padding-bottom:8px;}
+  .seg{display:flex;background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:3px;}
+  .seg-item{flex:1;text-align:center;padding:8px 2px;font-size:11px;font-family:'Noto Serif TC',serif;color:var(--ink2);}
+  .seg-on{background:var(--verm);color:#fff;border-radius:6px;}
+  .chk-done{width:22px;height:22px;border-radius:50%;background:var(--jade);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex:none;}
+  .chk-next{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--verm);display:flex;align-items:center;justify-content:center;flex:none;}
+  .chk-todo{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line2);flex:none;}
+  .vtag{font-family:'Noto Serif TC',serif;writing-mode:vertical-rl;font-size:11px;padding:5px 3px;letter-spacing:.12em;border-radius:3px;flex:none;}
+  @keyframes shimmer{0%{background-position:-120px 0;}100%{background-position:120px 0;}}
+  .skel{background:linear-gradient(90deg,var(--line) 25%,var(--line2) 50%,var(--line) 75%);background-size:240px 100%;animation:shimmer 1.4s ease-in-out infinite;flex:none;}
+</style>
+</head>
+<body style="margin:0;background:#efe8d6;min-height:100vh;">
+<div style="margin:36px;display:inline-block;">
+  <div class="fl" data-drags-parent="1">首頁 · 付費用戶</div>
+  <div class="page">
+    <div class="sb"><span>9:41</span><span style="display:flex;gap:6px;align-items:center;"><span class="serif" style="font-size:11px;">文</span><span class="batt"></span></span></div>
+    <div style="padding:14px 26px 0;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;align-items:center;gap:10px;"><img src="../uploads/logo-mark.png" alt="文言教室" style="width:34px;height:34px;border-radius:8px;flex:none;" data-om-raster="1"><div class="serif" style="font-size:16px;font-weight:700;color:var(--ink);">文言教室</div></div>
+        <div style="width:33px;height:33px;border:1.5px solid var(--amber);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--amber);background:var(--amber-tint);" title="付費會員"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="3.3"></circle><path d="M5.5 19c0-3.6 2.9-5.6 6.5-5.6s6.5 2 6.5 5.6"></path></svg></div>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:9px;margin-top:24px;">
+        <span class="num" style="font-size:52px;line-height:.85;font-weight:600;color:var(--verm);">312</span>
+        <div style="padding-bottom:5px;"><div class="sans" style="font-size:11px;letter-spacing:.14em;color:var(--ink3);">天後文憑試</div><div class="serif" style="font-size:12px;color:var(--jade);margin-top:3px;">已連續練習 6 天 🔥</div></div>
+        <div style="margin-left:auto;"><svg viewBox="0 0 160 210" style="width:60px;overflow:visible;flex:none;"><defs><filter id="cutHap2" x="-25%" y="-25%" width="150%" height="150%"><feDropShadow dx="0" dy="2.5" stdDeviation="1.6" flood-color="#5a3f2a" flood-opacity="0.3"></feDropShadow></filter></defs>  <g filter="url(#cutHap2)"><path d="M52,100 Q46,130 56,148 Q80,155 104,148 Q114,130 108,100 Q80,92 52,100 Z" fill="#46586a"></path></g>
+  <g style="transform-box:view-box;transform-origin:54px 106px;transform:rotate(-40deg)">
+    <path d="M54,104 Q42,112 40,130 Q39,138 48,138 Q56,137 56,128 L56,108 Z" fill="#3a4757"></path>
+    <circle cx="46" cy="136" r="7.5" fill="#f2ddb0"></circle>
+  </g>
+  <g style="transform-box:view-box;transform-origin:106px 106px;transform:rotate(-58deg)">
+    <path d="M106,104 Q118,112 120,130 Q121,138 112,138 Q104,137 104,128 L104,108 Z" fill="#46586a"></path>
+    <circle cx="114" cy="136" r="7.5" fill="#f2ddb0"></circle>
+  </g>
+  <g filter="url(#cutHap2)"><path d="M58,100 Q53,114 59,128 Q80,134 101,128 Q107,114 102,100 Q80,93 58,100 Z" fill="#5a2f28"></path></g>
+  <path d="M58,100 Q53,114 59,128 Q80,134 101,128 Q107,114 102,100" fill="none" stroke="#cba24e" stroke-width="1.6" opacity=".8"></path>
+  <path d="M70,98 Q80,104 90,98 L90,104 Q80,110 70,104 Z" fill="#4a251f"></path>
+  <circle cx="80" cy="108" r="2.6" fill="#cba24e"></circle><circle cx="80" cy="117" r="2.6" fill="#cba24e"></circle><circle cx="80" cy="126" r="2.6" fill="#cba24e"></circle>
+  <g filter="url(#cutHap2)"><circle cx="37" cy="60" r="7.5" fill="#f2ddb0"></circle><circle cx="123" cy="60" r="7.5" fill="#f2ddb0"></circle><circle cx="80" cy="56" r="44" fill="#f2ddb0"></circle></g>
+  <g filter="url(#cutHap2)"><path d="M36,50 Q36,14 80,10 Q124,14 124,50 Q102,34 80,42 Q58,34 36,50 Z" fill="#2f2a25"></path></g>
+  <g filter="url(#cutHap2)"><circle cx="80" cy="14" r="13" fill="#2f2a25"></circle></g>
+  <g filter="url(#cutHap2)"><ellipse cx="80" cy="13" rx="19" ry="9" fill="#dce8d6"></ellipse></g>
+  <ellipse cx="80" cy="13" rx="19" ry="9" fill="none" stroke="#a9c29d" stroke-width="1.3" opacity=".8"></ellipse>
+  <path d="M65,10 Q80,5 95,10" fill="none" stroke="#c3d6ba" stroke-width="1.6" opacity=".7"></path>
+  <rect x="54" y="10.5" width="52" height="3" rx="1.5" fill="#ece0c4"></rect>
+  <circle cx="54" cy="12" r="2.6" fill="#cba24e"></circle><circle cx="106" cy="12" r="2.6" fill="#cba24e"></circle>
+  <circle cx="80" cy="4" r="6" fill="#2f2a25"></circle>
+  <g style="transform-box:fill-box;transform-origin:center;transform:rotate(0deg)"><path d="M52,60 Q59,56 66,60" fill="none" stroke="#2f2a25" stroke-width="2.8" stroke-linecap="round"></path></g>
+  <g style="transform-box:fill-box;transform-origin:center;transform:rotate(0deg)"><path d="M94,60 Q101,56 108,60" fill="none" stroke="#2f2a25" stroke-width="2.8" stroke-linecap="round"></path></g>
+  <g style="opacity:0">
+    <g filter="url(#cutHap2)"><ellipse cx="60" cy="72" rx="8" ry="9.6" fill="#fff8ea"></ellipse><ellipse cx="100" cy="72" rx="8" ry="9.6" fill="#fff8ea"></ellipse></g>
+    <circle cx="61.6" cy="73.4" r="4.8" fill="#2f2a25"></circle><circle cx="101.6" cy="73.4" r="4.8" fill="#2f2a25"></circle>
+    <circle cx="64" cy="70" r="1.8" fill="#fff"></circle><circle cx="104" cy="70" r="1.8" fill="#fff"></circle>
+  </g>
+  <g style="opacity:1" fill="none" stroke="#2f2a25" stroke-width="3.6" stroke-linecap="round"><path d="M50,74 Q60,60 70,74"></path><path d="M90,74 Q100,60 110,74"></path></g>
+  <g style="opacity:0">
+    <ellipse cx="60" cy="74" rx="7.5" ry="9" fill="#fff8ea"></ellipse><ellipse cx="100" cy="74" rx="7.5" ry="9" fill="#fff8ea"></ellipse>
+    <circle cx="60" cy="69" r="5" fill="#2f2a25"></circle><circle cx="100" cy="69" r="5" fill="#2f2a25"></circle>
+    <circle cx="62" cy="66" r="1.7" fill="#fff"></circle><circle cx="102" cy="66" r="1.7" fill="#fff"></circle>
+  </g>
+  <g style="opacity:0">
+    <ellipse cx="60" cy="72" rx="8" ry="9.6" fill="#fff8ea"></ellipse><ellipse cx="100" cy="72" rx="8" ry="9.6" fill="#fff8ea"></ellipse>
+    <circle cx="61" cy="66" r="5.2" fill="#2f2a25"></circle><circle cx="101" cy="66" r="5.2" fill="#2f2a25"></circle>
+    <circle cx="63" cy="63" r="1.6" fill="#fff"></circle><circle cx="103" cy="63" r="1.6" fill="#fff"></circle>
+  </g>
+  <ellipse cx="46" cy="85" rx="7.5" ry="4.4" fill="#d98a76" opacity=".5"></ellipse><ellipse cx="114" cy="85" rx="7.5" ry="4.4" fill="#d98a76" opacity=".5"></ellipse>
+  <path d="M66,92 Q80,101 94,92" fill="none" stroke="#9a5240" stroke-width="2.6" stroke-linecap="round" style="opacity:0"></path>
+  <g style="opacity:1"><ellipse cx="80" cy="95" rx="7" ry="8" fill="#7e3f33"></ellipse><ellipse cx="80" cy="99" rx="4.2" ry="3.2" fill="#cf6a52"></ellipse></g>
+  <path d="M66,98 Q80,90 94,98" fill="none" stroke="#9a5240" stroke-width="2.6" stroke-linecap="round" style="opacity:0"></path>
+  <path d="M30,44 l3,7 7,3 -7,3 -3,7 -3,-7 -7,-3 7,-3 Z" fill="#cba24e" style="opacity:1;transform-box:fill-box;transform-origin:center;animation:sparklePulse 1.3s ease-in-out infinite;"></path>
+  <ellipse cx="118" cy="38" rx="4.4" ry="6" fill="#8fb4d6" style="opacity:0;transform-box:fill-box;transform-origin:center;animation:sweatDrip 1.6s ease-in infinite;"></ellipse>
+  <g style="opacity:0" fill="#46586a">
+    <circle cx="122" cy="30" r="3" style="transform-box:fill-box;transform-origin:center;animation:dotPulse 1.2s ease-in-out infinite;"></circle>
+    <circle cx="132" cy="22" r="2.4" style="transform-box:fill-box;transform-origin:center;animation:dotPulse 1.2s .15s ease-in-out infinite;"></circle>
+    <circle cx="140" cy="14" r="1.8" style="transform-box:fill-box;transform-origin:center;animation:dotPulse 1.2s .3s ease-in-out infinite;"></circle>
+  </g>
+  <g style="opacity:0">
+    <rect x="26" y="8" width="5" height="5" fill="#b0392c" style="transform-box:fill-box;animation:confettiFall 1.1s ease-in infinite;"></rect>
+    <rect x="122" y="4" width="5" height="5" fill="#3f7a44" style="transform-box:fill-box;animation:confettiFall 1.1s .2s ease-in infinite;"></rect>
+    <rect x="72" y="0" width="5" height="5" fill="#cba24e" style="transform-box:fill-box;animation:confettiFall 1.1s .4s ease-in infinite;"></rect>
+  </g></svg></div>
+      </div>
+      <div style="margin-top:26px;padding-top:22px;border-top:2px solid var(--ink);">
+        <div class="sans" style="font-size:11px;letter-spacing:.2em;color:var(--ink3);">接 下 來 · 今日第 2／3 項</div>
+        <div class="serif" style="font-size:31px;line-height:1.2;font-weight:700;color:var(--ink);margin-top:11px;">單篇文章練習</div>
+        <div class="serif" style="font-size:13px;color:var(--ink2);margin-top:7px;">DSE 甲部 · 隨機 22 題 · 約 10 分鐘</div>
+        <div class="primary" style="padding:14px;font-size:16px;margin-top:18px;">繼續課業　→</div>
+        <div style="display:flex;gap:16px;margin-top:14px;">
+          <span class="serif" style="font-size:12px;color:var(--ink3);"><span style="color:var(--jade);">✓</span> 重溫錯題</span>
+          <span class="serif" style="font-size:12px;color:var(--ink);font-weight:600;">● 單篇練習</span>
+          <span class="serif" style="font-size:12px;color:var(--ink3);">○ 針對性訓練</span>
+        </div>
+      </div>
+      <div class="sans" style="font-size:11px;letter-spacing:.2em;color:var(--ink3);margin:30px 0 4px;">繼 續 練 習</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;padding:15px 0;border-bottom:1px solid var(--line);">
+        <div><div class="serif" style="font-size:20px;font-weight:600;color:var(--ink);">愛蓮說</div><div class="serif" style="font-size:12px;color:var(--ink3);margin-top:3px;">周敦頤 · DSE 甲部</div></div>
+        <div style="text-align:right;"><div class="num" style="font-size:15px;color:var(--jade);">28<span style="color:var(--ink3);font-size:12px;">/50</span></div><div class="sans" style="font-size:10px;color:var(--ink3);letter-spacing:.08em;">已見題數</div></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;padding:15px 0;border-bottom:1px solid var(--line);">
+        <div><div style="display:flex;align-items:center;gap:8px;"><span class="serif" style="font-size:20px;font-weight:600;color:var(--ink);">逍遙遊（節錄）</span><span class="typebadge" style="background:var(--jade-tint);border:1px solid var(--jade-bd);color:var(--jade);">已解鎖</span></div><div class="serif" style="font-size:12px;color:var(--ink3);margin-top:3px;">莊子 · 48+ 題</div></div>
+        <div style="text-align:right;"><div class="num" style="font-size:15px;color:var(--jade);">6<span style="color:var(--ink3);font-size:12px;">/48</span></div><div class="sans" style="font-size:10px;color:var(--ink3);letter-spacing:.08em;">已見題數</div></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;padding:15px 0;border-bottom:1px solid var(--line);">
+        <div><div style="display:flex;align-items:center;gap:8px;"><span class="serif" style="font-size:20px;font-weight:600;color:var(--ink);">木蘭辭</span><span class="typebadge" style="background:var(--verm);color:#fff;letter-spacing:.1em;">章節挑戰</span></div><div class="serif" style="font-size:12px;color:var(--ink3);margin-top:3px;">樂府詩集 · 40+ 題</div></div>
+        <span class="serif" style="font-size:13px;color:var(--verm);flex:none;">接受挑戰 →</span>
+      </div>
+      <div style="margin-top:26px;">
+        <div class="sans" style="font-size:11px;letter-spacing:.2em;color:var(--ink3);">能 力 分 析</div>
+        <div style="display:flex;align-items:baseline;gap:10px;margin-top:11px;">
+          <span class="serif" style="font-size:22px;font-weight:700;color:var(--ink);">最弱 ·</span>
+          <span class="serif" style="font-size:22px;font-weight:700;color:var(--verm);">一詞多義</span>
+          <span class="num" style="font-size:18px;color:var(--amber);margin-left:auto;">58%</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;">
+          <span class="serif" style="font-size:13px;color:var(--ink2);">平均準確 82% · 累計練習 19 次</span>
+          <span class="serif" style="font-size:13px;color:var(--verm);">詳細報告 →</span>
+        </div>
+      </div>
+      <div style="height:22px;"></div>
+    </div>
+    <div class="navbar">
+      <div class="tab on"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 11l8-6 8 6"></path><path d="M6 10v9h12v-9"></path></svg><span>首頁</span></div>
+      <div class="tab"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="4" width="14" height="16" rx="1.5"></rect><line x1="9" y1="9" x2="15" y2="9"></line><line x1="9" y1="13" x2="15" y2="13"></line></svg><span>篇章</span></div>
+      <div class="tab"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="7"></circle><circle cx="12" cy="12" r="2.4"></circle></svg><span>操練</span></div>
+      <div class="tab"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="3.4"></circle><path d="M5.5 20c0-4 3-6 6.5-6s6.5 2 6.5 6"></path></svg><span>帳戶</span></div>
+    </div>
+  </div>
+</div>
+<!-- ═══════════════════════════════════════════════════
+     ROW · 原文檢視器 MODULE (multi-article)
+     ═══════════════════════════════════════════════════ -->
+
+<!-- 原文檢視器 · 多篇文章 -->
+
+</body>
+</html>

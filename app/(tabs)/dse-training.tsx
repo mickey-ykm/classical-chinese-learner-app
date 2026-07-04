@@ -7,6 +7,8 @@ import { useAuth } from "@/hooks/useAuth"
 import { saveDSETrainingSession } from "@/lib/exerciseSession"
 import { getArticle } from "@/lib/data"
 import type { Question, Article, QuizAnswer } from "@/lib/types"
+import { Button, JianColors, JianTypography, JianRadius, getSerifFont } from "@/components/jian"
+import { Logo } from "@/components/Logo"
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true)
@@ -29,23 +31,75 @@ function ArticleAccordion({ article, index }: { article: SelectedArticle; index:
   const segments = article.article.segments ?? []
   const footnotes = article.article.footnotes ?? []
 
+  const numberLabels = ['一', '二', '三', '四', '五']
+
   return (
-    <View className="bg-white rounded-2xl border border-slate-200 mb-3 overflow-hidden shadow-sm">
-      <Pressable onPress={toggle} className="flex-row items-center px-5 py-4 active:opacity-70">
-        <View className="bg-amber-100 rounded-lg px-2.5 py-1 mr-3">
-          <Text className="text-amber-700 font-bold text-sm">{index + 1}</Text>
-        </View>
-        <Text className="text-base font-semibold text-slate-800 flex-1 leading-relaxed" style={{ fontFamily: "Georgia" }}>
-          {article.title}
-        </Text>
-        <Text className="text-slate-400 text-base ml-2">{expanded ? "▲" : "▼"}</Text>
+    <View style={{
+      backgroundColor: JianColors.surface,
+      borderRadius: JianRadius.card,
+      borderWidth: 1,
+      borderColor: JianColors.line,
+      marginBottom: 10,
+      overflow: 'hidden'
+    }}>
+      <Pressable onPress={toggle} hitSlop={8}>
+        {({ pressed }) => (
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingHorizontal: 15,
+            paddingVertical: 14,
+            backgroundColor: expanded ? JianColors.surface2 : 'transparent',
+            borderBottomWidth: expanded ? 1 : 0,
+            borderBottomColor: JianColors.line,
+            opacity: pressed ? 0.7 : 1
+          }}>
+            <View style={{
+              width: 28,
+              height: 28,
+              borderRadius: 5,
+              borderWidth: 1.4,
+              borderColor: JianColors.vermilion,
+              backgroundColor: JianColors.vermilionTint,
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: 12
+            }}>
+              <Text style={{
+                fontFamily: getSerifFont('700'),
+                fontSize: 15,
+                color: JianColors.vermilion
+              }}>
+                {numberLabels[index] || (index + 1)}
+              </Text>
+            </View>
+            <Text style={{
+              fontFamily: getSerifFont('600'),
+              fontSize: 16,
+              lineHeight: 24,
+              color: JianColors.ink,
+              flex: 1
+            }}>
+              {article.title}
+            </Text>
+            <Text style={{ fontSize: 18, color: expanded ? JianColors.vermilion : JianColors.ink3 }}>
+              {expanded ? '▴' : '▾'}
+            </Text>
+          </View>
+        )}
       </Pressable>
       {expanded && (
-        <View className="border-t border-slate-100 px-5 py-4 bg-amber-50">
-          <Text className="text-base text-slate-700 leading-9 tracking-wide mb-4" style={{ fontFamily: "Georgia" }}>
+        <View style={{ paddingHorizontal: 16, paddingVertical: 13 }}>
+          <Text style={{
+            fontFamily: getSerifFont('400'),
+            fontSize: 14,
+            lineHeight: 28,
+            color: JianColors.ink,
+            textAlign: 'justify'
+          }}>
             {segments.map((seg, i) =>
               seg.footnoteId ? (
-                <Text key={i} className="text-amber-600 font-bold text-sm">
+                <Text key={i} style={{ color: JianColors.vermilion, fontWeight: '700', fontSize: 10 }}>
                   {seg.text}
                 </Text>
               ) : (
@@ -54,20 +108,46 @@ function ArticleAccordion({ article, index }: { article: SelectedArticle; index:
             )}
           </Text>
           {segments.length === 0 && (
-            <Text className="text-sm text-slate-400 italic">（未有文章內容）</Text>
+            <Text style={{
+              fontFamily: JianTypography.serif,
+              fontSize: 13,
+              color: JianColors.ink3,
+              fontStyle: 'italic'
+            }}>
+              （未有文章內容）
+            </Text>
           )}
 
           {footnotes.length > 0 && (
-            <View className="mt-6 gap-2">
-              <Text className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
-                註釋
+            <View style={{ marginTop: 12 }}>
+              <Text style={{
+                fontFamily: JianTypography.sans,
+                fontSize: 10,
+                letterSpacing: 2,
+                color: JianColors.ink3,
+                marginBottom: 8
+              }}>
+                註 釋
               </Text>
               {footnotes.map((fn) => (
-                <View key={fn.id} className="flex-row gap-2">
-                  <Text className="text-amber-600 font-bold text-sm min-w-[32px]">{fn.marker}</Text>
-                  <View className="flex-1">
-                    <Text className="text-sm font-semibold text-slate-700">{fn.term}</Text>
-                    <Text className="text-xs text-slate-500 leading-relaxed">{fn.explanation}</Text>
+                <View key={fn.id} style={{ flexDirection: 'row', gap: 9, marginBottom: 6 }}>
+                  <Text style={{
+                    fontFamily: getSerifFont('700'),
+                    fontSize: 13,
+                    color: JianColors.vermilion,
+                    minWidth: 22
+                  }}>
+                    {fn.marker}
+                  </Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{
+                      fontFamily: getSerifFont('400'),
+                      fontSize: 13,
+                      lineHeight: 20,
+                      color: JianColors.ink2
+                    }}>
+                      <Text style={{ color: JianColors.ink, fontWeight: '700' }}>{fn.term}</Text> — {fn.explanation}
+                    </Text>
                   </View>
                 </View>
               ))}
@@ -172,67 +252,171 @@ export default function DSETrainingTab() {
   // Mode selection screen
   if (mode === "select") {
     return (
-      <SafeAreaView className="flex-1 bg-slate-50">
-        <View className="px-5 pt-4 pb-2">
-          <Text className="text-xl font-bold text-slate-800" style={{ fontFamily: "Georgia" }}>DSE 操練</Text>
+      <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper }}>
+        <View style={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 8 }}>
+          <Text style={{
+            fontFamily: getSerifFont('700'),
+            fontSize: 20,
+            lineHeight: 28,
+            color: JianColors.ink
+          }}>
+            DSE 操練
+          </Text>
         </View>
-        <ScrollView className="flex-1 px-5" contentContainerStyle={{ paddingBottom: 32 }}>
-          <Text className="text-sm text-slate-500 mt-2 mb-6 leading-5">選擇練習模式開始操練。</Text>
+        <ScrollView style={{ flex: 1, paddingHorizontal: 24 }} contentContainerStyle={{ paddingBottom: 32 }}>
+          <Text style={{
+            fontFamily: JianTypography.serif,
+            fontSize: 13,
+            lineHeight: 20,
+            color: JianColors.ink2,
+            marginTop: 8,
+            marginBottom: 24
+          }}>
+            選擇練習模式開始操練。
+          </Text>
 
           {/* DSE Mock */}
-          <Pressable
-            onPress={() => setMode("mock")}
-            className="bg-white border border-slate-200 rounded-2xl px-5 py-5 mb-4 shadow-sm active:opacity-80"
-          >
-            <View className="flex-row items-center mb-2">
-              <Text className="text-2xl mr-3">📝</Text>
-              <Text className="text-base font-bold text-slate-800" style={{ fontFamily: "Georgia" }}>DSE 模擬考題</Text>
-            </View>
-            <Text className="text-sm text-slate-500 leading-5">
-              隨機抽選 2–3 篇 DSE 核心篇章，模擬考試作答。
-            </Text>
+          <Pressable onPress={() => setMode("mock")} hitSlop={8}>
+            {({ pressed }) => (
+              <View style={{
+                backgroundColor: JianColors.surface,
+                borderWidth: 1,
+                borderColor: JianColors.line,
+                borderRadius: JianRadius.card,
+                paddingHorizontal: 20,
+                paddingVertical: 20,
+                marginBottom: 16,
+                opacity: pressed ? 0.7 : 1
+              }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                  <Text style={{ fontSize: 24, marginRight: 12 }}>📝</Text>
+                  <Text style={{
+                    fontFamily: getSerifFont('700'),
+                    fontSize: 18,
+                    lineHeight: 26,
+                    color: JianColors.ink
+                  }}>
+                    DSE 模擬考題
+                  </Text>
+                </View>
+                <Text style={{
+                  fontFamily: JianTypography.serif,
+                  fontSize: 14,
+                  lineHeight: 22,
+                  color: JianColors.ink2
+                }}>
+                  隨機抽選 2–3 篇 DSE 核心篇章，模擬考試作答。
+                </Text>
+              </View>
+            )}
           </Pressable>
 
           {/* Article-based Revision */}
-          <Pressable
-            onPress={() => router.push("/revision-article")}
-            className="bg-white border border-slate-200 rounded-2xl px-5 py-5 mb-4 shadow-sm active:opacity-80"
-          >
-            <View className="flex-row items-center mb-2">
-              <Text className="text-2xl mr-3">📚</Text>
-              <Text className="text-base font-bold text-slate-800" style={{ fontFamily: "Georgia" }}>文章錯題重溫</Text>
-            </View>
-            <Text className="text-sm text-slate-500 leading-5">
-              按文章分類，針對性重溫各篇章的錯題。
-            </Text>
+          <Pressable onPress={() => router.push("/revision-article")} hitSlop={8}>
+            {({ pressed }) => (
+              <View style={{
+                backgroundColor: JianColors.surface,
+                borderWidth: 1,
+                borderColor: JianColors.line,
+                borderRadius: JianRadius.card,
+                paddingHorizontal: 20,
+                paddingVertical: 20,
+                marginBottom: 16,
+                opacity: pressed ? 0.7 : 1
+              }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                  <Text style={{ fontSize: 24, marginRight: 12 }}>📚</Text>
+                  <Text style={{
+                    fontFamily: getSerifFont('700'),
+                    fontSize: 18,
+                    lineHeight: 26,
+                    color: JianColors.ink
+                  }}>
+                    文章錯題重溫
+                  </Text>
+                </View>
+                <Text style={{
+                  fontFamily: JianTypography.serif,
+                  fontSize: 14,
+                  lineHeight: 22,
+                  color: JianColors.ink2
+                }}>
+                  按文章分類，針對性重溫各篇章的錯題。
+                </Text>
+              </View>
+            )}
           </Pressable>
 
-          {/* Part-based Revision (focus on Parts 7-8) */}
-          <Pressable
-            onPress={() => router.push("/revision-part")}
-            className="bg-white border border-slate-200 rounded-2xl px-5 py-5 mb-4 shadow-sm active:opacity-80"
-          >
-            <View className="flex-row items-center mb-2">
-              <Text className="text-2xl mr-3">🎯</Text>
-              <Text className="text-base font-bold text-slate-800" style={{ fontFamily: "Georgia" }}>文言文語基能力錯題重溫</Text>
-            </View>
-            <Text className="text-sm text-slate-500 leading-5">
-              按部分分類，集中練習特定語文基礎能力。
-            </Text>
+          {/* Part-based Revision */}
+          <Pressable onPress={() => router.push("/revision-part")} hitSlop={8}>
+            {({ pressed }) => (
+              <View style={{
+                backgroundColor: JianColors.surface,
+                borderWidth: 1,
+                borderColor: JianColors.line,
+                borderRadius: JianRadius.card,
+                paddingHorizontal: 20,
+                paddingVertical: 20,
+                marginBottom: 16,
+                opacity: pressed ? 0.7 : 1
+              }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                  <Text style={{ fontSize: 24, marginRight: 12 }}>🎯</Text>
+                  <Text style={{
+                    fontFamily: getSerifFont('700'),
+                    fontSize: 18,
+                    lineHeight: 26,
+                    color: JianColors.ink
+                  }}>
+                    文言文語基能力錯題重溫
+                  </Text>
+                </View>
+                <Text style={{
+                  fontFamily: JianTypography.serif,
+                  fontSize: 14,
+                  lineHeight: 22,
+                  color: JianColors.ink2
+                }}>
+                  按部分分類，集中練習特定語文基礎能力。
+                </Text>
+              </View>
+            )}
           </Pressable>
 
-          {/* Weight Training (針對性難題訓練) */}
-          <Pressable
-            onPress={() => router.push("/weight-training")}
-            className="bg-white border border-slate-200 rounded-2xl px-5 py-5 mb-4 shadow-sm active:opacity-80"
-          >
-            <View className="flex-row items-center mb-2">
-              <Text className="text-2xl mr-3">🎯</Text>
-              <Text className="text-base font-bold text-slate-800" style={{ fontFamily: "Georgia" }}>針對性難題訓練</Text>
-            </View>
-            <Text className="text-sm text-slate-500 leading-5">
-              跨文章一詞多義 & 文言句式專項訓練 (Part 7 & 8)
-            </Text>
+          {/* Weight Training */}
+          <Pressable onPress={() => router.push("/weight-training")} hitSlop={8}>
+            {({ pressed }) => (
+              <View style={{
+                backgroundColor: JianColors.surface,
+                borderWidth: 1,
+                borderColor: JianColors.line,
+                borderRadius: JianRadius.card,
+                paddingHorizontal: 20,
+                paddingVertical: 20,
+                marginBottom: 16,
+                opacity: pressed ? 0.7 : 1
+              }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                  <Text style={{ fontSize: 24, marginRight: 12 }}>💪</Text>
+                  <Text style={{
+                    fontFamily: getSerifFont('700'),
+                    fontSize: 18,
+                    lineHeight: 26,
+                    color: JianColors.ink
+                  }}>
+                    針對性難題訓練
+                  </Text>
+                </View>
+                <Text style={{
+                  fontFamily: JianTypography.serif,
+                  fontSize: 14,
+                  lineHeight: 22,
+                  color: JianColors.ink2
+                }}>
+                  跨文章一詞多義 & 文言句式專項訓練 (Part 7 & 8)
+                </Text>
+              </View>
+            )}
           </Pressable>
         </ScrollView>
       </SafeAreaView>
@@ -242,20 +426,37 @@ export default function DSETrainingTab() {
   // DSE Mock flow
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-slate-50 items-center justify-center">
-        <ActivityIndicator size="large" color="#f59e0b" />
-        <Text className="text-slate-500 mt-4 text-sm">載入 DSE 練習...</Text>
+      <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color={JianColors.amber} />
+        <Text style={{
+          fontFamily: JianTypography.serif,
+          fontSize: 13,
+          lineHeight: 20,
+          color: JianColors.ink2,
+          marginTop: 16
+        }}>
+          載入 DSE 練習...
+        </Text>
       </SafeAreaView>
     )
   }
 
   if (error) {
     return (
-      <SafeAreaView className="flex-1 bg-slate-50 items-center justify-center px-6">
-        <Text className="text-slate-700 text-base text-center mb-6">{error}</Text>
-        <Pressable onPress={loadDSEQuestions} className="bg-amber-500 px-6 py-3 rounded-xl active:opacity-80">
-          <Text className="text-white font-semibold">重試</Text>
-        </Pressable>
+      <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
+        <Text style={{
+          fontFamily: getSerifFont('400'),
+          fontSize: 16,
+          lineHeight: 26,
+          color: JianColors.ink,
+          textAlign: 'center',
+          marginBottom: 24
+        }}>
+          {error}
+        </Text>
+        <Button variant="primary" size="medium" onPress={loadDSEQuestions}>
+          重試
+        </Button>
       </SafeAreaView>
     )
   }
@@ -265,59 +466,101 @@ export default function DSETrainingTab() {
     const articles = selectedArticles.map(a => ({ id: a.id, title: a.title }))
 
     return (
-      <SafeAreaView className="flex-1 bg-slate-50">
-        <View className="px-5 pt-4 pb-2 flex-row items-center">
-          <Pressable onPress={() => setPhase("lobby")} hitSlop={12} className="mr-3">
-            <Text className="text-amber-600 font-semibold text-sm">← 返回</Text>
-          </Pressable>
-          <Text className="text-base font-bold text-slate-800" style={{ fontFamily: "Georgia" }}>
-            DSE 模擬考題
-          </Text>
-        </View>
-        <View className="flex-1 px-5 pt-2">
-          <QuizShell
-            questions={questions}
-            articles={articles}
-            exerciseType="dse-training"
-            partTitles={{ 1: "DSE 模擬考題" }}
-            onSave={handleSave}
-          />
-        </View>
+      <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper }}>
+        <QuizShell
+          questions={questions}
+          articles={articles}
+          exerciseType="dse-training"
+          partTitles={{ 1: "DSE 模擬考題" }}
+          hideHeader={false}
+          hideArticleButton={true}
+          onSave={handleSave}
+          onExit={() => setPhase("lobby")}
+        />
       </SafeAreaView>
     )
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-50">
-      <View className="px-5 pt-4 pb-2 flex-row items-center">
-        <Pressable onPress={() => setMode("select")} hitSlop={12} className="mr-3">
-          <Text className="text-amber-600 font-semibold text-sm">← 返回</Text>
-        </Pressable>
-        <Text className="text-xl font-bold text-slate-800" style={{ fontFamily: "Georgia" }}>DSE 模擬考題</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper }}>
+      <View style={{ paddingHorizontal: 24, paddingTop: 10 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <Pressable onPress={() => setMode("select")} hitSlop={12}>
+              {({ pressed }) => (
+                <Text style={{
+                  fontFamily: getSerifFont('400'),
+                  fontSize: 14,
+                  lineHeight: 20,
+                  color: JianColors.vermilion,
+                  opacity: pressed ? 0.7 : 1
+                }}>
+                  ‹ 返回
+                </Text>
+              )}
+            </Pressable>
+            <Text style={{
+              fontFamily: getSerifFont('700'),
+              fontSize: 18,
+              lineHeight: 26,
+              color: JianColors.ink
+            }}>
+              DSE 模擬考題
+            </Text>
+          </View>
+          <Logo size={52} />
+        </View>
       </View>
-      <ScrollView className="flex-1 px-5" contentContainerStyle={{ paddingBottom: 32 }}>
-        <View className="mt-2 mb-5">
-          <Text className="text-sm text-slate-500 leading-5">
-            系統已為你隨機抽選以下 {selectedArticles.length} 篇 DSE 核心篇章。點擊篇章可展開閱讀，再開始答題。
+      <ScrollView style={{ flex: 1, paddingHorizontal: 24 }} contentContainerStyle={{ paddingBottom: 32 }}>
+        <View style={{ marginTop: 12, marginBottom: 16 }}>
+          <Text style={{
+            fontFamily: getSerifFont('400'),
+            fontSize: 13,
+            lineHeight: 22,
+            color: JianColors.ink2
+          }}>
+            系統已隨機抽選以下 {selectedArticles.length} 篇核心篇章，點擊展開閱讀後開始答題。
           </Text>
         </View>
         {selectedArticles.map((article, index) => (
           <ArticleAccordion key={article.id} article={article} index={index} />
         ))}
-        <View className="bg-slate-100 rounded-xl px-4 py-3 mb-6">
-          <Text className="text-sm text-slate-600 text-center">
-            共 <Text className="font-bold text-slate-800">{questions.length}</Text> 題・
-            滿分 <Text className="font-bold text-slate-800">{questions.reduce((s, q) => s + q.points, 0)}</Text> 分
+        <View style={{
+          backgroundColor: JianColors.surface2,
+          borderWidth: 1,
+          borderColor: JianColors.line,
+          borderRadius: 7,
+          padding: 11,
+          alignItems: 'center',
+          marginTop: 14,
+          marginBottom: 4
+        }}>
+          <Text style={{
+            fontFamily: getSerifFont('400'),
+            fontSize: 13,
+            lineHeight: 20,
+            color: JianColors.ink2
+          }}>
+            共 <Text style={{ fontFamily: JianTypography.number, color: JianColors.ink }}>{questions.length}</Text> 題・
+            滿分 <Text style={{ fontFamily: JianTypography.number, color: JianColors.ink }}>{questions.reduce((s, q) => s + q.points, 0)}</Text> 分
           </Text>
         </View>
-        <Pressable
-          onPress={() => setPhase("quiz")}
-          className="bg-amber-500 py-4 rounded-2xl items-center active:opacity-80 shadow-sm"
-        >
-          <Text className="text-white font-bold text-base">開始練習 →</Text>
-        </Pressable>
-        <Text className="text-xs text-slate-400 text-center mt-4">完成後成績將自動儲存</Text>
       </ScrollView>
+      <View style={{ paddingHorizontal: 24, paddingTop: 4, paddingBottom: 18 }}>
+        <Button variant="primary" size="large" fullWidth onPress={() => setPhase("quiz")}>
+          開始練習　→
+        </Button>
+        <Text style={{
+          fontFamily: getSerifFont('400'),
+          fontSize: 11,
+          lineHeight: 18,
+          color: JianColors.ink3,
+          textAlign: 'center',
+          marginTop: 9
+        }}>
+          完成後成績將自動儲存
+        </Text>
+      </View>
     </SafeAreaView>
   )
 }
