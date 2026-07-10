@@ -362,6 +362,7 @@ export default function RevisionScreen() {
                       <Text style={{
                         fontFamily: JianTypography.number,
                         fontSize: 13,
+                        lineHeight: 13,
                         color: isHighlighted ? '#fff' : JianColors.ink2
                       }}>
                         {partData.part}
@@ -463,6 +464,7 @@ export default function RevisionScreen() {
                       <Text style={{
                         fontFamily: getSerifFont('700'),
                         fontSize: 18,
+                        lineHeight: 18,
                         color: JianColors.vermilion
                       }}>
                         篇
@@ -480,6 +482,7 @@ export default function RevisionScreen() {
                   <Text style={{
                     fontFamily: getSerifFont('400'),
                     fontSize: 18,
+                    lineHeight: 18,
                     color: JianColors.vermilion
                   }}>
                     ›
@@ -515,6 +518,7 @@ export default function RevisionScreen() {
                       <Text style={{
                         fontFamily: getSerifFont('700'),
                         fontSize: 18,
+                        lineHeight: 18,
                         color: JianColors.vermilion
                       }}>
                         基
@@ -532,6 +536,7 @@ export default function RevisionScreen() {
                   <Text style={{
                     fontFamily: getSerifFont('400'),
                     fontSize: 18,
+                    lineHeight: 18,
                     color: JianColors.vermilion
                   }}>
                     ›

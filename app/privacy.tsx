@@ -20,7 +20,7 @@ export default function PrivacyScreen() {
               ‹
             </Text>
           </Pressable>
-          <Text style={{ fontFamily: getSerifFont('700'), fontSize: 31, color: JianColors.ink, marginLeft: 14 }}>
+          <Text style={{ fontFamily: getSerifFont('700'), fontSize: 31, lineHeight: 40, color: JianColors.ink, marginLeft: 14 }}>
             私隱政策
           </Text>
         </View>

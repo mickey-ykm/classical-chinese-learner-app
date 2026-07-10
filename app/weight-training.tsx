@@ -176,6 +176,7 @@ export default function WeightTrainingScreen() {
                 <Text style={{
                   fontFamily: getSerifFont('700'),
                   fontSize: 18,
+                  lineHeight: 18,
                   color: JianColors.vermilion
                 }}>
                   重

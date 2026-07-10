@@ -43,7 +43,7 @@ export default function MagicLinkSentScreen() {
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, paddingVertical: 24 }}>
         <EmailIcon />
 
-        <Text style={{ fontFamily: getSerifFont('700'), fontSize: 24, color: JianColors.ink, marginTop: 22, textAlign: 'center' }}>
+        <Text style={{ fontFamily: getSerifFont('700'), fontSize: 24, lineHeight: 32, color: JianColors.ink, marginTop: 22, textAlign: 'center' }}>
           登入連結已寄出
         </Text>
 
@@ -51,7 +51,7 @@ export default function MagicLinkSentScreen() {
           我們已將登入連結寄至
         </Text>
 
-        <Text style={{ fontFamily: getSerifFont('600'), fontSize: 16, color: JianColors.ink, marginTop: 4, textAlign: 'center' }}>
+        <Text style={{ fontFamily: getSerifFont('600'), fontSize: 16, lineHeight: 24, color: JianColors.ink, marginTop: 4, textAlign: 'center' }}>
           {email}
         </Text>
 

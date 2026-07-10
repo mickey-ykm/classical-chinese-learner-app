@@ -1,4 +1,5 @@
 import { Tabs } from "expo-router"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 import Svg, { Path, Rect, Line, Circle } from "react-native-svg"
 
 function HomeIcon({ focused }: { focused: boolean }) {
@@ -43,6 +44,8 @@ function AccountIcon({ focused }: { focused: boolean }) {
 }
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets()
+
   return (
     <Tabs
       screenOptions={{
@@ -51,8 +54,8 @@ export default function TabsLayout() {
           backgroundColor: "#f4f0e6",
           borderTopColor: "#e7ddc9",
           borderTopWidth: 1,
-          height: 64,
-          paddingBottom: 8,
+          height: 64 + insets.bottom,
+          paddingBottom: insets.bottom + 8,
           paddingTop: 8,
         },
         tabBarActiveTintColor: "#b0392c",

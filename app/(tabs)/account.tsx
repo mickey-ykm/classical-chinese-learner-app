@@ -139,10 +139,10 @@ export default function AccountScreen() {
               <Text style={{ fontFamily: JianTypography.sans, fontSize: 11, letterSpacing: 2, color: JianColors.ink3, marginBottom: 12 }}>
                 免 費 註 冊
               </Text>
-              <Text style={{ fontFamily: getSerifFont('700'), fontSize: 24, color: JianColors.ink, marginBottom: 10 }}>
+              <Text style={{ fontFamily: getSerifFont('700'), fontSize: 24, lineHeight: 32, color: JianColors.ink, marginBottom: 10 }}>
                 記錄你的
               </Text>
-              <Text style={{ fontFamily: getSerifFont('700'), fontSize: 24, color: JianColors.ink, marginBottom: 14 }}>
+              <Text style={{ fontFamily: getSerifFont('700'), fontSize: 24, lineHeight: 32, color: JianColors.ink, marginBottom: 14 }}>
                 學習進度
               </Text>
               <Text style={{ fontFamily: JianTypography.serif, fontSize: 14, lineHeight: 22, color: JianColors.ink2, marginBottom: 18 }}>
