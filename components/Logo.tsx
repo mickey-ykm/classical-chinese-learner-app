@@ -7,7 +7,7 @@ interface LogoProps {
 export function Logo({ size = 100 }: LogoProps) {
   return (
     <Image
-      source={require("@/assets/images/logo.png")}
+      source={require("@/assets/images/logo-seal.png")}
       style={{ width: size, height: size }}
       contentFit="contain"
     />

@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context"
 import { useAuth } from "@/hooks/useAuth"
 import { supabase } from "@/lib/supabase"
 import { getArticleIndex } from "@/lib/data"
+import { JianColors, JianTypography, JianRadius, getSerifFont, ProgressBar } from "@/components/jian"
 
 interface ExerciseSession {
   id: string
@@ -19,78 +20,131 @@ interface ExerciseSession {
 
 function formatDate(iso: string): string {
   const d = new Date(iso)
-  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`
+  return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`
 }
 
 function formatSeconds(s: number): string {
   const totalMinutes = Math.floor(s / 60)
   const sec = s % 60
-  if (totalMinutes === 0) return `${sec} 秒`
-  return `${totalMinutes} 分 ${sec} 秒`
+  if (totalMinutes === 0) return `${sec}秒`
+  return `${totalMinutes}分${sec}秒`
 }
 
 function timeDelta(actual: number, expected: number) {
   const diff = actual - expected
   if (Math.abs(diff) < 10) return null
   if (diff > 0) {
-    return { label: `慢 ${formatSeconds(diff)}`, color: "text-slate-400" }
+    return { label: `慢 ${formatSeconds(diff)}`, color: JianColors.ink3 }
   } else {
-    return { label: `快 ${formatSeconds(Math.abs(diff))}`, color: "text-emerald-500" }
+    return { label: `快 ${formatSeconds(Math.abs(diff))}`, color: JianColors.jade }
   }
 }
 
 function AttemptRow({ attempt, title, onPress }: { attempt: ExerciseSession; title: string; onPress: () => void }) {
   const pct = Math.round((attempt.score / attempt.total_points) * 100)
-  const barColor = pct >= 80 ? "bg-amber-500" : pct >= 50 ? "bg-amber-300" : "bg-slate-300"
+  const progressVariant = pct >= 80 ? "jade" : pct >= 50 ? "amber" : "vermilion"
   const delta = attempt.total_seconds != null && attempt.expected_seconds != null
     ? timeDelta(attempt.total_seconds, attempt.expected_seconds)
     : null
 
-  // Exercise type badge
-  const badge =
-    attempt.kind === "dse-training" ? "🎓" :
-    attempt.kind === "weight-training" ? "💪" :
-    attempt.kind === "revision" ? "📚" :
-    null
+  // Exercise type badge text
+  const kindLabel =
+    attempt.kind === "dse-training" ? "DSE" :
+    attempt.kind === "weight-training" ? "重訓" :
+    attempt.kind === "revision" ? "重溫" :
+    "文章"
 
   return (
-    <Pressable
-      onPress={onPress}
-      className="bg-white rounded-2xl border border-slate-100 shadow-sm px-4 py-3 mb-2 active:opacity-70"
-    >
-      <View className="flex-row items-center justify-between">
-        <View className="flex-row items-center gap-1.5 flex-1 mr-2">
-          {badge && <Text className="text-base">{badge}</Text>}
-          <Text
-            className="text-sm font-bold text-slate-800 leading-snug flex-1"
-            style={{ fontFamily: "Georgia" }}
-            numberOfLines={1}
-          >
-            {title}
-          </Text>
-        </View>
-        <Text className="text-xs text-slate-400">{formatDate(attempt.finished_at)}</Text>
-      </View>
-      <View className="flex-row items-center gap-2">
-        <View className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-          <View
-            className={`h-full rounded-full ${barColor}`}
-            style={{ width: `${pct}%` }}
-          />
-        </View>
-        <Text className="text-xs font-semibold text-slate-600">
-          {attempt.score}/{attempt.total_points}
-        </Text>
-      </View>
-      {attempt.total_seconds != null && (
-        <View className="flex-row items-center gap-2">
-          <Text className="text-xs text-slate-400">{formatSeconds(attempt.total_seconds)}</Text>
-          {delta && (
-            <Text className={`text-xs font-medium ${delta.color}`}>{delta.label}</Text>
+    <Pressable onPress={onPress} hitSlop={8}>
+      {({ pressed }) => (
+        <View style={{
+          backgroundColor: JianColors.surface,
+          borderWidth: 1,
+          borderColor: JianColors.line,
+          borderRadius: JianRadius.card,
+          padding: 14,
+          marginBottom: 9,
+          opacity: pressed ? 0.7 : 1
+        }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+              <View style={{
+                paddingHorizontal: 7,
+                paddingVertical: 3,
+                borderRadius: 3,
+                backgroundColor: JianColors.surface2,
+                borderWidth: 1,
+                borderColor: JianColors.line2
+              }}>
+                <Text style={{
+                  fontFamily: JianTypography.sans,
+                  fontSize: 9,
+                  letterSpacing: 0.5,
+                  color: JianColors.ink2,
+                  fontWeight: '600'
+                }}>
+                  {kindLabel}
+                </Text>
+              </View>
+              <Text
+                style={{
+                  fontFamily: getSerifFont('600'),
+                  fontSize: 15,
+                  lineHeight: 22,
+                  color: JianColors.ink,
+                  flex: 1
+                }}
+                numberOfLines={1}
+              >
+                {title}
+              </Text>
+            </View>
+            <Text style={{
+              fontFamily: JianTypography.sans,
+              fontSize: 11,
+              color: JianColors.ink3
+            }}>
+              {formatDate(attempt.finished_at)}
+            </Text>
+          </View>
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <View style={{ flex: 1 }}>
+              <ProgressBar value={pct} variant={progressVariant} height={5} />
+            </View>
+            <Text style={{
+              fontFamily: JianTypography.number,
+              fontSize: 13,
+              fontWeight: '600',
+              color: JianColors.ink2
+            }}>
+              {attempt.score}/{attempt.total_points}
+            </Text>
+          </View>
+
+          {attempt.total_seconds != null && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Text style={{
+                fontFamily: JianTypography.sans,
+                fontSize: 11,
+                color: JianColors.ink3
+              }}>
+                {formatSeconds(attempt.total_seconds)}
+              </Text>
+              {delta && (
+                <Text style={{
+                  fontFamily: JianTypography.sans,
+                  fontSize: 11,
+                  fontWeight: '500',
+                  color: delta.color
+                }}>
+                  {delta.label}
+                </Text>
+              )}
+            </View>
           )}
         </View>
       )}
-      <Text className="text-xs text-slate-300 text-right">查看詳情 →</Text>
     </Pressable>
   )
 }
@@ -118,28 +172,83 @@ export default function ExerciseHistoryScreen() {
   }, [user])
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-50">
-      <ScrollView className="flex-1 px-5" contentContainerStyle={{ paddingTop: 16, paddingBottom: 32 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: JianColors.paper }}>
+      <ScrollView style={{ flex: 1, paddingHorizontal: 24 }} contentContainerStyle={{ paddingTop: 10, paddingBottom: 32 }}>
         {/* Header */}
-        <Pressable onPress={() => router.back()} hitSlop={12} className="self-start mb-6">
-          <Text className="text-amber-600 font-semibold text-sm">← 返回</Text>
+        <Pressable onPress={() => router.back()} hitSlop={12}>
+          {({ pressed }) => (
+            <Text style={{
+              fontFamily: getSerifFont('400'),
+              fontSize: 14,
+              lineHeight: 20,
+              color: JianColors.vermilion,
+              marginBottom: 18,
+              opacity: pressed ? 0.7 : 1
+            }}>
+              ‹ 返回
+            </Text>
+          )}
         </Pressable>
 
-        <Text className="text-xl font-bold text-slate-800 mb-6" style={{ fontFamily: "Georgia" }}>
+        <Text style={{
+          fontFamily: getSerifFont('700'),
+          fontSize: 21,
+          lineHeight: 28,
+          color: JianColors.ink,
+          marginBottom: 8
+        }}>
           所有練習紀錄
         </Text>
 
+        <Text style={{
+          fontFamily: getSerifFont('400'),
+          fontSize: 13,
+          lineHeight: 22,
+          color: JianColors.ink2,
+          marginBottom: 18
+        }}>
+          查看你的完整練習歷史與表現分析。
+        </Text>
+
         {loading ? (
-          <ActivityIndicator size="small" color="#d97706" className="my-4" />
+          <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 40 }}>
+            <ActivityIndicator size="large" color={JianColors.amber} />
+          </View>
         ) : attempts.length === 0 ? (
-          <View className="bg-white rounded-2xl border border-slate-100 px-4 py-6 items-center">
-            <Text className="text-slate-400 text-sm">尚未完成任何練習</Text>
-            <Pressable onPress={() => router.replace("/")} className="mt-3">
-              <Text className="text-amber-600 font-semibold text-sm">開始學習 →</Text>
+          <View style={{
+            backgroundColor: JianColors.surface2,
+            borderWidth: 1,
+            borderColor: JianColors.line,
+            borderRadius: JianRadius.card,
+            padding: 24,
+            alignItems: 'center'
+          }}>
+            <Text style={{
+              fontFamily: getSerifFont('400'),
+              fontSize: 14,
+              lineHeight: 22,
+              color: JianColors.ink2,
+              textAlign: 'center',
+              marginBottom: 16
+            }}>
+              尚未完成任何練習
+            </Text>
+            <Pressable onPress={() => router.replace("/")} hitSlop={8}>
+              {({ pressed }) => (
+                <Text style={{
+                  fontFamily: getSerifFont('600'),
+                  fontSize: 14,
+                  lineHeight: 20,
+                  color: JianColors.vermilion,
+                  opacity: pressed ? 0.7 : 1
+                }}>
+                  開始學習 →
+                </Text>
+              )}
             </Pressable>
           </View>
         ) : (
-          <View className="gap-2">
+          <View>
             {attempts.map((attempt) => {
               // Determine title based on kind
               let title: string
