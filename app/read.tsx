@@ -1,5 +1,5 @@
 import { useState, useRef } from "react"
-import { ScrollView, View, Text, Pressable, NativeSyntheticEvent, NativeScrollEvent } from "react-native"
+import { ScrollView, View, Text, Pressable, NativeSyntheticEvent, NativeScrollEvent, LayoutChangeEvent } from "react-native"
 import { useRouter, useLocalSearchParams } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { getArticle, isArticleFree } from "@/lib/data"
@@ -20,6 +20,7 @@ export default function ReadScreen() {
   const { user, profile, isAnonymous } = useAuth()
   const [activeFootnote, setActiveFootnote] = useState<Footnote | null>(null)
   const [tabMode, setTabMode] = useState<TabMode>("original")
+  const [buttonBarHeight, setButtonBarHeight] = useState(0)
   const markedRead = useRef(false)
 
   const isPro = profile?.is_pro ?? false
@@ -38,6 +39,11 @@ export default function ReadScreen() {
       markedRead.current = true
       markAsRead(id, !isAnonymous && user ? user.id : undefined)
     }
+  }
+
+  function handleButtonBarLayout(event: LayoutChangeEvent) {
+    const { height } = event.nativeEvent.layout
+    setButtonBarHeight(height)
   }
 
   if (gated) {
@@ -139,7 +145,10 @@ export default function ReadScreen() {
         </ScrollView>
 
         {/* Sticky Button */}
-        <View style={{ paddingHorizontal: 20, paddingVertical: 16, backgroundColor: JianColors.paper, borderTopWidth: 1, borderTopColor: JianColors.line }}>
+        <View
+          style={{ paddingHorizontal: 20, paddingVertical: 16, backgroundColor: JianColors.paper, borderTopWidth: 1, borderTopColor: JianColors.line }}
+          onLayout={handleButtonBarLayout}
+        >
           <Button
             variant="primary"
             size="large"
@@ -151,7 +160,11 @@ export default function ReadScreen() {
         </View>
 
         {tabMode === "original" && (
-          <FootnotePanel footnote={activeFootnote} onClose={() => setActiveFootnote(null)} />
+          <FootnotePanel
+            footnote={activeFootnote}
+            onClose={() => setActiveFootnote(null)}
+            buttonBarHeight={buttonBarHeight}
+          />
         )}
       </View>
     </SafeAreaView>

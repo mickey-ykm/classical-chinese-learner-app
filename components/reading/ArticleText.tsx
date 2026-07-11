@@ -12,7 +12,7 @@ export default function ArticleText({ segments, footnotes, onFootnoteTap }: Prop
   return (
     <View>
       <Text
-        style={{ fontFamily: getSerifFont('400'), fontSize: 18, color: JianColors.ink, lineHeight: 42 }}
+        style={{ fontFamily: getSerifFont('400'), fontSize: 18, lineHeight: 36, color: JianColors.ink }}
       >
         {segments.map((seg, i) =>
           seg.footnoteId ? (
@@ -22,7 +22,7 @@ export default function ArticleText({ segments, footnotes, onFootnoteTap }: Prop
                 hitSlop={8}
                 style={{ display: "inline" }}
               >
-                <Text style={{ fontFamily: getSerifFont('700'), fontSize: 14, color: JianColors.vermilion }}>
+                <Text style={{ fontFamily: getSerifFont('700'), fontSize: 14, lineHeight: 14, color: JianColors.vermilion }}>
                   {seg.text}
                 </Text>
               </Pressable>

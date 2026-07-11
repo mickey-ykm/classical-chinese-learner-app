@@ -120,6 +120,7 @@ export default function ArticlePopup({ visible, article, articles, onClose }: Pr
                 <Text style={{
                   fontFamily: getSerifFont('400'),
                   fontSize: 16,
+                  lineHeight: 16,
                   color: JianColors.ink2,
                   opacity: pressed ? 0.7 : 1
                 }}>
