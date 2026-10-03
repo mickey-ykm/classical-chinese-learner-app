@@ -81,17 +81,21 @@ Admin Portal
 - **Content Sync:** Incremental sync based on `updated_at` timestamps
 - **Cache Management:** Clear cache + force re-sync button for users
 
-### 🚧 Partially Complete
+### ✅ Also completed (since the 2026-06-13 version)
 
-- **Revision Chapter:** Built for bundled data (numeric question IDs); needs UUID linkage for Supabase questions
-- **Weight Training:** Placeholder screen only; full implementation pending
+- **Magic-link email login** alongside Google Sign-In
+- **Weight Training (針對性難題訓練):** cross-article Part 7/8 questions, smart sampling, partial-credit scoring, admin page `/cross-article-questions.html`
+- **DSE mock exam:** 2–3 articles, 44–66 questions, multi-article viewer
+- **Revision system:** `/performance-report` → `/revision-article` / `/revision-part`, unified over `questions` and `cross_article_questions`
+- **Unified exercise logging:** `exercise_sessions` + `exercise_answers` for every exercise type, including anonymous users
+- **Jiān design system (Phase 13 UI/UX upgrade):** merged to `main` (2026-07). 4 tabs: 首頁, 篇章, 操練, 帳戶
 
 ### ⬜ Not Yet Started
 
 - **RevenueCat Subscriptions:** (Phase 12) Pro membership, in-app purchases
-- **Content Gating:** (Phase 11 partially done for UI; needs RevenueCat integration) Free vs Pro article access
-- **UI/UX Upgrade:** (Phase 13) Enhanced user experience affecting conversion funnel and ad display
+- **Content Gating:** Phase 11 UI exists (`isArticleFree`, `UpgradeModal` placeholders); needs RevenueCat integration
 - **Ads:** (Phase 14) AdMob integration for free tier monetization
+- **Backlog features:** onboarding, streaks, badges, charts, SRS vocab, widget, font size. See `docs/TASKS.md`
 
 ---
 
@@ -415,39 +419,20 @@ PORT (auto-injected by Railway)
 
 ## Future Phases (Post-RevenueCat)
 
-### Phase 13: UI/UX Upgrade
+### Phase 13: UI/UX Upgrade: DONE
 
-**Goal:** Enhanced user experience to improve conversion funnel and optimize ad placement strategy.
-
-**Status:** Exploration phase — evaluating different UI/UX approaches
-
-**Impact Areas:**
-- **Conversion Funnel:** Improve free-to-paid user conversion through better UX patterns
-- **Advertising Display:** Strategic placement and presentation of ads for free tier
-- **User Flow:** Optimize navigation, onboarding, and feature discovery
-- **Visual Design:** Modern, engaging interface that encourages continued usage
-
-**Dependencies:**
-- Must complete after Phase 12 (RevenueCat) to properly test conversion improvements
-- Should complete before Phase 14 (Ads) to finalize ad placement strategy
-
-**Approach:**
-- Research and prototype multiple UI/UX options
-- User testing and feedback collection
-- Iterate based on conversion metrics
-- Implementation of chosen design direction
+Delivered as the Jiān design system (see `CLAUDE.md` and `docs/archive/jian-revamp/`). Remaining UX items (onboarding #030, font size #037) are in `docs/TASKS.md`.
 
 ### Phase 14: Ads (Free Tier Monetization)
 
 **Goal:** AdMob integration for free users.
 
 **Dependencies:**
-- Phase 13 (UI/UX Upgrade) must complete first to finalize ad placement strategy
+- Phase 12 (RevenueCat) must complete first; ad placements to be finalized with the Jiān UI
 
-**Placements (to be finalized in Phase 13):**
+**Placements (to be finalized):**
 - Banner at bottom of `app/read.tsx`
 - Interstitial between quiz completion and score screen (max 1 per session)
-- Additional placements based on UI/UX research
 
 **Requirements:**
 - Register AdMob app, get unit IDs
@@ -456,32 +441,15 @@ PORT (auto-injected by Railway)
 
 **Ad-Free:** All ad components short-circuit when `is_pro = true`
 
-### Weight Training (Deferred from Phase 9)
-
-**Goal:** Practice specific question types across all accessible articles.
-
-**UI:**
-- List question types with available counts (e.g. "字詞解釋: 47 questions")
-- User picks a type → sample 15–20 questions
-- Save as `exercise_sessions.kind = 'weight-training'`
-
-**Pro Feature:** Locked for free users
-
-### Revision Chapter (Enhance from Phase 9)
-
-**Current:** Works with bundled data (numeric question IDs)  
-**Enhancement Needed:** UUID linkage for Supabase questions, `source_excerpt` display
-
 ---
 
 ## Known Issues & Limitations
 
 ### Current Limitations
 
-1. **Incremental Sync Doesn't Detect Deletions:** After a Supabase data purge, users must use "清除快取並重新同步" button to force full re-sync
-2. **NativeWind Requires Native Build:** Styling doesn't work in Expo Go; use `npx expo run:ios` or `expo start --web`
-3. **Revision Chapter UUID Linkage:** Not yet wired to Supabase questions (still uses bundled numeric IDs)
-4. **Weight Training:** Placeholder only
+1. **NativeWind requires a native build:** styling doesn't work in Expo Go; use `npx expo run:ios` / `run:android` or `expo start --web`
+2. **Mobile data-layer tests are thin:** admin API tests are solid; only `contentStore` filter tests exist on the mobile side
+3. **Legacy tables:** `quiz_attempts` / `quiz_answers` are superseded by `exercise_*`; `admin/lib/sampling.js` may still query both
 
 ### Data Integrity Invariants (Critical)
 
@@ -538,3 +506,4 @@ cd admin && node clear-supabase.js   # Clear all articles and questions
   - Added Phase 13 (UI/UX Upgrade) — affects conversion funnel and ad strategy
   - Re-sequenced: Phase 12 (RevenueCat) → Phase 13 (UI/UX) → Phase 14 (Ads)
 - Previous plan covered Phases 1–11 with historical context; this doc focuses on current state and next steps
+- **2026-10-03:** Updated after a 3-month break. Phase 13 marked done (Jiān), weight training and revision marked complete, limitations refreshed. Day-to-day status lives in `docs/TASKS.md`.
