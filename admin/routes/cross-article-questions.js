@@ -5,6 +5,7 @@ const {
   deleteCrossArticleQuestion,
   getCrossArticleQuestion,
   listCrossArticleQuestions,
+  importCrossArticleQuestions,
 } = require("../lib/cross-article-helpers")
 
 const router = express.Router()
@@ -71,6 +72,22 @@ router.post("/", async (req, res) => {
     })
 
     res.json({ success: true, id: questionId })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
+// POST /api/cross-article-questions/import - Batch import as drafts (all-or-nothing)
+router.post("/import", async (req, res) => {
+  try {
+    if (!requireSupabase(res)) return
+
+    const { questions, dryRun, allowDuplicates } = req.body || {}
+    const result = await importCrossArticleQuestions(questions, {
+      dryRun: !!dryRun,
+      allowDuplicates: !!allowDuplicates,
+    })
+    res.status(result.status).json(result.body)
   } catch (e) {
     res.status(500).json({ error: e.message })
   }

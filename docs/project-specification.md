@@ -259,6 +259,53 @@ Background fetch from Supabase (once per session)
 
 Test at: `https://ccladmin.mickey-calligraphy.art/test-sampling.html`
 
+### Cross-Article Question Batch Import
+
+Admin page `/cross-article-questions.html` → **Import JSON**; backend `POST /api/cross-article-questions/import` (`{ questions, dryRun?, allowDuplicates? }`; logic in `admin/lib/cross-article-helpers.js`). No schema change.
+
+- Input: a JSON array, or `{ "questions": [...] }` (max 200 per batch).
+- Always imported as `draft` (any `status` in the JSON is ignored); publish afterwards via "Publish Imported" or the list's bulk publish.
+- **All-or-nothing:** any invalid question or unknown article ID rejects the whole batch (HTTP 400, errors listed per question index). If linking articles fails after insert, inserted rows are deleted.
+- **Duplicates** (same `part` + `questionText`, in the DB or earlier in the batch): `dryRun` reports them; a real import returns 409 unless `allowDuplicates: true`. The UI asks the admin to confirm.
+
+```json
+[
+  {
+    "part": 7,
+    "format": "mc",
+    "questionText": "下列哪一項「之」字的用法與其他不同？",
+    "options": ["…", "…", "…", "…"],
+    "correctAnswer": "B",
+    "explanation": "…",
+    "questionTypes": ["字詞解釋"],
+    "relatedArticleIds": ["article-id-1", "article-id-2"]
+  },
+  {
+    "part": 8,
+    "format": "sentence-order",
+    "questionText": "將下列詞語排成正確的句子。",
+    "sequenceTokens": ["天", "地", "人"],
+    "correctAnswer": "天>地>人",
+    "relatedArticleIds": ["article-id-1"]
+  }
+]
+```
+
+| Field | Rules |
+|-------|-------|
+| `part` | required; `7` or `8` |
+| `format` | `mc` (default) \| `fill-blank` \| `sentence-order` |
+| `questionText` | required |
+| `options` | `mc` only; ≥ 2 non-empty. Array of strings, `[{key,text}]` (keys A, B, C… in order) or `{A:…}`. Keys are assigned by position |
+| `correctAnswer` | required. `mc`: `"B"` or `"A,C"` (keys must exist). `fill-blank`: answer text. `sentence-order`: the tokens in order joined by `>` or `,`; must be a permutation of `sequenceTokens` |
+| `selectCount` | optional; derived from the number of correct answers; rejected if it disagrees |
+| `sequenceTokens` | `sentence-order` only; ≥ 2 strings |
+| `questionTypes` | optional; subset of 字詞解釋, 語句背誦, 語句翻譯, 修辭手法, 內容重點 (unknown labels are rejected) |
+| `explanation` | optional |
+| `relatedArticleIds` | required; ≥ 1 existing `articles.id` |
+
+`points` is auto-calculated (number of correct answers for `mc`).
+
 ---
 
 ## Admin Portal Structure (Post-Refactor)

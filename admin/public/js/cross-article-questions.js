@@ -31,6 +31,9 @@ async function loadArticles() {
     const data = await res.json()
     articlesList = data
     const container = document.getElementById('qm-articles-checkboxes')
+    document.getElementById('import-article-ref').innerHTML = data.map(a =>
+      `<div><span class="text-slate-800">${escapeHtml(String(a.id))}</span> <span class="text-slate-400 font-sans">${escapeHtml(a.title)}</span></div>`
+    ).join('')
     container.innerHTML = data.map(a =>
       `<label class="flex items-center gap-2 text-sm hover:bg-stone-50 px-2 py-1 rounded cursor-pointer">
         <input type="checkbox" value="${a.id}" class="article-checkbox w-4 h-4 accent-amber-500" />
@@ -397,6 +400,157 @@ window.bulkDelete = async function() {
     loadQuestions()
   } catch (e) {
     showToast('Error: ' + e.message, 'error')
+  }
+}
+
+// ---- Batch import ----
+let importedIds = []
+
+window.openImportModal = function() {
+  document.getElementById('import-json').value = ''
+  document.getElementById('import-file').value = ''
+  importedIds = []
+  showImportResult(null)
+  document.getElementById('import-submit-btn').classList.remove('hidden')
+  document.getElementById('import-publish-btn').classList.add('hidden')
+  document.getElementById('import-modal').classList.remove('hidden')
+}
+
+window.closeImportModal = function() {
+  document.getElementById('import-modal').classList.add('hidden')
+}
+
+window.loadImportFile = function(event) {
+  const file = event.target.files[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = () => { document.getElementById('import-json').value = reader.result }
+  reader.readAsText(file)
+}
+
+function showImportResult(html, kind = 'info') {
+  const el = document.getElementById('import-result')
+  if (!html) { el.classList.add('hidden'); return }
+  const styles = {
+    info: 'bg-stone-50 border-stone-200 text-slate-700',
+    ok: 'bg-green-50 border-green-200 text-green-800',
+    error: 'bg-red-50 border-red-200 text-red-800',
+    warn: 'bg-amber-50 border-amber-200 text-amber-800',
+  }
+  el.className = `text-sm rounded border px-3 py-2 ${styles[kind]}`
+  el.innerHTML = html
+}
+
+// Parse the textarea with JS. Returns the questions array, or null after showing the error.
+function parseImportJson() {
+  const text = document.getElementById('import-json').value.trim()
+  if (!text) { showImportResult('Paste some JSON first.', 'error'); return null }
+  let parsed
+  try {
+    parsed = JSON.parse(text)
+  } catch (e) {
+    showImportResult(`<b>Invalid JSON:</b> ${escapeHtml(e.message)}`, 'error')
+    return null
+  }
+  const questions = Array.isArray(parsed) ? parsed : parsed && parsed.questions
+  if (!Array.isArray(questions) || questions.length === 0) {
+    showImportResult('JSON must be a non-empty array of questions, or an object with a <code>questions</code> array.', 'error')
+    return null
+  }
+  return questions
+}
+
+async function postImport(questions, opts) {
+  const res = await fetch('/api/cross-article-questions/import', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ questions, ...opts })
+  })
+  const data = await res.json().catch(() => ({}))
+  return { res, data }
+}
+
+function renderValidationErrors(data) {
+  const rows = (data.errors || []).map(e =>
+    `<li>Question #${e.index + 1}: ${e.errors.map(escapeHtml).join('; ')}</li>`).join('')
+  showImportResult(`<b>${escapeHtml(data.error || 'Validation failed')}</b><ul class="list-disc ml-5 mt-1 text-xs">${rows}</ul>`, 'error')
+}
+
+function describeDuplicates(dups) {
+  return dups.map(d => {
+    const where = d.existingId ? 'already in database' : `repeats question #${d.duplicateOfIndex + 1} in this batch`
+    return `#${d.index + 1} (Part ${d.part}) "${d.questionText.slice(0, 30)}${d.questionText.length > 30 ? '…' : ''}" – ${where}`
+  })
+}
+
+window.validateImport = async function() {
+  const questions = parseImportJson()
+  if (!questions) return
+  try {
+    const { res, data } = await postImport(questions, { dryRun: true })
+    if (res.status === 400 && data.errors) return renderValidationErrors(data)
+    if (!res.ok) throw new Error(data.error || 'Validation failed')
+    let html = `<b>Valid:</b> ${data.count} question(s) ready to import as drafts.`
+    let kind = 'ok'
+    if (data.duplicates.length) {
+      kind = 'warn'
+      html += `<div class="mt-1 text-xs">Warning: ${data.duplicates.length} possible duplicate(s):<ul class="list-disc ml-5">${describeDuplicates(data.duplicates).map(t => `<li>${escapeHtml(t)}</li>`).join('')}</ul></div>`
+    }
+    showImportResult(html, kind)
+  } catch (e) {
+    showImportResult('Error: ' + escapeHtml(e.message), 'error')
+  }
+}
+
+window.submitImport = async function() {
+  const questions = parseImportJson()
+  if (!questions) return
+  try {
+    // Validate first; surfaces errors and duplicates before anything is written
+    const check = await postImport(questions, { dryRun: true })
+    if (check.res.status === 400 && check.data.errors) return renderValidationErrors(check.data)
+    if (!check.res.ok) throw new Error(check.data.error || 'Validation failed')
+
+    let allowDuplicates = false
+    if (check.data.duplicates.length) {
+      const msg = `${check.data.duplicates.length} question(s) look like duplicates:\n\n` +
+        describeDuplicates(check.data.duplicates).join('\n') +
+        '\n\nImport anyway?'
+      if (!confirm(msg)) { showImportResult('Import cancelled.', 'info'); return }
+      allowDuplicates = true
+    }
+
+    const { res, data } = await postImport(questions, { allowDuplicates })
+    if (res.status === 400 && data.errors) return renderValidationErrors(data)
+    if (!res.ok) throw new Error(data.error || 'Import failed')
+
+    importedIds = data.ids
+    showImportResult(`<b>Imported ${data.imported} question(s) as drafts.</b> Publish them now, or review them in the list first.`, 'ok')
+    document.getElementById('import-submit-btn').classList.add('hidden')
+    document.getElementById('import-publish-btn').classList.remove('hidden')
+    showToast(`Imported ${data.imported} draft(s)`, 'success')
+    loadQuestions()
+  } catch (e) {
+    showImportResult('Error: ' + escapeHtml(e.message), 'error')
+  }
+}
+
+window.publishImported = async function() {
+  if (!importedIds.length) return
+  if (!confirm(`Publish ${importedIds.length} imported question(s)? They will be served in weight training.`)) return
+  try {
+    const res = await fetch('/api/cross-article-questions/bulk-publish', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: importedIds })
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Failed to publish')
+    showToast(`Published ${data.published} question(s)`, 'success')
+    closeImportModal()
+    loadQuestions()
+  } catch (e) {
+    showImportResult('Error: ' + escapeHtml(e.message), 'error')
   }
 }
 

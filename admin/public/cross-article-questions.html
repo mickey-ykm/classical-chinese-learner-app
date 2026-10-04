@@ -53,6 +53,7 @@
       <option value="8">Part 8 (文言句式)</option>
     </select>
     <div class="ml-auto flex gap-2">
+      <button onclick="openImportModal()" class="text-sm border border-amber-600 text-amber-700 px-4 py-2 rounded hover:bg-amber-50">Import JSON</button>
       <button onclick="openQuestionModal()" class="text-sm bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700">+ New Question</button>
     </div>
   </div>
@@ -185,6 +186,54 @@
       <button onclick="closeModal()" class="px-4 py-2 text-sm border border-stone-300 rounded hover:bg-stone-50">Cancel</button>
       <button onclick="saveQuestion()" class="px-4 py-2 text-sm bg-amber-600 text-white rounded hover:bg-amber-700">Save Question</button>
       <button onclick="saveAndPublish()" class="px-4 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700">Save & Publish</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import Modal -->
+<div id="import-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+  <div class="bg-white rounded-xl shadow-2xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <div class="px-6 py-4 border-b border-stone-200 flex items-center justify-between sticky top-0 bg-white">
+      <h3 class="font-semibold text-lg">Import Questions (JSON)</h3>
+      <button onclick="closeImportModal()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+    </div>
+    <div class="px-6 py-4 space-y-3">
+      <p class="text-xs text-slate-500">Paste a JSON array of questions (or <code>{"questions": [...]}</code>). Questions are imported as <b>drafts</b>; the whole batch is rejected if any question is invalid.</p>
+
+      <details class="text-xs border border-stone-200 rounded">
+        <summary class="px-3 py-2 cursor-pointer text-slate-600">Expected format</summary>
+        <pre class="px-3 py-2 bg-stone-50 overflow-x-auto whitespace-pre">[
+  {
+    "part": 7,                       // 7 | 8
+    "format": "mc",                  // mc | fill-blank | sentence-order (default mc)
+    "questionText": "…",
+    "options": ["…", "…", "…", "…"], // mc only; keys A, B, C… assigned by position
+    "correctAnswer": "B",            // mc: "B" or "A,C"; fill-blank: text;
+                                     // sentence-order: "t1&gt;t2&gt;t3" (the tokens in order)
+    "sequenceTokens": ["t1","t2","t3"], // sentence-order only
+    "explanation": "…",              // optional
+    "questionTypes": ["字詞解釋"],     // optional: 字詞解釋 語句背誦 語句翻譯 修辭手法 內容重點
+    "relatedArticleIds": ["article-id"] // required, at least 1
+  }
+]</pre>
+      </details>
+
+      <details class="text-xs border border-stone-200 rounded">
+        <summary class="px-3 py-2 cursor-pointer text-slate-600">Article ID reference</summary>
+        <div id="import-article-ref" class="px-3 py-2 max-h-48 overflow-y-auto font-mono space-y-0.5"></div>
+      </details>
+
+      <div class="flex items-center gap-3">
+        <input id="import-file" type="file" accept=".json,application/json" onchange="loadImportFile(event)" class="text-xs" />
+      </div>
+      <textarea id="import-json" rows="12" class="w-full border border-stone-300 rounded px-3 py-2 text-xs font-mono" placeholder="Paste JSON here"></textarea>
+      <div id="import-result" class="hidden text-sm rounded border px-3 py-2"></div>
+    </div>
+    <div class="px-6 py-4 border-t border-stone-200 flex gap-3 justify-end sticky bottom-0 bg-white">
+      <button onclick="closeImportModal()" class="px-4 py-2 text-sm border border-stone-300 rounded hover:bg-stone-50">Close</button>
+      <button onclick="validateImport()" class="px-4 py-2 text-sm border border-amber-600 text-amber-700 rounded hover:bg-amber-50">Validate</button>
+      <button id="import-submit-btn" onclick="submitImport()" class="px-4 py-2 text-sm bg-amber-600 text-white rounded hover:bg-amber-700">Import as Drafts</button>
+      <button id="import-publish-btn" onclick="publishImported()" class="hidden px-4 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700">Publish Imported</button>
     </div>
   </div>
 </div>

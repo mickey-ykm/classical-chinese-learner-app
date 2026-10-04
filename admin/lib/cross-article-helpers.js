@@ -253,7 +253,231 @@ async function listCrossArticleQuestions(filters = {}) {
   }))
 }
 
+const VALID_FORMATS = ["mc", "fill-blank", "sentence-order"]
+const VALID_QUESTION_TYPES = ["字詞解釋", "語句背誦", "語句翻譯", "修辭手法", "內容重點"]
+const MAX_IMPORT_BATCH = 200
+
+function dupKey(text, part) {
+  return `${part}::${String(text).trim()}`
+}
+
+/**
+ * Validate and normalise one raw imported question.
+ * Returns { errors: string[], question } where question is shaped for upsertCrossArticleQuestion.
+ */
+function normalizeImportQuestion(raw) {
+  const errors = []
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    return { errors: ["must be an object"], question: null }
+  }
+
+  const questionText = String(raw.questionText ?? raw.question_text ?? "").trim()
+  if (!questionText) errors.push("questionText is required")
+
+  const part = Number(raw.part)
+  if (![7, 8].includes(part)) errors.push("part must be 7 or 8")
+
+  const format = raw.format ?? "mc"
+  if (!VALID_FORMATS.includes(format)) errors.push(`format must be one of ${VALID_FORMATS.join(", ")}`)
+
+  const explanation = raw.explanation == null ? "" : String(raw.explanation).trim()
+
+  let relatedArticleIds = raw.relatedArticleIds ?? raw.related_article_ids
+  if (typeof relatedArticleIds === "string") relatedArticleIds = [relatedArticleIds]
+  if (!Array.isArray(relatedArticleIds) || relatedArticleIds.length === 0) {
+    errors.push("relatedArticleIds must be a non-empty array of article IDs")
+    relatedArticleIds = []
+  } else {
+    relatedArticleIds = [...new Set(relatedArticleIds.map(x => String(x).trim()).filter(Boolean))]
+    if (relatedArticleIds.length === 0) errors.push("relatedArticleIds must be a non-empty array of article IDs")
+  }
+
+  let questionTypes
+  const rawTypes = raw.questionTypes ?? raw.question_types
+  if (rawTypes != null) {
+    if (!Array.isArray(rawTypes)) {
+      errors.push("questionTypes must be an array")
+    } else {
+      const bad = rawTypes.filter(t => !VALID_QUESTION_TYPES.includes(t))
+      if (bad.length) errors.push(`invalid questionTypes: ${bad.join(", ")} (allowed: ${VALID_QUESTION_TYPES.join(", ")})`)
+      else if (rawTypes.length) questionTypes = rawTypes
+    }
+  }
+
+  let correctAnswer = raw.correctAnswer ?? raw.correct_answer
+  if (Array.isArray(correctAnswer)) correctAnswer = correctAnswer.join(",")
+  correctAnswer = correctAnswer == null ? "" : String(correctAnswer).trim()
+  if (!correctAnswer) errors.push("correctAnswer is required")
+
+  const question = {
+    questionText,
+    format,
+    part,
+    explanation,
+    status: "draft",
+    relatedArticleIds,
+  }
+  if (questionTypes) question.questionTypes = questionTypes
+
+  if (format === "mc") {
+    let opts = raw.options
+    let optionTexts = []
+    if (Array.isArray(opts)) {
+      optionTexts = opts.map(o => (typeof o === "string" ? o : o && o.text != null ? o.text : ""))
+      // [{key,text}] must be in A, B, C... order, since keys are re-derived from position
+      if (opts.some(o => o && typeof o === "object" && o.key)) {
+        opts.forEach((o, i) => {
+          if (o && o.key && String(o.key).toUpperCase() !== String.fromCharCode(65 + i)) {
+            errors.push(`option keys must run A, B, C... in order (got "${o.key}" at position ${i + 1})`)
+          }
+        })
+      }
+    } else if (opts && typeof opts === "object") {
+      const keys = Object.keys(opts).sort()
+      keys.forEach((k, i) => {
+        if (k !== String.fromCharCode(65 + i)) errors.push(`option keys must be A, B, C... without gaps (got "${k}")`)
+      })
+      optionTexts = keys.map(k => opts[k])
+    }
+    optionTexts = optionTexts.map(t => String(t ?? "").trim())
+    if (optionTexts.length < 2) errors.push("MC questions need at least 2 options")
+    if (optionTexts.some(t => !t)) errors.push("MC options must not be empty")
+    question.options = optionTexts
+
+    const answers = correctAnswer.split(",").map(a => a.trim().toUpperCase()).filter(Boolean)
+    const validKeys = optionTexts.map((_, i) => String.fromCharCode(65 + i))
+    const badKeys = answers.filter(a => !validKeys.includes(a))
+    if (answers.length && badKeys.length) errors.push(`correctAnswer references missing option(s): ${badKeys.join(", ")}`)
+    if (new Set(answers).size !== answers.length) errors.push("correctAnswer has duplicate keys")
+    question.correctAnswer = answers.join(",")
+
+    const selectCount = raw.selectCount ?? raw.select_count
+    if (selectCount != null && Number(selectCount) !== answers.length) {
+      errors.push(`selectCount (${selectCount}) must equal the number of correct answers (${answers.length})`)
+    }
+    question.selectCount = answers.length || 1
+  } else {
+    question.correctAnswer = correctAnswer
+  }
+
+  if (format === "sentence-order") {
+    const tokens = raw.sequenceTokens ?? raw.sequence_tokens
+    if (!Array.isArray(tokens) || tokens.length < 2 || tokens.some(t => typeof t !== "string" || !t.trim())) {
+      errors.push("sentence-order needs sequenceTokens: an array of at least 2 non-empty strings")
+    } else {
+      question.sequenceTokens = tokens.map(t => t.trim())
+      const seq = correctAnswer.includes(",") ? correctAnswer.split(",") : correctAnswer.split(">")
+      const sortedSeq = seq.map(t => t.trim()).sort()
+      const sortedTokens = [...question.sequenceTokens].sort()
+      if (correctAnswer && JSON.stringify(sortedSeq) !== JSON.stringify(sortedTokens)) {
+        errors.push("correctAnswer must contain exactly the sequenceTokens in the correct order (joined by \">\" or \",\")")
+      }
+    }
+  }
+
+  return { errors, question }
+}
+
+/**
+ * Validate a batch and (unless dryRun) insert it as drafts, all-or-nothing.
+ * Returns { ok, status, body } so the route can send it unchanged.
+ */
+async function importCrossArticleQuestions(rawQuestions, { dryRun = false, allowDuplicates = false } = {}) {
+  if (!Array.isArray(rawQuestions) || rawQuestions.length === 0) {
+    return { status: 400, body: { error: "questions must be a non-empty array" } }
+  }
+  if (rawQuestions.length > MAX_IMPORT_BATCH) {
+    return { status: 400, body: { error: `Too many questions (max ${MAX_IMPORT_BATCH} per batch)` } }
+  }
+
+  const rowErrors = []
+  const questions = []
+  rawQuestions.forEach((raw, index) => {
+    const { errors, question } = normalizeImportQuestion(raw)
+    if (errors.length) rowErrors.push({ index, errors })
+    questions.push(question)
+  })
+
+  // Every referenced article must exist
+  const articleIds = [...new Set(questions.flatMap(q => (q ? q.relatedArticleIds : [])))]
+  if (articleIds.length > 0) {
+    const { data: found, error } = await supabase.from("articles").select("id").in("id", articleIds)
+    if (error) throw new Error("Failed to check articles: " + error.message)
+    const known = new Set((found || []).map(a => a.id))
+    questions.forEach((q, index) => {
+      if (!q) return
+      const missing = q.relatedArticleIds.filter(id => !known.has(id))
+      if (missing.length) {
+        let entry = rowErrors.find(e => e.index === index)
+        if (!entry) { entry = { index, errors: [] }; rowErrors.push(entry) }
+        entry.errors.push(`unknown article ID(s): ${missing.join(", ")}`)
+      }
+    })
+  }
+
+  if (rowErrors.length) {
+    rowErrors.sort((a, b) => a.index - b.index)
+    return {
+      status: 400,
+      body: { error: `${rowErrors.length} question(s) failed validation. Nothing was imported.`, errors: rowErrors },
+    }
+  }
+
+  // Duplicate detection: same part + question text, in the database or earlier in this batch
+  const duplicates = []
+  const seen = new Map()
+  const { data: existing, error: existErr } = await supabase
+    .from("cross_article_questions")
+    .select("id, part, question_text")
+    .in("question_text", [...new Set(questions.map(q => q.questionText))])
+  if (existErr) throw new Error("Failed to check duplicates: " + existErr.message)
+  const existingByKey = new Map((existing || []).map(r => [dupKey(r.question_text, r.part), r.id]))
+
+  questions.forEach((q, index) => {
+    const key = dupKey(q.questionText, q.part)
+    if (existingByKey.has(key)) {
+      duplicates.push({ index, questionText: q.questionText, part: q.part, existingId: existingByKey.get(key) })
+    } else if (seen.has(key)) {
+      duplicates.push({ index, questionText: q.questionText, part: q.part, duplicateOfIndex: seen.get(key) })
+    }
+    if (!seen.has(key)) seen.set(key, index)
+  })
+
+  if (dryRun) {
+    return { status: 200, body: { valid: true, count: questions.length, duplicates } }
+  }
+  if (duplicates.length > 0 && !allowDuplicates) {
+    return {
+      status: 409,
+      body: { error: `${duplicates.length} duplicate question(s) detected`, duplicates },
+    }
+  }
+
+  // Atomic insert of all question rows in one statement
+  const rows = questions.map(q => crossArticleQuestionToRow(q))
+  const { data: inserted, error: insErr } = await supabase
+    .from("cross_article_questions")
+    .insert(rows)
+    .select("id")
+  if (insErr) throw new Error("Failed to insert questions: " + insErr.message)
+  const ids = inserted.map(r => r.id)
+
+  const links = questions.flatMap((q, i) =>
+    q.relatedArticleIds.map(articleId => ({ question_id: ids[i], article_id: articleId }))
+  )
+  const { error: linkErr } = await supabase.from("cross_article_question_articles").insert(links)
+  if (linkErr) {
+    // Roll back so the import stays all-or-nothing
+    await supabase.from("cross_article_questions").delete().in("id", ids)
+    throw new Error("Failed to link related articles (import rolled back): " + linkErr.message)
+  }
+
+  return { status: 200, body: { success: true, imported: ids.length, ids, duplicates } }
+}
+
 module.exports = {
+  normalizeImportQuestion,
+  importCrossArticleQuestions,
   crossArticleQuestionToRow,
   rowToCrossArticleQuestion,
   upsertCrossArticleQuestion,
