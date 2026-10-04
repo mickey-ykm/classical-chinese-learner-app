@@ -306,6 +306,25 @@ Admin page `/cross-article-questions.html` → **Import JSON**; backend `POST /a
 
 `points` is auto-calculated (number of correct answers for `mc`).
 
+### Student Performance (admin)
+
+Read-only analytics page `/student-performance.html` (nav link "學習表現 ↗"); backend `admin/routes/performance.js` + `admin/lib/performance-helpers.js`, mounted under `/api/performance` **behind the admin auth guard**. No schema change. Data comes from `exercise_sessions` / `exercise_answers` (all kinds), joined to `profiles` and to `questions` **or** `cross_article_questions` (an answer's `question_id` can live in either).
+
+All endpoints take `days` (default 30, max 365) and `includeAnonymous` (default true). "Registered" = profile has an email; anonymous = null `user_id` or a profile without email.
+
+| Endpoint | Returns |
+|----------|---------|
+| `GET /overview` | totals (sessions, completion rate, abandoned, avg score, time vs expected, sessions/day, by kind), accuracy by part and by question type, top articles |
+| `GET /questions?kind=&part=&articleId=&minAttempts=` | per-question attempts/accuracy, sorted hardest first; flag `hard` (< 30%) / `easy` (> 95%) |
+| `GET /students?search=&sort=lastActive\|sessions\|score` | registered students with sessions, avg score, weakest part |
+| `GET /students/:userId` | profile, session list, accuracy by part/type, unresolved mistakes (via `getRevisionSummary`) |
+| `GET /sessions/:id` | answer-by-answer review |
+
+Caveats:
+- `QuizShell` shuffles MC options and re-keys A/B/C/D, so a stored MC `user_answer` letter can't be matched to the stored question's options. Session review therefore shows only correct/incorrect (plus the correct option text) for MC; fill-blank and sentence-order show the student's actual answer.
+- Aggregation runs in JS over a date-bounded range (paginated at 1000 rows). If volume grows, move to SQL views/RPCs.
+- `profiles` has no `created_at` column in the live DB (the DBML still lists one).
+
 ---
 
 ## Admin Portal Structure (Post-Refactor)

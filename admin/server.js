@@ -18,6 +18,7 @@ const quizRouter = require("./routes/quiz")
 const crossArticleQuestionsRouter = require("./routes/cross-article-questions")
 const weightTrainingRouter = require("./routes/weight-training")
 const revisionRouter = require("./routes/revision")
+const performanceRouter = require("./routes/performance")
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -62,6 +63,7 @@ app.use("/api/questions", questionsRouter)
 app.use("/api/cross-article-questions", crossArticleQuestionsRouter)
 app.use("/api/assessment", assessmentRouter)
 app.use("/api/generate-article", generateArticleRouter)
+app.use("/api/performance", performanceRouter)
 
 app.listen(PORT, () => {
   console.log(`\n  ✦ 文言教室 Admin Portal\n  → http://localhost:${PORT}\n`)

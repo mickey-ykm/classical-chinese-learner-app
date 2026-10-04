@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>學習表現 - 文言教室 Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; }
+    .tab-active { border-bottom: 2px solid #d97706; color: #d97706; }
+    #toast {
+      position: fixed; bottom: 24px; right: 24px;
+      padding: 12px 20px; border-radius: 8px; font-size: 14px;
+      transform: translateY(80px); opacity: 0;
+      transition: transform 0.25s ease, opacity 0.25s ease;
+      z-index: 1000; pointer-events: none;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    .modal-backdrop { background: rgba(0,0,0,0.3); }
+  </style>
+</head>
+<body class="bg-stone-50 text-slate-800 min-h-screen">
+
+<script>
+  fetch("/api/admin/me").then(r => { if (!r.ok) window.location.href = "/login.html" })
+</script>
+
+<header class="bg-white border-b border-stone-200 px-6 py-4 flex items-center gap-3">
+  <div class="w-9 h-9 rounded-md bg-amber-600 flex items-center justify-center text-white font-bold text-sm">文</div>
+  <div>
+    <h1 class="font-bold text-lg leading-tight">學習表現</h1>
+    <p class="text-xs text-slate-500">Student Performance</p>
+  </div>
+  <div class="ml-auto flex items-center gap-3">
+    <a href="/index.html" class="text-xs text-slate-500 hover:text-slate-700 border border-stone-200 rounded px-3 py-1.5">← Back to Main</a>
+    <button onclick="signOut()" class="text-xs text-slate-500 hover:text-slate-700 border border-stone-200 rounded px-3 py-1.5">Sign Out</button>
+  </div>
+</header>
+
+<div class="max-w-6xl mx-auto px-6 py-6">
+
+  <!-- Global filters -->
+  <div class="flex items-center gap-4 mb-4 flex-wrap">
+    <label class="text-sm text-slate-600">Range
+      <select id="f-days" onchange="reload()" class="ml-1 text-sm border border-stone-300 rounded px-2 py-1.5">
+        <option value="7">Last 7 days</option>
+        <option value="30" selected>Last 30 days</option>
+        <option value="90">Last 90 days</option>
+        <option value="365">Last 365 days</option>
+      </select>
+    </label>
+    <label class="text-sm text-slate-600 flex items-center gap-2">
+      <input id="f-registered" type="checkbox" onchange="reload()" class="w-4 h-4 accent-amber-500" />
+      Registered users only
+    </label>
+    <button onclick="reload()" class="ml-auto text-xs text-amber-600 hover:text-amber-700">Refresh</button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="flex border-b border-stone-200 mb-6">
+    <button id="tab-overview" onclick="showTab('overview')" class="tab-active px-5 pb-2.5 text-sm font-medium">Overview</button>
+    <button id="tab-questions" onclick="showTab('questions')" class="px-5 pb-2.5 text-sm font-medium text-slate-500 hover:text-slate-700">Questions</button>
+    <button id="tab-students" onclick="showTab('students')" class="px-5 pb-2.5 text-sm font-medium text-slate-500 hover:text-slate-700">Students</button>
+  </div>
+
+  <!-- Overview -->
+  <section id="panel-overview">
+    <div id="ov-kpis" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6"></div>
+    <div class="grid md:grid-cols-2 gap-4 mb-6">
+      <div class="bg-white rounded-xl border border-stone-200 p-4">
+        <h2 class="font-semibold text-sm mb-3">Sessions per day</h2>
+        <div id="ov-daily"></div>
+      </div>
+      <div class="bg-white rounded-xl border border-stone-200 p-4">
+        <h2 class="font-semibold text-sm mb-3">Avg score by exercise type</h2>
+        <div id="ov-kinds"></div>
+      </div>
+      <div class="bg-white rounded-xl border border-stone-200 p-4">
+        <h2 class="font-semibold text-sm mb-3">Accuracy by part</h2>
+        <div id="ov-parts"></div>
+      </div>
+      <div class="bg-white rounded-xl border border-stone-200 p-4">
+        <h2 class="font-semibold text-sm mb-3">Accuracy by question type (教學標籤)</h2>
+        <div id="ov-types"></div>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+      <div class="px-4 py-3 border-b border-stone-100"><h2 class="font-semibold text-sm">Articles by attempts</h2></div>
+      <table class="min-w-full text-sm">
+        <thead class="bg-stone-50 text-xs text-slate-500 uppercase tracking-wider">
+          <tr><th class="px-4 py-2.5 text-left font-medium">Article</th><th class="px-4 py-2.5 text-center font-medium">Sessions</th><th class="px-4 py-2.5 text-center font-medium">Avg score</th></tr>
+        </thead>
+        <tbody id="ov-articles" class="divide-y divide-stone-100"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Questions -->
+  <section id="panel-questions" class="hidden">
+    <div class="flex items-center gap-3 mb-4 flex-wrap">
+      <select id="qf-kind" onchange="loadQuestions()" class="text-sm border border-stone-300 rounded px-3 py-2">
+        <option value="">All exercise types</option>
+        <option value="article-quiz">Article quiz</option>
+        <option value="dse-training">DSE training</option>
+        <option value="weight-training">Weight training</option>
+        <option value="revision">Revision</option>
+      </select>
+      <select id="qf-part" onchange="loadQuestions()" class="text-sm border border-stone-300 rounded px-3 py-2">
+        <option value="">All parts</option>
+        <option value="1">Part 1</option><option value="2">Part 2</option><option value="3">Part 3</option>
+        <option value="4">Part 4</option><option value="5">Part 5</option><option value="6">Part 6</option>
+        <option value="7">Part 7</option><option value="8">Part 8</option>
+      </select>
+      <select id="qf-flag" onchange="renderQuestions()" class="text-sm border border-stone-300 rounded px-3 py-2">
+        <option value="">All questions</option>
+        <option value="hard">Hard (&lt; 30%)</option>
+        <option value="easy">Easy (&gt; 95%)</option>
+      </select>
+      <label class="text-sm text-slate-600">Min attempts
+        <input id="qf-min" type="number" min="1" value="5" onchange="loadQuestions()" class="ml-1 w-16 text-sm border border-stone-300 rounded px-2 py-1.5" />
+      </label>
+    </div>
+    <p class="text-xs text-slate-500 mb-3">Sorted hardest first. Very low accuracy can mean a hard question <em>or</em> a wrong answer key — check hard questions before assuming students are weak.</p>
+    <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead class="bg-stone-50 text-xs text-slate-500 uppercase tracking-wider">
+            <tr>
+              <th class="px-4 py-2.5 text-left font-medium">Question</th>
+              <th class="px-4 py-2.5 text-center font-medium">Part</th>
+              <th class="px-4 py-2.5 text-center font-medium">Attempts</th>
+              <th class="px-4 py-2.5 text-center font-medium">Accuracy</th>
+              <th class="px-4 py-2.5 text-center font-medium">Flag</th>
+              <th class="px-4 py-2.5 text-right font-medium">Edit</th>
+            </tr>
+          </thead>
+          <tbody id="q-list" class="divide-y divide-stone-100"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Students -->
+  <section id="panel-students" class="hidden">
+    <div class="flex items-center gap-3 mb-4">
+      <input id="sf-search" type="text" placeholder="Search email or name" oninput="debouncedStudents()" class="text-sm border border-stone-300 rounded px-3 py-2 w-64" />
+      <select id="sf-sort" onchange="loadStudents()" class="text-sm border border-stone-300 rounded px-3 py-2">
+        <option value="lastActive">Sort: last active</option>
+        <option value="sessions">Sort: most sessions</option>
+        <option value="score">Sort: lowest score</option>
+      </select>
+    </div>
+    <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead class="bg-stone-50 text-xs text-slate-500 uppercase tracking-wider">
+            <tr>
+              <th class="px-4 py-2.5 text-left font-medium">Student</th>
+              <th class="px-4 py-2.5 text-center font-medium">Sessions</th>
+              <th class="px-4 py-2.5 text-center font-medium">Avg score</th>
+              <th class="px-4 py-2.5 text-center font-medium">Weakest part</th>
+              <th class="px-4 py-2.5 text-right font-medium">Last active</th>
+            </tr>
+          </thead>
+          <tbody id="s-list" class="divide-y divide-stone-100"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Detail drawer (student / session) -->
+<div id="detail-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+  <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <div class="px-6 py-4 border-b border-stone-200 flex items-center justify-between sticky top-0 bg-white">
+      <div class="flex items-center gap-3">
+        <button id="detail-back" onclick="backToStudent()" class="hidden text-xs text-amber-600 hover:text-amber-700">← Student</button>
+        <h3 class="font-semibold text-lg" id="detail-title"></h3>
+      </div>
+      <button onclick="closeDetail()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+    </div>
+    <div id="detail-body" class="px-6 py-4"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script type="module" src="/js/student-performance.js"></script>
+</body>
+</html>
